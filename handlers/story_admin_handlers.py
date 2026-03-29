@@ -525,3 +525,595 @@ async def manage_choices(callback: CallbackQuery):
 
     await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons), parse_mode=ParseMode.HTML)
     await callback.answer()
+
+
+# ==================== VER DETALLE DE NODO ====================
+
+@router.callback_query(F.data.startswith("node_detail_"), lambda cb: is_admin(cb.from_user.id))
+async def node_detail(callback: CallbackQuery):
+    """Muestra detalle de un nodo - Voz de Lucien"""
+    try:
+        node_id = int(callback.data.replace("node_detail_", ""))
+    except ValueError:
+        await callback.answer("ID invalido", show_alert=True)
+        return
+
+    story_service = StoryService()
+    node = story_service.get_node(node_id)
+
+    if not node:
+        await callback.answer("Fragmento no encontrado", show_alert=True)
+        return
+
+    # Obtener opciones del nodo
+    choices = story_service.get_node_choices(node_id)
+
+    status = "✅ Activo" if node.is_active else "❌ Inactivo"
+    node_type_emoji = {
+        NodeType.NARRATIVE: "📖",
+        NodeType.DECISION: "🎭",
+        NodeType.ENDING: "🏁",
+        NodeType.QUIZ: "❓"
+    }.get(node.node_type, "📄")
+
+    archetype_text = "Cualquiera" if not node.required_archetype else node.required_archetype.value.title()
+
+    text = (f"🎩 <b>Lucien:</b>\n\n"
+            f"{node_type_emoji} <b>{node.title}</b>\n\n"
+            f"📖 <b>Contenido:</b>\n<i>{node.content[:200]}{'...' if len(node.content) > 200 else ''}</i>\n\n"
+            f"📊 <b>Detalles:</b>\n"
+            f"   Tipo: {node.node_type.value.title()}\n"
+            f"   Capitulo: {node.chapter}\n"
+            f"   Estado: {status}\n"
+            f"   Arquetipo requerido: {archetype_text}\n"
+            f"   Costo: {node.cost_besitos} besitos\n"
+            f"   Opciones: {len(choices)}\n\n"
+            f"<i>Que desea hacer con este fragmento?</i>")
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[])
+
+    # Boton para agregar opciones si es de decision
+    if node.node_type == NodeType.DECISION:
+        keyboard.inline_keyboard.append([InlineKeyboardButton(
+            text="➕ Agregar opcion",
+            callback_data=f"add_choices_{node.id}"
+        )])
+
+    keyboard.inline_keyboard.extend([
+        [InlineKeyboardButton(
+            text=f"{'Desactivar' if node.is_active else 'Activar'}",
+            callback_data=f"toggle_node_{node.id}"
+        )],
+        [InlineKeyboardButton(
+            text="🗑️ Eliminar",
+            callback_data=f"delete_node_{node.id}"
+        )],
+        [InlineKeyboardButton(text="🔙 Volver", callback_data="list_nodes")]
+    ])
+
+    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("toggle_node_"), lambda cb: is_admin(cb.from_user.id))
+async def toggle_node(callback: CallbackQuery):
+    """Activa/desactiva un nodo - Voz de Lucien"""
+    try:
+        node_id = int(callback.data.replace("toggle_node_", ""))
+    except ValueError:
+        await callback.answer("ID invalido", show_alert=True)
+        return
+
+    story_service = StoryService()
+    node = story_service.get_node(node_id)
+
+    if not node:
+        await callback.answer("Fragmento no encontrado", show_alert=True)
+        return
+
+    story_service.update_node(node_id, is_active=not node.is_active)
+
+    status = "activado" if not node.is_active else "desactivado"
+    await callback.answer(f"Fragmento {status}")
+    await node_detail(callback)
+
+
+@router.callback_query(F.data.startswith("delete_node_"), lambda cb: is_admin(cb.from_user.id))
+async def delete_node_confirm(callback: CallbackQuery):
+    """Confirma eliminacion de nodo - Voz de Lucien"""
+    try:
+        node_id = int(callback.data.replace("delete_node_", ""))
+    except ValueError:
+        await callback.answer("ID invalido", show_alert=True)
+        return
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Si, eliminar", callback_data=f"confirm_delete_node_{node_id}")],
+        [InlineKeyboardButton(text="❌ Cancelar", callback_data=f"node_detail_{node_id}")]
+    ])
+
+    text = ("🎩 <b>Lucien:</b>\n\n"
+            "<i>Esta seguro de eliminar este fragmento?</i>\n\n"
+            "Esta accion no se puede deshacer. "
+            "Las opciones y progresos asociados tambien se perderan...")
+
+    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("confirm_delete_node_"), lambda cb: is_admin(cb.from_user.id))
+async def confirm_delete_node(callback: CallbackQuery):
+    """Elimina el nodo - Voz de Lucien"""
+    try:
+        node_id = int(callback.data.replace("confirm_delete_node_", ""))
+    except ValueError:
+        await callback.answer("ID invalido", show_alert=True)
+        return
+
+    story_service = StoryService()
+    success = story_service.delete_node(node_id)
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔙 Volver", callback_data="list_nodes")]
+    ])
+
+    if success:
+        text = ("🎩 <b>Lucien:</b>\n\n"
+                "<i>El fragmento ha sido eliminado.</i>")
+    else:
+        text = ("🎩 <b>Lucien:</b>\n\n"
+                "<i>No se pudo eliminar el fragmento.</i>")
+
+    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await callback.answer()
+
+
+# ==================== AGREGAR OPCIONES A NODO ====================
+
+@router.callback_query(F.data.startswith("add_choices_"), lambda cb: is_admin(cb.from_user.id))
+async def add_choices_start(callback: CallbackQuery, state: FSMContext):
+    """Inicia wizard para agregar opcion a nodo - Voz de Lucien"""
+    try:
+        node_id = int(callback.data.replace("add_choices_", ""))
+    except ValueError:
+        await callback.answer("ID invalido", show_alert=True)
+        return
+
+    story_service = StoryService()
+    node = story_service.get_node(node_id)
+
+    if not node:
+        await callback.answer("Fragmento no encontrado", show_alert=True)
+        return
+
+    await state.update_data(choice_node_id=node_id)
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="❌ Cancelar", callback_data=f"node_detail_{node_id}")]
+    ])
+
+    text = (f"🎩 <b>Lucien:</b>\n\n"
+            f"<i>Agregando opcion a: {node.title}</i>\n\n"
+            f"<b>Paso 1:</b> Texto de la opcion\n\n"
+            f"Escriba el texto que el visitante vera:\n"
+            f"<i>Ejemplo: Aceptar la invitacion</i>")
+
+    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await state.set_state(ChoiceWizardStates.waiting_text)
+    await callback.answer()
+
+
+@router.message(ChoiceWizardStates.waiting_text)
+async def process_choice_text(message: Message, state: FSMContext):
+    """Procesa texto de la opcion - Voz de Lucien"""
+    text = message.text.strip()
+    if len(text) < 3:
+        await message.answer("El texto debe tener al menos 3 caracteres.")
+        return
+
+    await state.update_data(choice_text=text)
+
+    story_service = StoryService()
+    nodes = story_service.get_all_nodes()
+
+    buttons = []
+    for node in nodes:
+        buttons.append([InlineKeyboardButton(
+            text=f"📖 {node.title[:35]}",
+            callback_data=f"choice_next_{node.id}"
+        )])
+
+    buttons.append([InlineKeyboardButton(text="🏁 Fin de historia", callback_data="choice_next_none")])
+    buttons.append([InlineKeyboardButton(text="❌ Cancelar", callback_data="admin_narrative")])
+
+    text_msg = ("🎩 <b>Lucien:</b>\n\n"
+                "<b>Paso 2:</b> Seleccionar siguiente fragmento\n\n"
+                "A que fragmento lleva esta opcion?")
+
+    await message.answer(text_msg, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons), parse_mode=ParseMode.HTML)
+    await state.set_state(ChoiceWizardStates.selecting_next_node)
+
+
+@router.callback_query(ChoiceWizardStates.selecting_next_node, F.data.startswith("choice_next_"))
+async def select_choice_next_node(callback: CallbackQuery, state: FSMContext):
+    """Selecciona el siguiente nodo - Voz de Lucien"""
+    next_node_id = None
+    if callback.data != "choice_next_none":
+        try:
+            next_node_id = int(callback.data.replace("choice_next_", ""))
+        except ValueError:
+            await callback.answer("ID invalido", show_alert=True)
+            return
+
+    await state.update_data(choice_next_node_id=next_node_id)
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🌸 Ninguno", callback_data="choice_points_none")],
+        [InlineKeyboardButton(text="🎭 Seductor", callback_data="choice_points_seductor")],
+        [InlineKeyboardButton(text="👁️ Observador", callback_data="choice_points_observer")],
+        [InlineKeyboardButton(text="💎 Devoto", callback_data="choice_points_devoto")],
+        [InlineKeyboardButton(text="🗺️ Explorador", callback_data="choice_points_explorador")],
+        [InlineKeyboardButton(text="🌑 Misterioso", callback_data="choice_points_misterioso")],
+        [InlineKeyboardButton(text="🔥 Intrepido", callback_data="choice_points_intrepido")],
+        [InlineKeyboardButton(text="❌ Cancelar", callback_data="admin_narrative")]
+    ])
+
+    text = ("🎩 <b>Lucien:</b>\n\n"
+            "<b>Paso 3:</b> Puntos de arquetipo\n\n"
+            "Esta opcion suma puntos a algun arquetipo?")
+
+    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await state.set_state(ChoiceWizardStates.waiting_archetype_points)
+    await callback.answer()
+
+
+@router.callback_query(ChoiceWizardStates.waiting_archetype_points, F.data.startswith("choice_points_"))
+async def select_choice_archetype_points(callback: CallbackQuery, state: FSMContext):
+    """Selecciona puntos de arquetipo - Voz de Lucien"""
+    archetype_map = {
+        "choice_points_none": None,
+        "choice_points_seductor": ArchetypeType.SEDUCTOR,
+        "choice_points_observer": ArchetypeType.OBSERVER,
+        "choice_points_devoto": ArchetypeType.DEVOTO,
+        "choice_points_explorador": ArchetypeType.EXPLORADOR,
+        "choice_points_misterioso": ArchetypeType.MISTERIOSO,
+        "choice_points_intrepido": ArchetypeType.INTREPIDO
+    }
+
+    selected_archetype = archetype_map.get(callback.data)
+    await state.update_data(choice_archetype=selected_archetype)
+
+    data = await state.get_data()
+    choice_text = data.get('choice_text', '')
+    next_node_id = data.get('choice_next_node_id')
+
+    next_node_text = "Fin de historia" if not next_node_id else f"Fragmento {next_node_id}"
+    archetype_text = "Ninguno" if not selected_archetype else selected_archetype.value.title()
+
+    text = (f"🎩 <b>Lucien:</b>\n\n"
+            f"<i>Confirme la opcion...</i>\n\n"
+            f"🎭 <b>Texto:</b> {choice_text}\n"
+            f"📖 <b>Lleva a:</b> {next_node_text}\n"
+            f"🌸 <b>Arquetipo:</b> {archetype_text}\n\n"
+            f"<i>Desea agregar esta opcion?</i>")
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Agregar opcion", callback_data="confirm_create_choice")],
+        [InlineKeyboardButton(text="❌ Cancelar", callback_data="admin_narrative")]
+    ])
+
+    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await state.set_state(ChoiceWizardStates.confirming)
+    await callback.answer()
+
+
+@router.callback_query(ChoiceWizardStates.confirming, F.data == "confirm_create_choice")
+async def confirm_create_choice(callback: CallbackQuery, state: FSMContext):
+    """Crea la opcion - Voz de Lucien"""
+    data = await state.get_data()
+    story_service = StoryService()
+
+    try:
+        # Calcular puntos (simplificado - asignamos 3 puntos al arquetipo seleccionado)
+        archetype_points = 3 if data.get('choice_archetype') else 0
+
+        choice = story_service.create_choice(
+            node_id=data.get('choice_node_id'),
+            text=data.get('choice_text'),
+            next_node_id=data.get('choice_next_node_id'),
+            archetype_points=archetype_points
+        )
+
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="➕ Agregar otra opcion", callback_data=f"add_choices_{data.get('choice_node_id')}")],
+            [InlineKeyboardButton(text="🔙 Volver", callback_data=f"node_detail_{data.get('choice_node_id')}")]
+        ])
+
+        text = ("🎩 <b>Lucien:</b>\n\n"
+                "<i>La opcion ha sido agregada...</i>")
+
+        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+        logger.info(f"Opcion agregada al nodo {data.get('choice_node_id')} por custodio {callback.from_user.id}")
+
+    except Exception as e:
+        logger.error(f"Error agregando opcion: {e}")
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_narrative")]
+        ])
+        text = ("🎩 <b>Lucien:</b>\n\n"
+                "<i>Hmm... algo inesperado ha ocurrido.</i>")
+        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+
+    await state.clear()
+    await callback.answer()
+
+
+# ==================== CREAR ARQUETIPO ====================
+
+@router.callback_query(F.data == "create_archetype", lambda cb: is_admin(cb.from_user.id))
+async def create_archetype_start(callback: CallbackQuery, state: FSMContext):
+    """Inicia wizard para crear arquetipo - Voz de Lucien"""
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🎭 El Seductor", callback_data="new_archetype_seductor")],
+        [InlineKeyboardButton(text="👁️ El Observador", callback_data="new_archetype_observer")],
+        [InlineKeyboardButton(text="💎 El Devoto", callback_data="new_archetype_devoto")],
+        [InlineKeyboardButton(text="🗺️ El Explorador", callback_data="new_archetype_explorador")],
+        [InlineKeyboardButton(text="🌑 El Misterioso", callback_data="new_archetype_misterioso")],
+        [InlineKeyboardButton(text="🔥 El Intrepido", callback_data="new_archetype_intrepido")],
+        [InlineKeyboardButton(text="❌ Cancelar", callback_data="manage_archetypes")]
+    ])
+
+    text = ("🎩 <b>Lucien:</b>\n\n"
+            "<i>Que arquetipo desea definir?</i>\n\n"
+            "Seleccione el tipo de arquetipo:")
+
+    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await state.set_state(ArchetypeWizardStates.selecting_type)
+    await callback.answer()
+
+
+@router.callback_query(ArchetypeWizardStates.selecting_type, F.data.startswith("new_archetype_"))
+async def select_new_archetype_type(callback: CallbackQuery, state: FSMContext):
+    """Selecciona tipo de arquetipo - Voz de Lucien"""
+    archetype_map = {
+        "new_archetype_seductor": ArchetypeType.SEDUCTOR,
+        "new_archetype_observer": ArchetypeType.OBSERVER,
+        "new_archetype_devoto": ArchetypeType.DEVOTO,
+        "new_archetype_explorador": ArchetypeType.EXPLORADOR,
+        "new_archetype_misterioso": ArchetypeType.MISTERIOSO,
+        "new_archetype_intrepido": ArchetypeType.INTREPIDO
+    }
+
+    archetype_type = archetype_map.get(callback.data)
+    if not archetype_type:
+        await callback.answer("Tipo no valido", show_alert=True)
+        return
+
+    # Verificar si ya existe
+    story_service = StoryService()
+    existing = story_service.get_archetype(archetype_type)
+    if existing:
+        await callback.answer("Este arquetipo ya esta definido", show_alert=True)
+        return
+
+    await state.update_data(archetype_type=archetype_type)
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="❌ Cancelar", callback_data="manage_archetypes")]
+    ])
+
+    text = (f"🎩 <b>Lucien:</b>\n\n"
+            f"<b>Definiendo:</b> {archetype_type.value.title()}\n\n"
+            f"<b>Paso 1:</b> Nombre del arquetipo\n\n"
+            f"Indique como se llamara este arquetipo:\n"
+            f"<i>Ejemplo: El Seductor</i>")
+
+    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await state.set_state(ArchetypeWizardStates.waiting_name)
+    await callback.answer()
+
+
+@router.message(ArchetypeWizardStates.waiting_name)
+async def process_archetype_name(message: Message, state: FSMContext):
+    """Procesa nombre del arquetipo - Voz de Lucien"""
+    name = message.text.strip()
+    if len(name) < 3:
+        await message.answer("El nombre debe tener al menos 3 caracteres.")
+        return
+
+    await state.update_data(archetype_name=name)
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="❌ Cancelar", callback_data="manage_archetypes")]
+    ])
+
+    text = ("🎩 <b>Lucien:</b>\n\n"
+            "<b>Paso 2:</b> Descripcion\n\n"
+            "Describa este arquetipo:\n"
+            "<i>Ejemplo: Quien busca el placer y la conquista...</i>")
+
+    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await state.set_state(ArchetypeWizardStates.waiting_description)
+
+
+@router.message(ArchetypeWizardStates.waiting_description)
+async def process_archetype_description(message: Message, state: FSMContext):
+    """Procesa descripcion del arquetipo - Voz de Lucien"""
+    description = message.text.strip()
+    if len(description) < 10:
+        await message.answer("La descripcion debe tener al menos 10 caracteres.")
+        return
+
+    await state.update_data(archetype_description=description)
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="📖 Omitir", callback_data="archetype_welcome_skip")],
+        [InlineKeyboardButton(text="❌ Cancelar", callback_data="manage_archetypes")]
+    ])
+
+    text = ("🎩 <b>Lucien:</b>\n\n"
+            "<b>Paso 3:</b> Mensaje de bienvenida (opcional)\n\n"
+            "Escriba el mensaje que recibira quien despierte este arquetipo:\n"
+            "<i>Ejemplo: Has despertado al Seductor...</i>")
+
+    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await state.set_state(ArchetypeWizardStates.waiting_welcome)
+
+
+@router.callback_query(ArchetypeWizardStates.waiting_welcome, F.data == "archetype_welcome_skip")
+async def skip_archetype_welcome(callback: CallbackQuery, state: FSMContext):
+    """Omite mensaje de bienvenida - Voz de Lucien"""
+    await state.update_data(archetype_welcome=None)
+    await show_archetype_confirmation(callback, state)
+
+
+@router.message(ArchetypeWizardStates.waiting_welcome)
+async def process_archetype_welcome(message: Message, state: FSMContext):
+    """Procesa mensaje de bienvenida - Voz de Lucien"""
+    welcome = message.text.strip()
+    await state.update_data(archetype_welcome=welcome)
+    await show_archetype_confirmation(message, state)
+
+
+async def show_archetype_confirmation(target, state: FSMContext):
+    """Muestra confirmacion del arquetipo - Voz de Lucien"""
+    data = await state.get_data()
+
+    archetype_type = data.get('archetype_type')
+    name = data.get('archetype_name')
+    description = data.get('archetype_description')
+    welcome = data.get('archetype_welcome', 'No especificado')
+
+    text = (f"🎩 <b>Lucien:</b>\n\n"
+            f"<i>Confirme el arquetipo...</i>\n\n"
+            f"🎭 <b>{name}</b> ({archetype_type.value.title()})\n\n"
+            f"📖 <b>Descripcion:</b>\n<i>{description[:100]}{'...' if len(description) > 100 else ''}</i>\n\n"
+            f"💬 <b>Bienvenida:</b>\n<i>{welcome[:100] if welcome else 'No especificado'}{'...' if welcome and len(welcome) > 100 else ''}</i>\n\n"
+            f"<i>Desea definir este arquetipo?</i>")
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Definir arquetipo", callback_data="confirm_create_archetype")],
+        [InlineKeyboardButton(text="❌ Cancelar", callback_data="manage_archetypes")]
+    ])
+
+    if isinstance(target, CallbackQuery):
+        await target.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    else:
+        await target.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+
+    await state.set_state(ArchetypeWizardStates.confirming)
+
+
+@router.callback_query(ArchetypeWizardStates.confirming, F.data == "confirm_create_archetype")
+async def confirm_create_archetype(callback: CallbackQuery, state: FSMContext):
+    """Crea el arquetipo - Voz de Lucien"""
+    data = await state.get_data()
+    story_service = StoryService()
+
+    try:
+        archetype = story_service.create_archetype(
+            archetype_type=data.get('archetype_type'),
+            name=data.get('archetype_name'),
+            description=data.get('archetype_description'),
+            welcome_message=data.get('archetype_welcome'),
+            created_by=callback.from_user.id
+        )
+
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔙 Volver", callback_data="manage_archetypes")]
+        ])
+
+        text = (f"🎩 <b>Lucien:</b>\n\n"
+                f"<i>El arquetipo ha sido definido...</i>\n\n"
+                f"🎭 <b>{archetype.name}</b>")
+
+        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+        logger.info(f"Arquetipo creado: {archetype.name} por custodio {callback.from_user.id}")
+
+    except Exception as e:
+        logger.error(f"Error definiendo arquetipo: {e}")
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔙 Volver", callback_data="manage_archetypes")]
+        ])
+        text = ("🎩 <b>Lucien:</b>\n\n"
+                "<i>Hmm... algo inesperado ha ocurrido.</i>")
+        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+
+    await state.clear()
+    await callback.answer()
+
+
+# ==================== VER DETALLE DE ARQUETIPO ====================
+
+@router.callback_query(F.data.startswith("archetype_detail_"), lambda cb: is_admin(cb.from_user.id))
+async def archetype_detail(callback: CallbackQuery):
+    """Muestra detalle de un arquetipo - Voz de Lucien"""
+    try:
+        archetype_value = callback.data.replace("archetype_detail_", "")
+        archetype_type = ArchetypeType(archetype_value)
+    except (ValueError, KeyError):
+        await callback.answer("Arquetipo no valido", show_alert=True)
+        return
+
+    story_service = StoryService()
+    archetype = story_service.get_archetype(archetype_type)
+
+    if not archetype:
+        await callback.answer("Arquetipo no encontrado", show_alert=True)
+        return
+
+    text = (f"🎩 <b>Lucien:</b>\n\n"
+            f"🎭 <b>{archetype.name}</b>\n"
+            f"Tipo: {archetype.archetype_type.value.title()}\n\n"
+            f"📖 <b>Descripcion:</b>\n<i>{archetype.description}</i>\n\n")
+
+    if archetype.welcome_message:
+        text += f"💬 <b>Mensaje de bienvenida:</b>\n<i>{archetype.welcome_message}</i>\n\n"
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔙 Volver", callback_data="manage_archetypes")]
+    ])
+
+    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await callback.answer()
+
+
+# ==================== CREAR LOGRO ====================
+
+@router.callback_query(F.data == "create_achievement", lambda cb: is_admin(cb.from_user.id))
+async def create_achievement_start(callback: CallbackQuery, state: FSMContext):
+    """Inicia wizard para crear logro - Voz de Lucien"""
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="❌ Cancelar", callback_data="manage_achievements")]
+    ])
+
+    text = ("🎩 <b>Lucien:</b>\n\n"
+            "<i>Vamos a crear un nuevo reconocimiento...</i>\n\n"
+            "<b>Paso 1:</b> Nombre del logro\n\n"
+            "Indique un nombre evocador:\n"
+            "<i>Ejemplo: El Primer Paso</i>")
+
+    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await state.set_state(ArchetypeWizardStates.waiting_name)  # Reusamos estados
+    await callback.answer()
+
+
+# ==================== LISTAR LOGROS ====================
+
+@router.callback_query(F.data == "list_achievements", lambda cb: is_admin(cb.from_user.id))
+async def list_achievements(callback: CallbackQuery):
+    """Lista todos los logros - Voz de Lucien"""
+    story_service = StoryService()
+    # TODO: Implementar metodo para obtener logros
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="➕ Crear reconocimiento", callback_data="create_achievement")],
+        [InlineKeyboardButton(text="🔙 Volver", callback_data="manage_achievements")]
+    ])
+
+    text = ("🎩 <b>Lucien:</b>\n\n"
+            "<i>Los reconocimientos disponibles...</i>\n\n"
+            "Aqui se mostraran los logros que los visitantes pueden obtener.")
+
+    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await callback.answer()
