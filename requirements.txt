@@ -1,0 +1,14 @@
+# 🎩 Lucien Bot - Dependencias
+
+# Framework del Bot
+aiogram==3.4.1
+
+# Base de Datos
+SQLAlchemy==2.0.28
+
+# Utilidades
+python-dotenv==1.0.1
+pytz==2024.1
+
+# Logging (incluido en stdlib, no requiere instalación)
+# asyncio (incluido en Python 3.7+)
