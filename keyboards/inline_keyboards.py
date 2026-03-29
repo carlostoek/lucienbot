@@ -246,6 +246,25 @@ def cancel_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
+def broadcast_back_keyboard(current_step: str) -> InlineKeyboardMarkup:
+    """Teclado con botón de regresar al paso anterior durante broadcast"""
+    back_steps = {
+        "waiting_text": ("admin_gamification", "❌ Cancelar"),
+        "waiting_attachment": ("attach_no", "🔙 Omitir adjunto"),
+        "waiting_attachment_decision": ("waiting_text", "🔙 Volver al texto"),
+        "selecting_reactions": ("reaction_no", "🔙 Sin reacciones"),
+        "waiting_reaction_decision": ("waiting_attachment_decision", "🔙 Volver"),
+        "waiting_protection": ("waiting_reaction_decision", "🔙 Volver"),
+        "confirming": ("waiting_protection", "🔙 Volver"),
+    }
+    
+    callback, text = back_steps.get(current_step, ("cancel", "❌ Cancelar"))
+    buttons = [
+        [InlineKeyboardButton(text=text, callback_data=callback)]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 def vip_management_keyboard() -> InlineKeyboardMarkup:
     """Menú de gestión VIP"""
     buttons = [

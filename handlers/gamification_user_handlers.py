@@ -245,45 +245,10 @@ async def handle_reaction(callback: CallbackQuery):
                 except Exception as e:
                     logger.warning(f"No se pudo actualizar conteo en mensaje: {e}")
         
-        # Notificar al usuario
-        await callback.bot.send_message(
-            chat_id=user.id,
-            text=f"""🎩 <b>Lucien:</b>
-
-<i>Diana ha notado su reacción...</i>
-
-{emoji} <b>¡Recibiste {besitos} besitos!</b>
-
-<i>Su atención es valiosa para nosotros.</i>""",
-            parse_mode="HTML"
-        )
-        
+        # Solo notificar via callback (sin mensaje privado)
         await callback.answer(f"¡+{besitos} besitos! 💋")
     else:
         await callback.answer("Ya reaccionaste a este mensaje", show_alert=True)
 
 
-# ==================== MIS MISIONES (Placeholder Fase 3) ====================
 
-@router.callback_query(F.data == "my_missions")
-async def my_missions(callback: CallbackQuery):
-    """Muestra las misiones del usuario (Fase 3)"""
-    await callback.message.edit_text(
-        LucienVoice.coming_soon(),
-        reply_markup=back_keyboard("back_to_main"),
-        parse_mode="HTML"
-    )
-    await callback.answer()
-
-
-# ==================== TIENDA (Placeholder Fase 4) ====================
-
-@router.callback_query(F.data == "shop")
-async def shop_menu(callback: CallbackQuery):
-    """Menú de la tienda (Fase 4)"""
-    await callback.message.edit_text(
-        LucienVoice.coming_soon(),
-        reply_markup=back_keyboard("back_to_main"),
-        parse_mode="HTML"
-    )
-    await callback.answer()

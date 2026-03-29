@@ -696,3 +696,138 @@ async def list_rewards(callback: CallbackQuery):
     
     await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
     await callback.answer()
+
+
+# ==================== VER DETALLE DE RECOMPENSA ====================
+
+@router.callback_query(F.data.startswith("reward_admin_detail_"), lambda cb: is_admin(cb.from_user.id))
+async def reward_admin_detail(callback: CallbackQuery):
+    """Muestra detalles de una recompensa"""
+    try:
+        reward_id = int(callback.data.replace("reward_admin_detail_", ""))
+    except ValueError:
+        await callback.answer("ID invalido", show_alert=True)
+        return
+    
+    reward_service = RewardService()
+    reward = reward_service.get_reward(reward_id)
+    
+    if not reward:
+        await callback.answer("Recompensa no encontrada", show_alert=True)
+        return
+    
+    status = "✅ Activo" if reward.is_active else "❌ Inactivo"
+    
+    # Contenido segun tipo
+    content_text = ""
+    if reward.reward_type.value == "besitos":
+        content_text = f"{reward.besito_amount} besitos"
+    elif reward.reward_type.value == "package" and reward.package:
+        content_text = f"Paquete: {reward.package.name}"
+    elif reward.reward_type.value == "vip_access" and reward.tariff:
+        content_text = f"VIP: {reward.tariff.name}"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text=f"{'Desactivar' if reward.is_active else 'Activar'}",
+            callback_data=f"toggle_reward_{reward_id}"
+        )],
+        [InlineKeyboardButton(
+            text="🗑️ Eliminar",
+            callback_data=f"delete_reward_{reward_id}"
+        )],
+        [InlineKeyboardButton(text="🔙 Volver", callback_data="list_rewards")]
+    ])
+    
+    await callback.message.edit_text(
+        f"""🎩 Lucien:
+
+🎁 {reward.name}
+
+📝 {reward.description or 'Sin descripcion'}
+
+📋 Informacion:
+   • Tipo: {reward.reward_type.value}
+   • Contenido: {content_text}
+   • Estado: {status}
+
+Que deseas hacer?""",
+        reply_markup=keyboard
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("toggle_reward_"), lambda cb: is_admin(cb.from_user.id))
+async def toggle_reward(callback: CallbackQuery):
+    """Activa/desactiva una recompensa"""
+    try:
+        reward_id = int(callback.data.replace("toggle_reward_", ""))
+    except ValueError:
+        await callback.answer("ID invalido", show_alert=True)
+        return
+    
+    reward_service = RewardService()
+    reward = reward_service.get_reward(reward_id)
+    
+    if not reward:
+        await callback.answer("Recompensa no encontrada", show_alert=True)
+        return
+    
+    reward_service.update_reward(reward_id, is_active=not reward.is_active)
+    
+    status = "activada" if not reward.is_active else "desactivada"
+    await callback.answer(f"Recompensa {status}")
+    await reward_admin_detail(callback)
+
+
+@router.callback_query(F.data.startswith("delete_reward_"), lambda cb: is_admin(cb.from_user.id))
+async def delete_reward_confirm(callback: CallbackQuery):
+    """Confirma eliminacion de recompensa"""
+    try:
+        reward_id = int(callback.data.replace("delete_reward_", ""))
+    except ValueError:
+        await callback.answer("ID invalido", show_alert=True)
+        return
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Si, eliminar", callback_data=f"confirm_delete_reward_{reward_id}")],
+        [InlineKeyboardButton(text="❌ Cancelar", callback_data=f"reward_admin_detail_{reward_id}")]
+    ])
+    
+    await callback.message.edit_text(
+        "🎩 Lucien:\n\n"
+        "Estas seguro de eliminar esta recompensa?\n\n"
+        "Esta accion no se puede deshacer.",
+        reply_markup=keyboard
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("confirm_delete_reward_"), lambda cb: is_admin(cb.from_user.id))
+async def confirm_delete_reward(callback: CallbackQuery):
+    """Elimina la recompensa"""
+    try:
+        reward_id = int(callback.data.replace("confirm_delete_reward_", ""))
+    except ValueError:
+        await callback.answer("ID invalido", show_alert=True)
+        return
+    
+    reward_service = RewardService()
+    success = reward_service.delete_reward(reward_id)
+    
+    if success:
+        await callback.message.edit_text(
+            "🎩 Lucien:\n\n"
+            "✅ Recompensa eliminada correctamente.",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🔙 Volver", callback_data="list_rewards")]
+            ])
+        )
+    else:
+        await callback.message.edit_text(
+            "Error al eliminar la recompensa.",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🔙 Volver", callback_data="list_rewards")]
+            ])
+        )
+    await callback.answer()

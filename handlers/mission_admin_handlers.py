@@ -395,3 +395,206 @@ async def list_missions(callback: CallbackQuery):
     
     await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
     await callback.answer()
+
+
+# ==================== VER DETALLE DE MISION ====================
+
+@router.callback_query(F.data.startswith("mission_admin_detail_"), lambda cb: is_admin(cb.from_user.id))
+async def mission_admin_detail(callback: CallbackQuery):
+    """Muestra detalles de una mision"""
+    try:
+        mission_id = int(callback.data.replace("mission_admin_detail_", ""))
+    except ValueError:
+        await callback.answer("ID invalido", show_alert=True)
+        return
+    
+    mission_service = MissionService()
+    mission = mission_service.get_mission(mission_id)
+    
+    if not mission:
+        await callback.answer("Mision no encontrada", show_alert=True)
+        return
+    
+    status = "✅ Activo" if mission.is_active else "❌ Inactivo"
+    freq_text = "Una vez" if mission.frequency.value == "one_time" else "Recurrente"
+    
+    reward_text = "Sin recompensa"
+    if mission.reward:
+        reward_text = f"{mission.reward.name} ({mission.reward.reward_type.value})"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text=f"{'Desactivar' if mission.is_active else 'Activar'}",
+            callback_data=f"toggle_mission_{mission_id}"
+        )],
+        [InlineKeyboardButton(
+            text="🗑️ Eliminar",
+            callback_data=f"delete_mission_{mission_id}"
+        )],
+        [InlineKeyboardButton(text="🔙 Volver", callback_data="list_missions")]
+    ])
+    
+    await callback.message.edit_text(
+        f"""🎩 Lucien:
+
+📋 {mission.name}
+
+📝 {mission.description or 'Sin descripcion'}
+
+📊 Informacion:
+   • Tipo: {mission.mission_type.value}
+   • Meta: {mission.target_value}
+   • Frecuencia: {freq_text}
+   • Estado: {status}
+
+🎁 Recompensa: {reward_text}
+
+Que deseas hacer?""",
+        reply_markup=keyboard
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("toggle_mission_"), lambda cb: is_admin(cb.from_user.id))
+async def toggle_mission(callback: CallbackQuery):
+    """Activa/desactiva una mision"""
+    try:
+        mission_id = int(callback.data.replace("toggle_mission_", ""))
+    except ValueError:
+        await callback.answer("ID invalido", show_alert=True)
+        return
+    
+    mission_service = MissionService()
+    mission = mission_service.get_mission(mission_id)
+    
+    if not mission:
+        await callback.answer("Mision no encontrada", show_alert=True)
+        return
+    
+    mission_service.update_mission(mission_id, is_active=not mission.is_active)
+    
+    status = "activada" if not mission.is_active else "desactivada"
+    await callback.answer(f"Mision {status}")
+    await mission_admin_detail(callback)
+
+
+@router.callback_query(F.data.startswith("delete_mission_"), lambda cb: is_admin(cb.from_user.id))
+async def delete_mission_confirm(callback: CallbackQuery):
+    """Confirma eliminacion de mision"""
+    try:
+        mission_id = int(callback.data.replace("delete_mission_", ""))
+    except ValueError:
+        await callback.answer("ID invalido", show_alert=True)
+        return
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Si, eliminar", callback_data=f"confirm_delete_mission_{mission_id}")],
+        [InlineKeyboardButton(text="❌ Cancelar", callback_data=f"mission_admin_detail_{mission_id}")]
+    ])
+    
+    await callback.message.edit_text(
+        "🎩 Lucien:\n\n"
+        "Estas seguro de eliminar esta mision?\n\n"
+        "Esta accion no se puede deshacer.",
+        reply_markup=keyboard
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("confirm_delete_mission_"), lambda cb: is_admin(cb.from_user.id))
+async def confirm_delete_mission(callback: CallbackQuery):
+    """Elimina la mision"""
+    try:
+        mission_id = int(callback.data.replace("confirm_delete_mission_", ""))
+    except ValueError:
+        await callback.answer("ID invalido", show_alert=True)
+        return
+    
+    mission_service = MissionService()
+    success = mission_service.delete_mission(mission_id)
+    
+    if success:
+        await callback.message.edit_text(
+            "🎩 Lucien:\n\n"
+            "✅ Mision eliminada correctamente.",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🔙 Volver", callback_data="list_missions")]
+            ])
+        )
+    else:
+        await callback.message.edit_text(
+            "Error al eliminar la mision.",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🔙 Volver", callback_data="list_missions")]
+            ])
+        )
+    await callback.answer()
+
+
+# ==================== ESTADISTICAS ====================
+
+@router.callback_query(F.data == "missions_stats", lambda cb: is_admin(cb.from_user.id))
+async def missions_stats(callback: CallbackQuery):
+    """Muestra estadisticas de misiones"""
+    mission_service = MissionService()
+    missions = mission_service.get_all_missions(active_only=False)
+    
+    total_missions = len(missions)
+    active_missions = sum(1 for m in missions if m.is_active)
+    
+    text = f"""🎩 Lucien:
+
+📊 Estadisticas de Misiones:
+
+📋 Misiones:
+   • Activas: {active_missions}
+   • Total: {total_missions}
+
+Selecciona una mision para ver estadisticas detalladas:"""
+    
+    buttons = []
+    for mission in missions:
+        if mission.is_active:
+            buttons.append([InlineKeyboardButton(
+                text=f"📊 {mission.name[:30]}",
+                callback_data=f"mission_stats_{mission.id}"
+            )])
+    
+    buttons.append([InlineKeyboardButton(text="🔙 Volver", callback_data="admin_missions")])
+    
+    await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("mission_stats_"), lambda cb: is_admin(cb.from_user.id))
+async def mission_detail_stats(callback: CallbackQuery):
+    """Muestra estadisticas detalladas de una mision"""
+    try:
+        mission_id = int(callback.data.replace("mission_stats_", ""))
+    except ValueError:
+        await callback.answer("ID invalido", show_alert=True)
+        return
+    
+    mission_service = MissionService()
+    stats = mission_service.get_mission_stats(mission_id)
+    
+    if not stats:
+        await callback.answer("Mision no encontrada", show_alert=True)
+        return
+    
+    await callback.message.edit_text(
+        f"""🎩 Lucien:
+
+📊 Estadisticas: {stats['mission_name']}
+
+📈 Progreso:
+   • Usuarios participando: {stats['total_users']}
+   • Completadas: {stats['completed']}
+   • En progreso: {stats['in_progress']}
+   • Tasa de completion: {stats['completion_rate']}%
+""",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔙 Volver", callback_data="missions_stats")]
+        ])
+    )
+    await callback.answer()

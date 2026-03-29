@@ -27,6 +27,13 @@ class PackageWizardStates(StatesGroup):
     confirming = State()
 
 
+# Estados para enviar paquete a usuario
+class SendPackageStates(StatesGroup):
+    selecting_package = State()
+    waiting_user_id = State()
+    confirming = State()
+
+
 # Función helper para verificar admin
 def is_admin(user_id: int) -> bool:
     return user_id in bot_config.ADMIN_IDS
@@ -47,6 +54,10 @@ async def manage_packages_menu(callback: CallbackQuery):
         [InlineKeyboardButton(
             text="➕ Crear nuevo paquete",
             callback_data="create_package"
+        )],
+        [InlineKeyboardButton(
+            text="📤 Enviar paquete a usuario",
+            callback_data="send_package_to_user"
         )],
         [InlineKeyboardButton(
             text="📋 Ver paquetes activos",
@@ -729,3 +740,183 @@ async def confirm_create_package(callback: CallbackQuery, state: FSMContext):
     
     await state.clear()
     await callback.answer()
+
+
+# ==================== ENVIAR PAQUETE A USUARIO (PRUEBA) ====================
+
+@router.callback_query(F.data == "send_package_to_user", lambda cb: is_admin(cb.from_user.id))
+async def send_package_to_user_start(callback: CallbackQuery, state: FSMContext):
+    """Inicia envio de paquete a usuario"""
+    package_service = PackageService()
+    packages = package_service.get_all_packages(active_only=True)
+    
+    if not packages:
+        await callback.message.edit_text(
+            """🎩 Lucien:
+
+No hay paquetes disponibles.
+
+Crea un paquete primero.""",
+            reply_markup=back_keyboard("manage_packages")
+        )
+        await callback.answer()
+        return
+    
+    buttons = []
+    for pkg in packages:
+        buttons.append([InlineKeyboardButton(
+            text=f"{pkg.name} ({pkg.file_count} archivos)",
+            callback_data=f"sendpkg_select_{pkg.id}"
+        )])
+    
+    buttons.append([InlineKeyboardButton(text="🔙 Volver", callback_data="manage_packages")])
+    
+    await callback.message.edit_text(
+        """🎩 Lucien:
+
+Enviar paquete a usuario...
+
+Selecciona el paquete:""",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons)
+    )
+    await state.set_state(SendPackageStates.selecting_package)
+    await callback.answer()
+
+
+@router.callback_query(SendPackageStates.selecting_package, F.data.startswith("sendpkg_select_"))
+async def select_package_to_send(callback: CallbackQuery, state: FSMContext):
+    """Selecciona paquete y pide ID de usuario"""
+    try:
+        package_id = int(callback.data.replace("sendpkg_select_", ""))
+    except ValueError:
+        await callback.answer("ID invalido", show_alert=True)
+        return
+    
+    package_service = PackageService()
+    package = package_service.get_package(package_id)
+    
+    if not package:
+        await callback.answer("Paquete no encontrado", show_alert=True)
+        return
+    
+    await state.update_data(package_id=package_id, package_name=package.name)
+    
+    await callback.message.edit_text(
+        f"""🎩 Lucien:
+
+Paquete seleccionado: {package.name}
+
+Indica el ID del usuario destino:
+
+Ejemplo: 123456789
+
+(Obtén el ID desde @userinfobot)""",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔙 Volver", callback_data="manage_packages")]
+        ])
+    )
+    await state.set_state(SendPackageStates.waiting_user_id)
+    await callback.answer()
+
+
+@router.message(SendPackageStates.waiting_user_id)
+async def process_user_id_for_package(message: Message, state: FSMContext, bot: Bot):
+    """Procesa ID de usuario y envia paquete"""
+    try:
+        user_id = int(message.text.strip())
+    except ValueError:
+        await message.answer("Por favor indica un ID de usuario valido (numeros solo).")
+        return
+    
+    data = await state.get_data()
+    package_id = data.get('package_id')
+    package_name = data.get('package_name')
+    
+    package_service = PackageService()
+    
+    # Enviar paquete
+    await message.answer(f"Enviando paquete '{package_name}' al usuario {user_id}...")
+    
+    success, result_msg = await package_service.deliver_package_to_user(
+        bot=bot,
+        user_id=user_id,
+        package_id=package_id
+    )
+    
+    if success:
+        await message.answer(
+            f"✅ Paquete enviado exitosamente!\n\n{result_msg}",
+            reply_markup=back_keyboard("manage_packages")
+        )
+    else:
+        await message.answer(
+            f"❌ Error al enviar: {result_msg}",
+            reply_markup=back_keyboard("manage_packages")
+        )
+    
+    await state.clear()
+
+
+# ==================== VER ARCHIVOS DE PAQUETE (CON PREVIEW) ====================
+
+@router.callback_query(F.data.startswith("view_package_files_"), lambda cb: is_admin(cb.from_user.id))
+async def view_package_files(callback: CallbackQuery, bot: Bot):
+    """Muestra los archivos de un paquete con preview"""
+    package_id = int(callback.data.replace("view_package_files_", ""))
+    
+    package_service = PackageService()
+    package = package_service.get_package(package_id)
+    files = package_service.get_package_files(package_id)
+    
+    if not files:
+        await callback.answer("El paquete no tiene archivos", show_alert=True)
+        return
+    
+    # Enviar mensaje de introduccion
+    await callback.message.edit_text(
+        f"""🎩 Lucien:
+
+Mostrando archivos del paquete '{package.name}'...
+
+Total: {len(files)} archivo(s)
+
+Enviando previews...""",
+        reply_markup=back_keyboard(f"package_detail_{package_id}")
+    )
+    await callback.answer()
+    
+    # Enviar cada archivo como preview
+    for i, file_entry in enumerate(files[:10], 1):  # Max 10 previews
+        try:
+            caption = f"{i}/{min(len(files), 10)}: {file_entry.file_name or file_entry.file_type}"
+            
+            if file_entry.file_type == "photo":
+                await bot.send_photo(
+                    chat_id=callback.from_user.id,
+                    photo=file_entry.file_id,
+                    caption=caption
+                )
+            elif file_entry.file_type == "video":
+                await bot.send_video(
+                    chat_id=callback.from_user.id,
+                    video=file_entry.file_id,
+                    caption=caption
+                )
+            elif file_entry.file_type == "animation":
+                await bot.send_animation(
+                    chat_id=callback.from_user.id,
+                    animation=file_entry.file_id,
+                    caption=caption
+                )
+            else:  # document y otros
+                await bot.send_document(
+                    chat_id=callback.from_user.id,
+                    document=file_entry.file_id,
+                    caption=caption
+                )
+        except Exception as e:
+            logger.error(f"Error enviando preview de archivo {file_entry.id}: {e}")
+            await bot.send_message(
+                chat_id=callback.from_user.id,
+                text=f"❌ Error al mostrar archivo {i}"
+            )
