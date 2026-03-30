@@ -9,6 +9,9 @@ aiogram==3.4.1
 # SQLAlchemy ORM para base de datos
 SQLAlchemy==2.0.28
 
+# Alembic migration management
+alembic==1.12.1
+
 # PostgreSQL (para producción en Railway)
 # Descomentar si se usa PostgreSQL:
 # psycopg2-binary==2.9.9
