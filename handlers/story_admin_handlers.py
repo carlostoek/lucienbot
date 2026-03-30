@@ -13,7 +13,7 @@ from aiogram.enums import ParseMode
 from config.settings import bot_config
 from services.story_service import StoryService
 from models.models import NodeType, ArchetypeType
-import json
+from utils.helpers import is_admin
 import logging
 
 logger = logging.getLogger(__name__)
@@ -47,8 +47,11 @@ class ArchetypeWizardStates(StatesGroup):
     confirming = State()
 
 
-def is_admin(user_id: int) -> bool:
-    return user_id in bot_config.ADMIN_IDS
+class AchievementWizardStates(StatesGroup):
+    waiting_name = State()
+    waiting_description = State()
+    waiting_icon = State()
+    confirming = State()
 
 
 # ==================== MENU PRINCIPAL ====================
@@ -814,14 +817,12 @@ async def confirm_create_choice(callback: CallbackQuery, state: FSMContext):
     story_service = StoryService()
 
     try:
-        # Calcular puntos (simplificado - asignamos 3 puntos al arquetipo seleccionado)
-        archetype_points = 3 if data.get('choice_archetype') else 0
-
         choice = story_service.create_choice(
             node_id=data.get('choice_node_id'),
             text=data.get('choice_text'),
             next_node_id=data.get('choice_next_node_id'),
-            archetype_points=archetype_points
+            choice_archetype=data.get('choice_archetype'),
+            archetype_points=data.get('choice_archetype') and 3 or 0
         )
 
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
@@ -1094,7 +1095,105 @@ async def create_achievement_start(callback: CallbackQuery, state: FSMContext):
             "<i>Ejemplo: El Primer Paso</i>")
 
     await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
-    await state.set_state(ArchetypeWizardStates.waiting_name)  # Reusamos estados
+    await state.set_state(AchievementWizardStates.waiting_name)
+    await callback.answer()
+
+
+@router.message(AchievementWizardStates.waiting_name)
+async def achievement_name_input(message: Message, state: FSMContext):
+    """Recibe nombre del logro"""
+    await state.update_data(achievement_name=message.text.strip())
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="❌ Cancelar", callback_data="manage_achievements")]
+    ])
+
+    text = ("🎩 <b>Lucien:</b>\n\n"
+            "<b>Paso 2:</b> Descripcion\n\n"
+            "Describa este reconocimiento:\n"
+            "<i>Ejemplo: Completa tu primer fragmento de historia</i>")
+
+    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await state.set_state(AchievementWizardStates.waiting_description)
+
+
+@router.message(AchievementWizardStates.waiting_description)
+async def achievement_description_input(message: Message, state: FSMContext):
+    """Recibe descripcion del logro"""
+    await state.update_data(achievement_description=message.text.strip())
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="❌ Cancelar", callback_data="manage_achievements")]
+    ])
+
+    text = ("🎩 <b>Lucien:</b>\n\n"
+            "<b>Paso 3:</b> Icono\n\n"
+            "Envie un emoji para este reconocimiento:\n"
+            "<i>Ejemplo: 🌹</i>")
+
+    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await state.set_state(AchievementWizardStates.waiting_icon)
+
+
+@router.message(AchievementWizardStates.waiting_icon)
+async def achievement_icon_input(message: Message, state: FSMContext):
+    """Recibe icono y pide confirmacion"""
+    icon = message.text.strip()[:10]
+    await state.update_data(achievement_icon=icon)
+
+    data = await state.get_data()
+    name = data.get('achievement_name', '')
+    desc = data.get('achievement_description', '')
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Crear reconocimiento", callback_data="confirm_create_achievement")],
+        [InlineKeyboardButton(text="❌ Cancelar", callback_data="manage_achievements")]
+    ])
+
+    text = (f"🎩 <b>Lucien:</b>\n\n"
+            f"<i>Confirme el reconocimiento...</i>\n\n"
+            f"{icon} <b>{name}</b>\n"
+            f"_{desc}_")
+
+    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await state.set_state(AchievementWizardStates.confirming)
+
+
+@router.callback_query(AchievementWizardStates.confirming, F.data == "confirm_create_achievement")
+async def confirm_create_achievement(callback: CallbackQuery, state: FSMContext):
+    """Crea el logro"""
+    data = await state.get_data()
+    story_service = StoryService()
+
+    try:
+        achievement = story_service.create_achievement(
+            name=data.get('achievement_name'),
+            description=data.get('achievement_description'),
+            icon=data.get('achievement_icon', '🏆'),
+            created_by=callback.from_user.id
+        )
+
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔙 Volver", callback_data="manage_achievements")]
+        ])
+
+        text = (f"🎩 <b>Lucien:</b>\n\n"
+                f"<i>El reconocimiento ha sido creado...</i>\n\n"
+                f"{achievement.icon} <b>{achievement.name}</b>")
+
+        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+        logger.info(f"Logro creado: {achievement.name} por custodio {callback.from_user.id}")
+
+    except Exception as e:
+        logger.error(f"Error creando logro: {e}")
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔙 Volver", callback_data="manage_achievements")]
+        ])
+        text = ("🎩 <b>Lucien:</b>\n\n"
+                "<i>Hmm... algo inesperado ha ocurrido.</i>")
+        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+
+    await state.clear()
     await callback.answer()
 
 
@@ -1104,16 +1203,25 @@ async def create_achievement_start(callback: CallbackQuery, state: FSMContext):
 async def list_achievements(callback: CallbackQuery):
     """Lista todos los logros - Voz de Lucien"""
     story_service = StoryService()
-    # TODO: Implementar metodo para obtener logros
+    achievements = story_service.get_all_achievements()
+
+    if achievements:
+        lines = []
+        for ach in achievements:
+            status = "✅" if ach.is_active else "❌"
+            lines.append(f"{status} {ach.icon} <b>{ach.name}</b>\n   _{ach.description[:60]}_")
+        achievements_text = "\n\n".join(lines)
+    else:
+        achievements_text = "<i>Aun no hay reconocimientos definidos...</i>"
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="➕ Crear reconocimiento", callback_data="create_achievement")],
         [InlineKeyboardButton(text="🔙 Volver", callback_data="manage_achievements")]
     ])
 
-    text = ("🎩 <b>Lucien:</b>\n\n"
-            "<i>Los reconocimientos disponibles...</i>\n\n"
-            "Aqui se mostraran los logros que los visitantes pueden obtener.")
+    text = (f"🎩 <b>Lucien:</b>\n\n"
+            f"<i>Los reconocimientos disponibles...</i>\n\n"
+            f"{achievements_text}")
 
     await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
     await callback.answer()

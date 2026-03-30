@@ -4,7 +4,7 @@ Servicio de Promociones - Lucien Bot
 Gestiona promociones comerciales con precio en dinero real (MXN)
 y el sistema de "Me Interesa" para notificar a administradores.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, and_
@@ -22,7 +22,14 @@ class PromotionService:
     """Servicio para gestion de promociones y sistema 'Me Interesa'"""
 
     def __init__(self, db: Session = None):
+        self._owns_session = db is None
         self.db = db or SessionLocal()
+
+    def close(self):
+        """Cierra la sesion si fue creada por este servicio"""
+        if self._owns_session and self.db:
+            self.db.close()
+            self.db = None
 
     # ==================== PROMOCIONES ====================
 
@@ -71,7 +78,7 @@ class PromotionService:
 
     def get_available_promotions(self) -> List[Promotion]:
         """Obtiene promociones disponibles para los usuarios"""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         return self.db.query(Promotion).filter(
             Promotion.is_active == True,
             Promotion.status == PromotionStatus.ACTIVE,
@@ -124,7 +131,7 @@ class PromotionService:
 
         # Si no es permanente, verificar si expiro el bloqueo
         if not blocked.is_permanent and blocked.expires_at:
-            if datetime.utcnow() > blocked.expires_at:
+            if datetime.now(timezone.utc) > blocked.expires_at:
                 # Desbloquear automaticamente
                 self.db.delete(blocked)
                 self.db.commit()
@@ -226,7 +233,7 @@ class PromotionService:
             return False
 
         interest.status = InterestStatus.ATTENDED
-        interest.attended_at = datetime.utcnow()
+        interest.attended_at = datetime.now(timezone.utc)
         interest.attended_by = admin_id
         self.db.commit()
 
@@ -261,7 +268,7 @@ class PromotionService:
             existing.is_permanent = is_permanent
             existing.expires_at = expires_at
             existing.blocked_by = blocked_by
-            existing.blocked_at = datetime.utcnow()
+            existing.blocked_at = datetime.now(timezone.utc)
             self.db.commit()
             logger.info(f"Bloqueo actualizado para usuario {user_id}")
             return existing
@@ -356,6 +363,5 @@ class PromotionService:
         ).order_by(desc(PromotionInterest.created_at)).all()
 
     def __del__(self):
-        """Cierra la sesion de base de datos"""
-        if hasattr(self, 'db'):
-            self.db.close()
+        """Cierra la sesion de base de datos (fallback)"""
+        self.close()

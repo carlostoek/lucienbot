@@ -1,7 +1,7 @@
 """
 Modelos de datos - Lucien Bot
 """
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, BigInteger, Text, Enum
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, BigInteger, Text, Enum, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from models.database import Base
@@ -450,9 +450,9 @@ class Mission(Base):
         if not self.is_active:
             return False
         
-        from datetime import datetime
-        now = datetime.utcnow()
-        
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+
         if self.start_date and now < self.start_date:
             return False
         if self.end_date and now > self.end_date:
@@ -706,8 +706,8 @@ class Promotion(Base):
         if self.status != PromotionStatus.ACTIVE:
             return False
 
-        from datetime import datetime
-        now = datetime.utcnow()
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
 
         if self.start_date and now < self.start_date:
             return False
@@ -754,7 +754,7 @@ class PromotionInterest(Base):
 
     # Constraint único: un usuario solo puede expresar interés una vez por promoción
     __table_args__ = (
-        # Se manejará a nivel de aplicación
+        UniqueConstraint('user_id', 'promotion_id', name='uq_user_promotion_interest'),
     )
 
 
@@ -852,6 +852,7 @@ class StoryChoice(Base):
     next_node_id = Column(Integer, ForeignKey("story_nodes.id"), nullable=True)  # None = fin
 
     # Efecto en el arquetipo
+    choice_archetype = Column(Enum(ArchetypeType), nullable=True)  # Arquetipo al que suman los puntos
     archetype_points = Column(Integer, default=0)  # Puntos que suma al arquetipo
 
     # Costo adicional
@@ -941,6 +942,7 @@ class StoryAchievement(Base):
     __tablename__ = "story_achievements"
 
     id = Column(Integer, primary_key=True, index=True)
+    icon = Column(String(10), default="🏆")
     name = Column(String(200), nullable=False)
     description = Column(Text, nullable=False)
 

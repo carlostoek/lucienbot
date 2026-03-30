@@ -4,7 +4,7 @@ Servicio de Narrativa - Lucien Bot
 Gestion de la historia interactiva, arquetipos y progreso de usuarios.
 Con la voz caracteristica de Lucien.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List, Dict
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
@@ -27,8 +27,15 @@ class StoryService:
     """Servicio para gestion de narrativa interactiva y arquetipos"""
 
     def __init__(self, db: Session = None):
+        self._owns_session = db is None
         self.db = db or SessionLocal()
         self.besito_service = BesitoService(self.db)
+
+    def close(self):
+        """Cierra la sesion si fue creada por este servicio"""
+        if self._owns_session and self.db:
+            self.db.close()
+            self.db = None
 
     # ==================== NODOS DE HISTORIA ====================
 
@@ -106,12 +113,14 @@ class StoryService:
     # ==================== OPCIONES/DECISIONES ====================
 
     def create_choice(self, node_id: int, text: str, next_node_id: int = None,
+                      choice_archetype: ArchetypeType = None,
                       archetype_points: int = 0, additional_cost: int = 0) -> StoryChoice:
         """Crea una opcion de decision para un nodo"""
         choice = StoryChoice(
             node_id=node_id,
             text=text,
             next_node_id=next_node_id,
+            choice_archetype=choice_archetype,
             archetype_points=archetype_points,
             additional_cost=additional_cost
         )
@@ -242,12 +251,12 @@ class StoryService:
         if choice_id:
             choice = self.get_choice(choice_id)
             if choice and choice.archetype_points > 0:
-                self._add_archetype_points(progress, choice.archetype_points)
+                self._add_archetype_points(progress, choice)
 
         # Actualizar progreso
         progress.current_node_id = node_id
         progress.current_chapter = node.chapter
-        progress.last_interaction = datetime.utcnow()
+        progress.last_interaction = datetime.now(timezone.utc)
 
         # Agregar a nodos visitados
         visited = json.loads(progress.visited_nodes)
@@ -257,7 +266,7 @@ class StoryService:
 
         # Verificar si es nodo final
         if node.node_type == NodeType.ENDING:
-            progress.completed_at = datetime.utcnow()
+            progress.completed_at = datetime.now(timezone.utc)
             # Asignar arquetipo si no tiene
             if not progress.archetype:
                 progress.archetype = progress.get_dominant_archetype()
@@ -270,18 +279,16 @@ class StoryService:
 
         return True, None, progress
 
-    def _add_archetype_points(self, progress: UserStoryProgress, points: int):
-        """Agrega puntos al arquetipo dominante actual"""
-        if not progress.archetype:
-            # Si no tiene arquetipo asignado, distribuir equitativamente
-            # o guardar para asignacion posterior
+    def _add_archetype_points(self, progress: UserStoryProgress, choice: StoryChoice):
+        """Agrega puntos al arquetipo correspondiente de la eleccion"""
+        if not choice.choice_archetype:
+            # Si la opcion no define arquetipo, no sumar puntos
             return
 
-        # Sumar puntos al arquetipo actual
-        archetype_field = f"{progress.archetype.value}_points"
+        archetype_field = f"{choice.choice_archetype.value}_points"
         if hasattr(progress, archetype_field):
             current = getattr(progress, archetype_field)
-            setattr(progress, archetype_field, current + points)
+            setattr(progress, archetype_field, current + choice.archetype_points)
             self.db.commit()
 
     def _check_achievements(self, user_id: int, progress: UserStoryProgress):
@@ -398,6 +405,7 @@ class StoryService:
     # ==================== LOGROS ====================
 
     def create_achievement(self, name: str, description: str,
+                           icon: str = "🏆",
                            required_node_id: int = None,
                            required_archetype: ArchetypeType = None,
                            required_chapter: int = None,
@@ -408,6 +416,7 @@ class StoryService:
         achievement = StoryAchievement(
             name=name,
             description=description,
+            icon=icon,
             required_node_id=required_node_id,
             required_archetype=required_archetype,
             required_chapter=required_chapter,
@@ -421,6 +430,13 @@ class StoryService:
         self.db.refresh(achievement)
         logger.info(f"Logro creado: {name}")
         return achievement
+
+    def get_all_achievements(self, active_only: bool = True) -> List[StoryAchievement]:
+        """Obtiene todos los logros disponibles"""
+        query = self.db.query(StoryAchievement)
+        if active_only:
+            query = query.filter(StoryAchievement.is_active == True)
+        return query.order_by(desc(StoryAchievement.created_at)).all()
 
     def get_user_achievements(self, user_id: int) -> List[UserStoryAchievement]:
         """Obtiene los logros de un usuario"""
@@ -526,6 +542,5 @@ class StoryService:
         }
 
     def __del__(self):
-        """Cierra la sesion de base de datos"""
-        if hasattr(self, 'db'):
-            self.db.close()
+        """Cierra la sesion de base de datos (fallback)"""
+        self.close()

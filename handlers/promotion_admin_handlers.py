@@ -13,6 +13,7 @@ from config.settings import bot_config
 from services.promotion_service import PromotionService
 from services.package_service import PackageService
 from models.models import PromotionStatus, InterestStatus
+from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
@@ -226,8 +227,6 @@ async def promotion_no_dates(callback: CallbackQuery, state: FSMContext):
 @router.message(PromotionWizardStates.waiting_dates)
 async def process_promotion_dates(message: Message, state: FSMContext):
     """Procesa fechas de vigencia - Voz de Lucien"""
-    from datetime import datetime
-
     text = message.text.strip()
     start_date = None
     end_date = None
