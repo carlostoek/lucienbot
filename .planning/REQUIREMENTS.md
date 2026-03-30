@@ -78,16 +78,16 @@ Deferred to future release. Tracked but not in current roadmap.
 
 ### Infrastructure
 
-- **BACK-01**: Sistema de backup automático de base de datos
+- [x] **BACK-01**: Sistema de backup automático de base de datos ✓ — [a3703a6]
 - **BACK-02**: Restauración desde backup funcional
 - **SCHED-01**: Job queue persistente para scheduler (取代 polling 30s)
-- **SCHED-02**: Verificación de suscripciones expiradas al iniciar bot
+- [x] **SCHED-02**: Verificación de suscripciones expiradas al iniciar bot ✓ — [2266d56]
 
 ### Security & Hardening
 
-- **SEC-01**: Rate limiting por usuario en handlers principales
-- **SEC-02**: FSM persistente (RedisStorage) para no perder estado en reinicios
-- **SEC-03**: Resolución de race condition en token redemption (SELECT FOR UPDATE)
+- [x] **SEC-01**: Rate limiting por usuario en handlers principales ✓ — [43b523c]
+- [x] **SEC-02**: FSM persistente (RedisStorage) para no perder estado en reinicios ✓ — [144364a]
+- [x] **SEC-03**: Resolución de race condition en token redemption (SELECT FOR UPDATE) ✓ — [2266d56]
 
 ### Analytics
 

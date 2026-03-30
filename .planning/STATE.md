@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to plan
-last_updated: "2026-03-30T19:22:29.791Z"
+status: Executing Phase 9
+last_updated: "2026-03-30T21:10:00.000Z"
 progress:
   total_phases: 10
-  completed_phases: 2
-  total_plans: 1
-  completed_plans: 2
+  completed_phases: 1
+  total_plans: 3
+  completed_plans: 3
 ---
 
 # State: Lucien Bot
@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Crear una experiencia premium y gamificada que incentiva el compromiso de la comunidad con Diana a través de un sistema de recompensas, acceso exclusivo VIP y narrativa inmersiva.
-**Current focus:** Phase 9 — Polish & Hardening (context gathered)
+**Current focus:** Phase 9 — polish-hardening (plan 01 complete)
 
 ## Milestone
 
@@ -42,11 +42,11 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 | 7: VIP Invite Links Dinámicos | ✓ Complete | d66b8b7 |
 | 07.1: Integrar completamente sistema de migraciones alembic | ✓ Complete | 3 commits, 2 revisions |
 | 8: Testing & Technical Debt | ✓ Complete | 2266d56 |
-| 9: Polish & Hardening | 📋 Context gathered | 1aeecf9 |
+| 9: Polish & Hardening | 🚧 Plan 01/03 complete | 43b523c, 144364a, a3703a6 |
 
 ## Current Phase
 
-**Phase 9: Polish & Hardening** — Context gathered, ready to plan
+**Phase 9: Polish & Hardening** — Plan 01 complete (3/3 tasks), 2 more plans remaining
 
 ## Execution Log
 
@@ -56,10 +56,11 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 | 2026-03-30 | 7 | VIP invite links completados — commit d66b8b7 |
 | 2026-03-30 | 07.1 | Alembic migration system fully integrated — commits 2c63b2c, a9a6ccf, 37d946f |
 | 2026-03-30 | 8 | Phase 8 executed — testing infrastructure, 80+ tests, technical debt fixes — commit 2266d56 |
+| 2026-03-30 | 9 | Phase 9 Plan 01 complete — rate limiter, RedisStorage FSM, backup script — commits 43b523c, 144364a, a3703a6 |
 
 ## What's Next
 
-→ `/gsd:plan-phase 9` — Polish & Hardening — Ready to plan
+→ `/gsd:plan-phase 9` — Polish & Hardening — Plan 01 complete, plans 02 and 03 remaining
 
 ### Quick Tasks Completed
 
@@ -72,6 +73,8 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-03-30 | RedisStorage preferred for FSM persistence | Redis already needed for production deployment |
+| 2026-03-30 | In-memory sliding window rate limiter | No external deps needed for single-instance deployment |
 | 2026-03-29 | Invites dinámicos con member_limit=1 | Prevenir uso compartido de links |
 | 2026-03-29 | Fallback a link estático | Resiliencia si API de Telegram falla |
 | ~2025 | aiogram 3.x | v4 en desarrollo, no migrar aún |

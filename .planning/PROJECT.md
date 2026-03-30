@@ -24,6 +24,9 @@ Crear una experiencia premium y gamificada que incentiva el compromiso de la com
 - ✓ **Infraestructura de Testing** — Tests unitarios e integración con pytest, cobertura 70%, fixtures completos — Fase 8
 - ✓ **Race Condition Protection** — SELECT FOR UPDATE en token redemption y operaciones de balance — Fase 8
 - ✓ **Session Management** — Context managers reemplazan __del__, startup check para suscripciones expiradas — Fase 8
+- ✓ **Rate Limiting (SEC-01)** — In-memory sliding window rate limiter, blocks after 5 actions per 60s — Fase 9
+- ✓ **FSM Persistente (SEC-02)** — RedisStorage con graceful MemoryStorage fallback — Fase 9
+- ✓ **Backup Automatizado (BACK-01)** — Script para SQLite y PostgreSQL con retention cleanup — Fase 9
 
 ### Active
 
@@ -33,7 +36,7 @@ Crear una experiencia premium y gamificada que incentiva el compromiso de la com
 
 - **App móvil nativa** — El bot es la plataforma principal, no hay planes de app
 - **Multi-idioma** — Todos los mensajes en español únicamente
-- **Copias de seguridad automáticas** — Database backup manual por ahora
+- **Copias de seguridad automáticas** — ✓ Resuelto en Fase 9 (scripts/backup_db.py)
 - **Webhooks** — Long polling es suficiente para la escala actual
 
 ## Context
@@ -71,7 +74,8 @@ Crear una experiencia premium y gamificada que incentiva el compromiso de la com
 |----------|-----------|---------|
 | aiogram 3.x (no v4) | v4 en desarrollo, rompería todo | ✓ Good |
 | SQLite → PostgreSQL en Railway | SQLite no escala con writes concurrentes | ✓ Good |
-| FSM con MemoryStorage | Simple, suficiente para el uso actual | ⚠️ Revisit (perdida de estado en reinicios) |
+| RedisStorage for FSM persistence | Redis already needed for production, RedisStorage available in aiogram | ✓ Good |
+| In-memory sliding window rate limiter | No external deps needed for single-instance deployment | ✓ Good |
 | Invite links estáticos para VIP | Simplicidad operativa | ⚠️ Revisit (limitación: un link compartido = varios usan) |
 | Scheduler con polling 30s | Simple de implementar | ⚠️ Revisit (puede perder expiraciones) |
 | python-dotenv para config | Simple, sin dependencias extra | ✓ Good |

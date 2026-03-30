@@ -1,7 +1,7 @@
 # Roadmap: Lucien Bot
 
 **Created:** 2026-03-30
-**Phases completed:** 8 of 10
+**Phases completed:** 8.5 of 10 (Phase 9 in progress)
 **Milestone:** v1.0 — Core bot functionality
 
 ## Summary
@@ -128,12 +128,13 @@
 ### Phase 9: Polish & Hardening
 **Goal:** Rate limiting, FSM persistente, backups y analytics
 **Requirements:** SEC-01, SEC-02, BACK-01, SCHED-01, ANLY-01, ANLY-02
-**Status:** In Progress (2 plans)
-**Plans:** 2 plans
+**Status:** In Progress (1/3 plans complete)
+**Plans:** 3 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — Rate limiter middleware, Redis FSM + fallback, backup script (wave 1)
+- [x] 09-01-PLAN.md — Rate limiter middleware, Redis FSM + fallback, backup script (wave 1) — commits 43b523c, 144364a, a3703a6
 - [ ] 09-02-PLAN.md — Analytics service + /analytics/export handlers, APScheduler migration (wave 2)
+- [ ] 09-03-PLAN.md — TBD (wave 3)
 
 **Success criteria:**
 1. Rate limiting por usuario en handlers principales
