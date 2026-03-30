@@ -26,23 +26,15 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 | 4: Gamificación | ✓ Complete | Fase 4 en git |
 | 5: Misiones | ✓ Complete | Fase 5 en git |
 | 6: Tienda + Promociones + Narrativa | ✓ Complete | Fase 6 en git |
-| 7: VIP Invite Links Dinámicos | 🔄 In Progress | Cambios sin commit |
+| 7: VIP Invite Links Dinámicos | ✓ Complete | d66b8b7 |
 | 8: Testing & Technical Debt | ⏳ Pending | — |
 | 9: Polish & Hardening | ⏳ Pending | — |
 
 ## Current Phase
 
-**Phase 7: VIP Invite Links Dinámicos**
-
-Uncommitted changes in:
-- `handlers/common_handlers.py` — genera invite link con `create_chat_invite_link(member_limit=1)`
-- `models/models.py` — agrega campo `invite_link` al modelo Channel
-- `services/vip_service.py` — agrega método `get_vip_channel()`
+**Phase 7: VIP Invite Links Dinámicos** — ✓ Complete (d66b8b7)
 
 Todo:
-- [ ] Commit cambios actuales
-- [ ] Tests para el nuevo flujo
-- [ ] Verificar que fallback a link estático funciona
 - [ ] Actualizar REQUIREMENTS.md (VIP-07 → Complete)
 
 ## Blockers
@@ -53,6 +45,12 @@ Todo:
 
 After Phase 7:
 → `/gsd:plan-phase 8` — Testing & Technical Debt
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260330-bpj | Agregar columna invite_link a Channel via migración Alembic | 2026-03-30 | d66b8b7 | [260330-bpj-agregar-columna-invite-link-a-channel-vi](./quick/260330-bpj-agregar-columna-invite-link-a-channel-vi/) |
 
 ## Decision Log
 
@@ -68,7 +66,7 @@ After Phase 7:
 | Date | Phase | Action |
 |------|-------|--------|
 | 2026-03-30 | — | GSD new-project inicializado (map-codebase completado, docs generados) |
-| 2026-03-30 | 7 | Cambios VIP invite links en progreso (sin commit) |
+| 2026-03-30 | 7 | VIP invite links completados — commit d66b8b7 |
 
 ## Workflow Config
 
