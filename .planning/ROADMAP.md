@@ -15,7 +15,7 @@
 | 5 | Misiones | Misiones, progreso, recompensas | MISS-01, MISS-02, MISS-03, MISS-04, ADMIN-03 | Visitantes completan misiones y reciben recompensas |
 | 6 | Tienda + Promociones + Narrativa | Compra de paquetes, códigos, historias interactivas | STOR-01–04, PROM-01–03, NARR-01–04, ADMIN-04, ADMIN-05 | Store, promociones y narrativa funcionando |
 | 7 | **VIP Invite Links Dinámicos** ✓ | Links de invitación de un solo uso para canal VIP | VIP-07 | Un token = un link de un solo uso generado dinámicamente |
-| 07.1 | **Integrar Alembic** ✓ | Sistema de migraciones Alembic reemplazar create_all() | — | Alembic gestiona esquema, Railway ejecuta upgrade |
+| 07.1 | **Integrar Alembic** ✓ | Sistema de migraciones Alembic reemplazar create_all() | Complete    | 2026-03-30 |
 | 8 | Testing & Technical Debt | Tests, linting, manejo de sessiones, refactor handlers | TEST-01–03, SCHED-02, SEC-03 | Cobertura de tests y código más mantenible |
 | 9 | Polish & Hardening | Rate limiting, FSM persistente, backups, analytics | SEC-01, SEC-02, BACK-01, SCHED-01, ANLY-01–02 | Bot listo para producción a escala |
 

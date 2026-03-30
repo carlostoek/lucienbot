@@ -20,6 +20,7 @@ Crear una experiencia premium y gamificada que incentiva el compromiso de la com
 - ✓ **Promociones** — Códigos promocionales con límites y descuentos — Fase 6
 - ✓ **Sistema de Narrativa** — Historias interactivas con arquetipos, opciones de usuario — Fase 6
 - ✓ **Panel de Administración** — Custodios pueden gestionar todos los dominios — Fases 3-6
+- ✓ **Migraciones Alembic** — Sistema de migraciones de esquema con Alembic, baseline migration, Railway integration — Fase 07.1
 
 ### Active
 
