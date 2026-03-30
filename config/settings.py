@@ -17,6 +17,14 @@ class BotConfig:
     TIMEZONE: str = os.getenv("TIMEZONE", "America/Mexico_City")
     CREATOR_USERNAME: str = os.getenv("CREATOR_USERNAME", "")
 
+    # FSM Persistence (Phase 9)
+    REDIS_URL: str = os.getenv("REDIS_URL", "")
+    FSM_TTL_SECONDS: int = int(os.getenv("FSM_TTL_SECONDS", str(7 * 24 * 3600)))  # 7 days default
+
+    # Rate Limiting (Phase 9)
+    RATE_LIMIT_MAX: int = int(os.getenv("RATE_LIMIT_MAX", "5"))
+    RATE_LIMIT_WINDOW: int = int(os.getenv("RATE_LIMIT_WINDOW", "60"))
+
     def __post_init__(self):
         admin_ids_str = os.getenv("ADMIN_IDS", "")
         self.ADMIN_IDS = [int(id_str.strip()) for id_str in admin_ids_str.split(",") if id_str.strip()]
