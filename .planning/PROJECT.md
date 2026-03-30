@@ -21,6 +21,9 @@ Crear una experiencia premium y gamificada que incentiva el compromiso de la com
 - ✓ **Sistema de Narrativa** — Historias interactivas con arquetipos, opciones de usuario — Fase 6
 - ✓ **Panel de Administración** — Custodios pueden gestionar todos los dominios — Fases 3-6
 - ✓ **Migraciones Alembic** — Sistema de migraciones de esquema con Alembic, baseline migration, Railway integration — Fase 07.1
+- ✓ **Infraestructura de Testing** — Tests unitarios e integración con pytest, cobertura 70%, fixtures completos — Fase 8
+- ✓ **Race Condition Protection** — SELECT FOR UPDATE en token redemption y operaciones de balance — Fase 8
+- ✓ **Session Management** — Context managers reemplazan __del__, startup check para suscripciones expiradas — Fase 8
 
 ### Active
 
@@ -44,15 +47,15 @@ Crear una experiencia premium y gamificada que incentiva el compromiso de la com
 **Arquitectura:** handlers → services → models (capas estrictas, sin lógica en handlers)
 
 **Tech debt conocido:**
-- Sin tests automatizados (riesgo de regresión alto)
+- ~~Sin tests automatizados~~ — ✓ Resuelto en Fase 8 (80+ tests, 70% cobertura)
 - Archivos de handlers grandes (>900 líneas)
-- Gestión de sesiones DB via `__del__` (poco confiable)
+- ~~Gestión de sesiones DB via `__del__`~~ — ✓ Resuelto en Fase 8 (context managers)
 - MemoryStorage para FSM (estado perdido en reinicios)
 
 **Seguridad conocida:**
 - No rate limiting implementado
-- Tokens VIP con race condition potencial
-- Scheduler con polling cada 30s (puede perder expiraciones)
+- ~~Tokens VIP con race condition potencial~~ — ✓ Resuelto en Fase 8 (SELECT FOR UPDATE)
+- ~~Scheduler con polling cada 30s~~ — ✓ Parcialmente mitigado en Fase 8 (startup check para expiraciones)
 
 ## Constraints
 
@@ -60,7 +63,7 @@ Crear una experiencia premium y gamificada que incentiva el compromiso de la com
 - **Arquitectura**: Capas handlers/services/models estrictas — sin lógica de negocio en handlers
 - **Voz de Lucien**: Siempre en 3ra persona, elegante y misterioso, "Diana" como figura central
 - **DB**: SQLite local / PostgreSQL en Railway — compatible SQLAlchemy
-- **Sin tests**: Prioridad alta pero no bloqueante para features
+- **Tests**: ~80 tests, 70% cobertura services/ — pytest + pytest-asyncio
 
 ## Key Decisions
 
