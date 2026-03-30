@@ -32,6 +32,10 @@ python-dateutil==2.9.0
 # Hashing de contraseñas (si se implementa auth)
 # bcrypt==4.1.2
 
+# ==================== SCHEDULER ====================
+# APScheduler for persistent job scheduling (Phase 9)
+APScheduler==3.10.4
+
 # ==================== MONITOREO (OPCIONAL) ====================
 # Logging avanzado
 # structlog==24.1.0
