@@ -19,6 +19,9 @@ psycopg2-binary==2.9.9
 # Variables de entorno
 python-dotenv==1.0.1
 
+# Redis async client (para FSM persistente en Phase 9)
+redis==5.0.1
+
 # Zonas horarias
 pytz==2024.1
 
