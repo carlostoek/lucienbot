@@ -39,7 +39,9 @@ from handlers import (
     promotion_admin_router,
     # Fase 6 - Narrativa
     story_user_router,
-    story_admin_router
+    story_admin_router,
+    # Phase 9 - Analytics
+    analytics_router,
 )
 
 # Configurar logging
@@ -226,7 +228,9 @@ async def main():
     # Fase 6 - Narrativa
     dp.include_router(story_user_router)
     dp.include_router(story_admin_router)
-    
+    # Phase 9 - Analytics
+    dp.include_router(analytics_router)
+
     # Configurar middleware de rate limiting (Phase 9)
     from utils.rate_limiter import RateLimitMiddleware
     dp.message.middleware(RateLimitMiddleware())
