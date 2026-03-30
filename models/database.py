@@ -21,8 +21,17 @@ Base = declarative_base()
 
 
 def init_db():
-    """Inicializa la base de datos creando todas las tablas"""
-    Base.metadata.create_all(bind=engine)
+    """
+    DEPRECATED: Schema management is now handled by Alembic.
+
+    This function is kept as a no-op for backwards compatibility.
+    All schema creation and migration is done via:
+        alembic revision --autogenerate -m "description"
+        alembic upgrade head
+
+    The Alembic baseline was established in Phase 07.1.
+    """
+    pass
 
 
 def get_db():
