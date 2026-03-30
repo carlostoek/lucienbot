@@ -31,11 +31,9 @@ Usuario → Ver productos → Verificar saldo → Confirmar → Debitar besitos 
 ```
 
 ## PackageService API
-```python
-- create_package(...)              # Crear paquete
-- get_package_contents(package_id)  # Contenido del paquete
-- deliver_package(user_id, package_id)  # Entregar
-```
+def create_package(...) -> 'Package': ...
+def get_package_contents(package_id: int) -> list['PackageFile']: ...
+def deliver_package(user_id: int, package_id: int) -> None: ...
 
 ## Reglas de Negocio
 - Verificar saldo **antes** de deduct
