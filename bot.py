@@ -10,6 +10,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import RedisStorage
 
 from config.settings import bot_config
 from models.database import init_db
@@ -178,9 +179,28 @@ async def main():
     
     # Crear bot y dispatcher
     bot = Bot(token=bot_config.TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    storage = MemoryStorage()
+
+    # Persistent FSM storage: RedisStorage with graceful MemoryStorage fallback
+    storage = None
+    if bot_config.REDIS_URL:
+        try:
+            redis_storage = RedisStorage(
+                url=bot_config.REDIS_URL,
+                data_ttl=bot_config.FSM_TTL_SECONDS,
+            )
+            # Test connection
+            await redis_storage.get_state()
+            storage = redis_storage
+            logger.info("FSM: Using RedisStorage (persistent)")
+        except Exception as e:
+            logger.warning(f"FSM: Redis unavailable ({e}), falling back to MemoryStorage")
+            storage = MemoryStorage()
+    else:
+        logger.info("FSM: REDIS_URL not set, using MemoryStorage")
+        storage = MemoryStorage()
+
     dp = Dispatcher(storage=storage)
-    
+
     # Registrar routers
     dp.include_router(common_router)
     dp.include_router(admin_router)
@@ -207,6 +227,11 @@ async def main():
     dp.include_router(story_user_router)
     dp.include_router(story_admin_router)
     
+    # Configurar middleware de rate limiting (Phase 9)
+    from utils.rate_limiter import RateLimitMiddleware
+    dp.message.middleware(RateLimitMiddleware())
+    dp.callback_query.middleware(RateLimitMiddleware())
+
     # Configurar eventos de startup/shutdown
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)

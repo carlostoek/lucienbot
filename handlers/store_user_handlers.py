@@ -8,6 +8,7 @@ from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardBut
 from services.store_service import StoreService
 from services.besito_service import BesitoService
 from keyboards.inline_keyboards import back_keyboard
+from utils.rate_limiter import rate_limited
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,6 +16,7 @@ router = Router()
 
 
 @router.callback_query(F.data == "shop")
+@rate_limited()
 async def shop_menu(callback: CallbackQuery):
     """Menu principal de la tienda"""
     store_service = StoreService()

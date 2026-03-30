@@ -12,6 +12,7 @@ from services.user_service import UserService
 from services.vip_service import VIPService
 from keyboards.inline_keyboards import main_menu_keyboard, admin_menu_keyboard
 from utils.lucien_voice import LucienVoice
+from utils.rate_limiter import rate_limited
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,7 @@ router = Router()
 
 
 @router.message(CommandStart())
+@rate_limited()
 async def cmd_start(message: Message):
     """Handler para el comando /start"""
     user = message.from_user

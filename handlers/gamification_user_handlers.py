@@ -11,6 +11,7 @@ from services.daily_gift_service import DailyGiftService
 from services.broadcast_service import BroadcastService
 from keyboards.inline_keyboards import back_keyboard, main_menu_keyboard
 from utils.lucien_voice import LucienVoice
+from utils.rate_limiter import rate_limited
 import logging
 
 logger = logging.getLogger(__name__)
@@ -96,6 +97,7 @@ async def show_transaction_history(callback: CallbackQuery):
 # ==================== REGALO DIARIO ====================
 
 @router.callback_query(F.data == "daily_gift")
+@rate_limited()
 async def daily_gift_menu(callback: CallbackQuery):
     """Menú del regalo diario"""
     user_id = callback.from_user.id
@@ -137,6 +139,7 @@ async def daily_gift_menu(callback: CallbackQuery):
 
 
 @router.callback_query(F.data == "claim_gift")
+@rate_limited()
 async def claim_daily_gift(callback: CallbackQuery):
     """Procesa el reclamo del regalo diario"""
     user_id = callback.from_user.id
