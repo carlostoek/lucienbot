@@ -2,7 +2,7 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Executing Phase 9
+status: Phase 9 complete
 last_updated: "2026-03-30T21:08:32.473Z"
 progress:
   total_phases: 10
@@ -22,13 +22,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Crear una experiencia premium y gamificada que incentiva el compromiso de la comunidad con Diana a través de un sistema de recompensas, acceso exclusivo VIP y narrativa inmersiva.
-**Current focus:** Phase 9 — polish-hardening (plans 01 and 02 complete)
+**Current focus:** Phase 9 complete — all 9 phases done, milestone v1.0 ready for completion
 
 ## Milestone
 
 **Name:** v1.0 — Core bot functionality
 **Started:** ~2025 (inferred from git history)
-**Progress:** [██████████] 100%
+**Progress:** 9/9.1 phases complete
 
 ## Phase Status
 
@@ -43,11 +43,7 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 | 7: VIP Invite Links Dinámicos | ✓ Complete | d66b8b7 |
 | 07.1: Integrar completamente sistema de migraciones alembic | ✓ Complete | 3 commits, 2 revisions |
 | 8: Testing & Technical Debt | ✓ Complete | 2266d56 |
-| 9: Polish & Hardening | 🚧 Plan 02/03 complete | 43b523c, 144364a, a3703a6, 7f60a14, d1588ed, f11ccf1 |
-
-## Current Phase
-
-**Phase 9: Polish & Hardening** — Plan 02 complete (3/3 tasks), 1 more plan remaining
+| 9: Polish & Hardening | ✓ Complete | 43b523c, 144364a, a3703a6, 7f60a14, d1588ed, f11ccf1 |
 
 ## Execution Log
 
@@ -62,7 +58,7 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 ## What's Next
 
-→ `/gsd:plan-phase 9` — Polish & Hardening — Plan 02 complete, plan 03 remaining
+→ `/gsd:complete-milestone` — All phases complete, milestone v1.0 ready to close
 
 ### Quick Tasks Completed
 
@@ -81,13 +77,6 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 | 2026-03-29 | Fallback a link estático | Resiliencia si API de Telegram falla |
 | ~2025 | aiogram 3.x | v4 en desarrollo, no migrar aún |
 | ~2025 | SQLite → PostgreSQL en Railway | SQLite no escala con writes concurrentes |
-
-## Execution Log
-
-| Date | Phase | Action |
-|------|-------|--------|
-| 2026-03-30 | — | GSD new-project inicializado (map-codebase completado, docs generados) |
-| 2026-03-30 | 7 | VIP invite links completados — commit d66b8b7 |
 
 ## Workflow Config
 

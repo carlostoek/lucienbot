@@ -1,7 +1,7 @@
 # Roadmap: Lucien Bot
 
 **Created:** 2026-03-30
-**Phases completed:** 8.5 of 10 (Phase 9 in progress)
+**Phases completed:** 9 of 10
 **Milestone:** v1.0 — Core bot functionality
 
 ## Summary
@@ -17,7 +17,7 @@
 | 7 | **VIP Invite Links Dinámicos** ✓ | Links de invitación de un solo uso para canal VIP | VIP-07 | Un token = un link de un solo uso generado dinámicamente |
 | 07.1 | **Integrar Alembic** ✓ | Sistema de migraciones Alembic reemplazar create_all() | Complete    | 2026-03-30 |
 | 8 | Testing & Technical Debt | Tests, linting, manejo de sessiones, refactor handlers | TEST-01–03, SCHED-02, SEC-03 | Cobertura de tests y código más mantenible |
-| 9 | Polish & Hardening | Rate limiting, FSM persistente, backups, analytics | SEC-01, SEC-02, BACK-01, SCHED-01, ANLY-01–02 | Bot listo para producción a escala |
+| 9 | **Polish & Hardening** ✓ | Rate limiting, FSM persistente, backups, analytics | SEC-01, SEC-02, BACK-01, SCHED-01, ANLY-01–02 | Bot listo para producción a escala |
 
 ## Phase Details
 
@@ -128,13 +128,12 @@
 ### Phase 9: Polish & Hardening
 **Goal:** Rate limiting, FSM persistente, backups y analytics
 **Requirements:** SEC-01, SEC-02, BACK-01, SCHED-01, ANLY-01, ANLY-02
-**Status:** In Progress (2/3 plans complete)
-**Plans:** 3 plans
+**Status:** Complete (2/2 plans committed)
+**Plans:** 2 plans
 
 Plans:
 - [x] 09-01-PLAN.md — Rate limiter middleware, Redis FSM + fallback, backup script (wave 1) — commits 43b523c, 144364a, a3703a6
 - [x] 09-02-PLAN.md — Analytics service + /analytics/export handlers, APScheduler migration (wave 2) — commits 7f60a14, d1588ed, f11ccf1
-- [ ] 09-03-PLAN.md — TBD (wave 3)
 
 **Success criteria:**
 1. Rate limiting por usuario en handlers principales
@@ -149,7 +148,7 @@ Plans:
 - [ ] Phases 1-6: Todas las funcionalidades core validadas en producción
 - [x] Phase 7: Invite links dinámicos deployados y funcionando
 - [x] Phase 8: Cobertura de tests ≥ 70%, deuda técnica reducida
-- [ ] Phase 9: Bot hardened para producción a escala
+- [x] Phase 9: Bot hardened para producción a escala
 
 ---
 *Roadmap created: 2026-03-30 from codebase analysis and git history*
