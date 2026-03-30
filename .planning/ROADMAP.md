@@ -1,7 +1,7 @@
 # Roadmap: Lucien Bot
 
 **Created:** 2026-03-30
-**Phases completed:** 6 of 9
+**Phases completed:** 7 of 9
 **Milestone:** v1.0 — Core bot functionality
 
 ## Summary
@@ -14,7 +14,7 @@
 | 4 | Gamificación | Besitos, hugs, gifts, balance, top | BESI-01, BESI-02, BESI-03, BESI-04 | Sistema de besitos activo y balance correcto |
 | 5 | Misiones | Misiones, progreso, recompensas | MISS-01, MISS-02, MISS-03, MISS-04, ADMIN-03 | Visitantes completan misiones y reciben recompensas |
 | 6 | Tienda + Promociones + Narrativa | Compra de paquetes, códigos, historias interactivas | STOR-01–04, PROM-01–03, NARR-01–04, ADMIN-04, ADMIN-05 | Store, promociones y narrativa funcionando |
-| 7 | **VIP Invite Links Dinámicos** | Links de invitación de un solo uso para canal VIP | VIP-07 | Un token = un link de un solo uso generado dinámicamente |
+| 7 | **VIP Invite Links Dinámicos** ✓ | Links de invitación de un solo uso para canal VIP | VIP-07 | Un token = un link de un solo uso generado dinámicamente |
 | 8 | Testing & Technical Debt | Tests, linting, manejo de sessiones, refactor handlers | TEST-01–03, SCHED-02, SEC-03 | Cobertura de tests y código más mantenible |
 | 9 | Polish & Hardening | Rate limiting, FSM persistente, backups, analytics | SEC-01, SEC-02, BACK-01, SCHED-01, ANLY-01–02 | Bot listo para producción a escala |
 
@@ -83,10 +83,10 @@
 4. Historias interactivas con nodos, arquetipos y opciones
 5. Custodio gestiona tienda, promociones y narrativa
 
-### Phase 7: VIP Invite Links Dinámicos ⚡ ACTIVE
+### Phase 7: VIP Invite Links Dinámicos ✓
 **Goal:** Reemplazar links de invitación estáticos por links de un solo uso generados dinámicamente
 **Requirements:** VIP-07
-**Status:** In Progress (cambios sin commit en handlers/common_handlers.py, models/models.py, services/vip_service.py)
+**Status:** Complete (d66b8b7)
 **Success criteria:**
 1. Al canjear token VIP se genera invite link con member_limit=1
 2. Link expires tras primer uso (un solo usuario por token)
@@ -121,7 +121,7 @@
 ## Milestone Completion Criteria
 
 - [ ] Phases 1-6: Todas las funcionalidades core validadas en producción
-- [ ] Phase 7: Invite links dinámicos deployados y funcionando
+- [x] Phase 7: Invite links dinámicos deployados y funcionando
 - [ ] Phase 8: Cobertura de tests ≥ 70%, deuda técnica reducida
 - [ ] Phase 9: Bot hardened para producción a escala
 

@@ -8,13 +8,13 @@
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Crear una experiencia premium y gamificada que incentiva el compromiso de la comunidad con Diana a través de un sistema de recompensas, acceso exclusivo VIP y narrativa inmersiva.
-**Current focus:** Phase 7 — VIP Invite Links Dinámicos
+**Current focus:** Phase 8 — Testing & Technical Debt
 
 ## Milestone
 
 **Name:** v1.0 — Core bot functionality
 **Started:** ~2025 (inferred from git history)
-**Progress:** 6/9 phases complete
+**Progress:** 7/9 phases complete
 
 ## Phase Status
 
@@ -32,18 +32,10 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 ## Current Phase
 
-**Phase 7: VIP Invite Links Dinámicos** — ✓ Complete (d66b8b7)
-
-Todo:
-- [ ] Actualizar REQUIREMENTS.md (VIP-07 → Complete)
-
-## Blockers
-
-(None currently — Phase 7 is in progress)
+**Phase 8: Testing & Technical Debt** — Pending
 
 ## What's Next
 
-After Phase 7:
 → `/gsd:plan-phase 8` — Testing & Technical Debt
 
 ### Quick Tasks Completed

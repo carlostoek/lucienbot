@@ -15,7 +15,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **VIP-04**: Sistema detecta y rechaza tokens ya utilizados o expirados
 - [ ] **VIP-05**: Suscripciones expiran automáticamente y el bot remueve al usuario del canal VIP
 - [ ] **VIP-06**: Recordatorio enviado 24h antes de expiración de suscripción
-- [ ] **VIP-07**: Links de invitación dinámicos de un solo uso para acceso VIP — [ACTIVE]
+- [x] **VIP-07**: Links de invitación dinámicos de un solo uso para acceso VIP ✓ — [d66b8b7]
 
 ### Channel Management
 
@@ -121,7 +121,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | VIP-01 through VIP-06 | Phase 3 | Complete |
-| VIP-07 (invite links dinámicos) | Phase 7 | Pending |
+| VIP-07 (invite links dinámicos) | Phase 7 | Complete |
 | CHAN-01 through CHAN-04 | Phase 2 | Complete |
 | BESI-01 through BESI-04 | Phase 4 | Complete |
 | MISS-01 through MISS-04 | Phase 5 | Complete |
@@ -131,10 +131,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ADMIN-01 through ADMIN-05 | Phases 3-6 | Complete |
 
 **Coverage:**
-- v1 requirements: 32 total (31 complete, 1 pending)
+- v1 requirements: 32 total (32 complete, 0 pending)
 - Mapped to phases: 32
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-30*
-*Last updated: 2026-03-30 after initialization from codebase analysis*
+*Last updated: 2026-03-30 after Phase 7 completion (VIP-07)*
