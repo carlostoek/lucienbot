@@ -25,7 +25,7 @@ Plantillas de mensaje con la voz de Lucien:
 ## Reglas
 - Funciones genéricas van aquí
 - NO lógica de negocio
-- Mínimo 50 líneas por función
+- Máximo 50 líneas por función
 
 ## Voz de Lucien
 - 3ra persona ("Lucien gestiona...")
