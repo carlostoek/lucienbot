@@ -116,7 +116,7 @@
 ### Phase 8: Testing & Technical Debt
 **Goal:** Tests automatizados, configuración de linting y refactor de deuda técnica
 **Requirements:** TEST-01, TEST-02, TEST-03, SCHED-02, SEC-03
-**Status:** Pending
+**Status:** Complete
 **Success criteria:**
 1. Tests unitarios para VIPService, ChannelService, BesitoService, MissionService
 2. Tests de integración para flujos VIP y canales
@@ -128,7 +128,13 @@
 ### Phase 9: Polish & Hardening
 **Goal:** Rate limiting, FSM persistente, backups y analytics
 **Requirements:** SEC-01, SEC-02, BACK-01, SCHED-01, ANLY-01, ANLY-02
-**Status:** Pending
+**Status:** In Progress (2 plans)
+**Plans:** 2 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Rate limiter middleware, Redis FSM + fallback, backup script (wave 1)
+- [ ] 09-02-PLAN.md — Analytics service + /analytics/export handlers, APScheduler migration (wave 2)
+
 **Success criteria:**
 1. Rate limiting por usuario en handlers principales
 2. FSM con RedisStorage (estado persiste en reinicios)
@@ -141,7 +147,7 @@
 
 - [ ] Phases 1-6: Todas las funcionalidades core validadas en producción
 - [x] Phase 7: Invite links dinámicos deployados y funcionando
-- [ ] Phase 8: Cobertura de tests ≥ 70%, deuda técnica reducida
+- [x] Phase 8: Cobertura de tests ≥ 70%, deuda técnica reducida
 - [ ] Phase 9: Bot hardened para producción a escala
 
 ---
