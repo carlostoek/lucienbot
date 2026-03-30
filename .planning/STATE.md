@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Crear una experiencia premium y gamificada que incentiva el compromiso de la comunidad con Diana a través de un sistema de recompensas, acceso exclusivo VIP y narrativa inmersiva.
-**Current focus:** Phase 9 — polish-&-hardening
+**Current focus:** Phase 9 — Polish & Hardening (context gathered)
 
 ## Milestone
 
@@ -46,7 +46,7 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 ## Current Phase
 
-**Phase 9: Polish & Hardening** — Ready to plan
+**Phase 9: Polish & Hardening** — Context gathered, ready to plan
 
 ## Execution Log
 
@@ -59,7 +59,7 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 ## What's Next
 
-→ `/gsd:discuss-phase 9` — Polish & Hardening — Ready to plan
+→ `/gsd:plan-phase 9` — Polish & Hardening — Ready to plan
 
 ### Quick Tasks Completed
 
