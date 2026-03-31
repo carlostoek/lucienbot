@@ -217,6 +217,13 @@ class VIPService:
         db.commit()
         db.refresh(subscription)
 
+        # Set VIP entry state for the 3-phase ritual
+        user = db.query(User).filter(User.telegram_id == user_id).first()
+        if user:
+            user.vip_entry_status = "pending_entry"
+            user.vip_entry_stage = 1
+            db.commit()
+
         return subscription
 
     def revoke_token(self, token_id: int) -> bool:
@@ -309,3 +316,57 @@ class VIPService:
             Channel.channel_type == ChannelType.VIP,
             Channel.is_active == True
         ).first()
+
+    # ==================== VIP ENTRY STATE MANAGEMENT (PHASE 10) ====================
+
+    def get_vip_entry_state(self, user_id: int) -> tuple:
+        """Returns (status, stage) for the user's VIP entry, or (None, None)."""
+        db = self._get_db()
+        user = db.query(User).filter(User.telegram_id == user_id).first()
+        if user:
+            return user.vip_entry_status, user.vip_entry_stage
+        return None, None
+
+    def advance_vip_entry_stage(self, user_id: int) -> int:
+        """Advances vip_entry_stage by 1 (max 3). Returns new stage or None."""
+        db = self._get_db()
+        user = db.query(User).filter(User.telegram_id == user_id).first()
+        if not user or user.vip_entry_status != "pending_entry" or user.vip_entry_stage is None:
+            return None
+        new_stage = min(user.vip_entry_stage + 1, 3)
+        user.vip_entry_stage = new_stage
+        db.commit()
+        return new_stage
+
+    def clear_vip_entry_state(self, user_id: int) -> bool:
+        """Clears vip_entry_status and vip_entry_stage."""
+        db = self._get_db()
+        user = db.query(User).filter(User.telegram_id == user_id).first()
+        if user:
+            user.vip_entry_status = None
+            user.vip_entry_stage = None
+            db.commit()
+            return True
+        return False
+
+    def get_active_subscription_for_entry(self, user_id: int) -> Optional[Subscription]:
+        """Returns the active subscription for a pending_entry user, or None if expired/inactive."""
+        db = self._get_db()
+        now = datetime.utcnow()
+        sub = db.query(Subscription).filter(
+            Subscription.user_id == user_id,
+            Subscription.is_active == True,
+            Subscription.end_date > now
+        ).first()
+        return sub
+
+    def complete_vip_entry(self, user_id: int) -> bool:
+        """Marks VIP entry as active and clears stage. Returns True if state was pending_entry."""
+        db = self._get_db()
+        user = db.query(User).filter(User.telegram_id == user_id).first()
+        if user and user.vip_entry_status == "pending_entry":
+            user.vip_entry_status = "active"
+            user.vip_entry_stage = None
+            db.commit()
+            return True
+        return False
