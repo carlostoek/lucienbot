@@ -17,7 +17,7 @@
 | 7 | **VIP Invite Links Dinamicos** ✓ | Links de invitacion de un solo uso para canal VIP | VIP-07 | Un token = un link de un solo uso generado dinamicamente |
 | 07.1 | **Integrar Alembic** ✓ | Sistema de migraciones Alembic reemplazar create_all() | Complete    | 2026-03-30 |
 | 8 | Testing & Technical Debt | Tests, linting, manejo de sessiones, refactor handlers | TEST-01-03, SCHED-02, SEC-03 | Cobertura de tests y codigo mas mantenible |
-| 9 | Polish & Hardening | Rate limiting, FSM persistente, backups, analytics | SEC-01, SEC-02, BACK-01, SCHED-01, ANLY-01-02 | 5/5 plans done (09-01, 09-02, 09-03, 09-04, 09-05) |
+| 9 | Polish & Hardening | Rate limiting, FSM persistente, backups, analytics | Complete    | 2026-03-31 |
 
 ## Phase Details
 
@@ -129,7 +129,7 @@
 **Goal:** Rate limiting, FSM persistente, backups y analytics
 **Requirements:** SEC-01, SEC-02, BACK-01, SCHED-01, ANLY-01, ANLY-02
 **Status:** Complete (5/5 plans done)
-**Plans:** 5 plans
+**Plans:** 5/5 plans complete
 Plans:
 - [x] 09-01-PLAN.md -- Rate limiting via ThrottlingMiddleware (SEC-01) ✓
 - [x] 09-02-PLAN.md -- FSM persistence via RedisStorage factory (SEC-02) ✓
@@ -149,7 +149,7 @@ Plans:
 - [ ] Phases 1-6: Todas las funcionalidades core validadas en produccion
 - [x] Phase 7: Invite links dinamicos deployados y funcionando
 - [ ] Phase 8: Cobertura de tests >= 70%, deuda tecnica reducida
-- [ ] Phase 9: Bot hardened para produccion a escala
+- [x] Phase 9: Bot hardened para produccion a escala (completed 2026-03-31)
 
 ---
 *Roadmap created: 2026-03-30 from codebase analysis and git history*
