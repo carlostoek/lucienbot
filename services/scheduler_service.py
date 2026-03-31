@@ -11,6 +11,7 @@ from aiogram.types import ChatJoinRequest
 from sqlalchemy.orm import Session
 from models.database import SessionLocal
 from models.models import ChannelType
+from services.backup_service import BackupService
 from services.channel_service import ChannelService
 from services.vip_service import VIPService
 from services.user_service import UserService
@@ -57,8 +58,26 @@ class SchedulerService:
             except Exception as e:
                 logger.error(f"Error en scheduler: {e}")
             
+            # Backup every 100 cycles (~50 min at 30s interval)
+            cycle_count = getattr(self, '_cycle_count', 0) + 1
+            self._cycle_count = cycle_count
+            if cycle_count % 100 == 0:
+                await self._run_backup_job()
+
             await asyncio.sleep(self.check_interval)
     
+    async def _run_backup_job(self):
+        """Ejecuta backup de base de datos."""
+        try:
+            backup_service = BackupService()
+            result = await backup_service.daily_backup()
+            if result:
+                logger.info(f"Backup completed: {result}")
+            else:
+                logger.warning("Backup failed -- check logs")
+        except Exception as e:
+            logger.error(f"Error running backup: {e}")
+
     async def _process_pending_requests(self):
         """Procesa solicitudes pendientes listas para aprobar"""
         db = SessionLocal()
