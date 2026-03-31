@@ -44,25 +44,22 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 | 07.1: Integrar completamente sistema de migraciones alembic | ✓ Complete | 3 commits, 2 revisions |
 | 8: Testing & Technical Debt | ✓ Complete | 2266d56 |
 | 9: Polish & Hardening | ✓ Complete | All 5 plans done (09-01 through 09-05) — SCHED-01 fulfilled |
-| 10: Flujos de entrada @docs/req_fase10.md | 🔄 In Progress | Wave 2 Complete — Executing Wave 3 (Tests) |
+| 10: Flujos de entrada @docs/req_fase10.md | ✓ Complete | All 4 plans done (10-01 through 10-04) |
 
 ## Current Phase
 
-**Phase 10: Flujos de entrada @docs/req_fase10.md** — Plan 10-01 Complete
+**Phase 10: Flujos de entrada @docs/req_fase10.md** — ✅ COMPLETE
 
-### Plan 10-01: Foundation for Ritualized Entry Flows ✓
+### Phase 10 Summary
 
-**Status:** Complete
-**Commits:** d7cecda, 6c0ec07, 29dfcc5
+| Plan | Status | Commits | Description |
+|------|--------|---------|-------------|
+| 10-01 | ✓ | d7cecda, 6c0ec07, 29dfcc5 | Foundation: DB columns, LucienVoice, keyboards |
+| 10-02 | ✓ | d82e88d, 72f99a6, ab477bf | Free channel: 30s delay, impatience, approval loop |
+| 10-03 | ✓ | e3374f8, 089cdea, 4389368, 635831e | VIP entry: 3-phase ritual, callbacks, state management |
+| 10-04 | ✓ | ca076f3, e887eb8 | Tests: VIP entry state, scheduler triggers, regression |
 
-**Deliverables:**
-
-- Database columns: `vip_entry_status`, `vip_entry_stage` on User model
-- Alembic migration: `9fab8787057e_add_vip_entry_status_and_stage_to_users.py`
-- LucienVoice methods: `free_entry_ritual()`, `free_entry_impatient()`, `free_entry_welcome()`, `free_entry_expired()`, `vip_entry_stage_1()`, `vip_entry_stage_2()`, `vip_entry_stage_3()`
-- Inline keyboards: `social_links_keyboard()`, `vip_entry_continue_keyboard()`, `vip_entry_ready_keyboard()`
-
-**Tests:** 49/49 passed
+**Tests:** 98/98 unit tests passing
 
 ## Execution Log
 
@@ -78,11 +75,14 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 | 2026-03-31 | 9-04 | APScheduler AsyncIOScheduler + SQLAlchemyJobStore replacing asyncio.sleep polling — commit a63e5e6 |
 | 2026-03-31 | 9-05 | AnalyticsService + analytics_handlers (/stats, /export) — commits 1b4c10c, b577bc2, 3adc069, ae33e37, 963f96f |
 | 2026-03-31 | 10-01 | Foundation for ritualized entry flows — DB columns, LucienVoice messages, keyboards — commits d7cecda, 6c0ec07, 29dfcc5 |
+| 2026-03-31 | 10-02 | Free channel 30s delay mechanism — scheduler handlers, impatience messages — commits d82e88d, 72f99a6 |
+| 2026-03-31 | 10-03 | VIP 3-phase entry ritual — state management, callbacks, link generation — commits e3374f8, 089cdea, 4389368 |
+| 2026-03-31 | 10-04 | Tests: VIP entry state, scheduler triggers, channel regression — commit ca076f3 |
 
 ## What's Next
 
-→ Continue with Plan 10-02 (Wave 1) — Implement 30s delay mechanism for Free channel
-→ Continue with Plan 10-03 (Wave 1) — Implement VIP entry flow handlers
+→ Phase 10 COMPLETE — All entry flow rituals implemented
+→ Ready for `/gsd:verify-work` to validate implementation
 
 ### Quick Tasks Completed
 
