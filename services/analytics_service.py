@@ -7,7 +7,7 @@ import csv
 import tempfile
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from models.models import User, Subscription, BesitoTransaction
+from models.models import User, Subscription, BesitoTransaction, BesitoBalance
 from models.database import SessionLocal
 import logging
 
@@ -46,7 +46,6 @@ class AnalyticsService:
         ).count()
 
         # Total besitos in circulation
-        from models.models import BesitoBalance
         balances = db.query(BesitoBalance).all()
         total_besitos = sum(b.balance for b in balances)
 
@@ -109,7 +108,6 @@ class AnalyticsService:
                     .first() is not None
                 )
 
-                from models.models import BesitoBalance
                 balance = db.query(BesitoBalance).filter(
                     BesitoBalance.user_id == user.telegram_id
                 ).first()
