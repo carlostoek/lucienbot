@@ -10,9 +10,9 @@ from typing import Optional
 
 class LucienVoice:
     """Clase para generar mensajes con la voz de Lucien"""
-    
+
     # ==================== SALUDOS ====================
-    
+
     @staticmethod
     def greeting(user_name: Optional[str] = None) -> str:
         """Saludo principal para usuarios"""
@@ -24,7 +24,7 @@ Puedo ver que su curiosidad lo ha traído hasta aquí...
 lo cual, debo admitir, no me sorprende en absoluto.</i>
 
 ¿En qué puedo asistirle hoy?"""
-    
+
     @staticmethod
     def admin_greeting() -> str:
         """Saludo para administradores"""
@@ -35,7 +35,7 @@ Bienvenido al sanctum donde se orquestan los secretos
 y se tejen las experiencias de nuestros... visitantes.</i>
 
 ¿Qué aspecto del reino requiere su atención hoy?"""
-    
+
     @staticmethod
     def vip_greeting(user_name: Optional[str] = None) -> str:
         """Saludo para usuarios VIP"""
@@ -47,9 +47,9 @@ Aquí, Diana puede mostrar facetas que... otros no conocen.
 Su presencia ha sido... anticipada.</i>
 
 Permíteme guiarle por los privilegios a su disposición."""
-    
+
     # ==================== CANAL FREE ====================
-    
+
     @staticmethod
     def free_request_received(wait_minutes: int) -> str:
         """Mensaje cuando se recibe solicitud al canal free"""
@@ -62,7 +62,7 @@ Los vestíbulos requieren... cierta paciencia.</i>
 
 <i>Le notificaré cuando las puertas se abran para usted.
 Mientras tanto, Diana observa su interés con... curiosidad.</i>"""
-    
+
     @staticmethod
     def free_access_approved(channel_name: Optional[str] = None) -> str:
         """Mensaje cuando se aprueba acceso al canal free"""
@@ -75,7 +75,7 @@ Diana lo recibe entre sus... observados.</i>
 ✅ <b>Su acceso ha sido concedido.</b>
 
 👉 <i>Puede ingresar cuando lo desee.</i>"""
-    
+
     @staticmethod
     def free_request_cancelled() -> str:
         """Mensaje cuando el usuario cancela su solicitud"""
@@ -86,9 +86,114 @@ Diana comprende que no todos están listos para lo que
 el vestíbulo tiene para ofrecer.</i>
 
 Si cambia de parecer, las puertas siempre están... casi abiertas."""
-    
+
+    # ==================== RITUALES DE ENTRADA (PHASE 10) ====================
+
+    @staticmethod
+    def free_entry_ritual() -> str:
+        """Mensaje 1: Ritual de entrada al canal Free (tras 30s de espera)"""
+        return """🎩 <b>Lucien:</b>
+
+Ah… alguien ha llamado a la puerta.
+Su solicitud para entrar a <b>Los Kinkys</b> ha sido registrada.
+Diana siempre nota cuando alguien decide cruzar hacia su mundo…
+Mientras su acceso se prepara, hay algo que puede hacer.
+Las redes de Diana no son simples perfiles.
+Obsérvela.
+Escuche el tono.
+Empiece a entender el juego.
+💡 No necesita quedarse aquí esperando.
+Cuando todo esté listo, yo mismo vendré a buscarle.
+Mientras tanto… aquí puede seguir su rastro 👇"""
+
+    @staticmethod
+    def free_entry_impatient() -> str:
+        """Mensaje 2: Cuando el usuario solicita acceso nuevamente estando pending"""
+        return """🎩 <b>Lucien:</b>
+
+Veo que el deseo de entrar no ha disminuido…
+Su acceso a Los Kinkys ya está en movimiento.
+Puede cerrar este chat con tranquilidad.
+Cuando llegue el momento, no tendrá que buscar la puerta.
+La puerta se abrirá."""
+
+    @staticmethod
+    def free_entry_welcome(channel_name: Optional[str] = None) -> str:
+        """Mensaje 3: Bienvenida al ser aprobado en el canal Free"""
+        return """🎩 <b>Lucien:</b>
+
+Listo.
+Diana ha permitido su entrada.
+Bienvenido a Los Kinkys.
+Este no es el lugar donde ella se entrega.
+Es el lugar donde comienza a insinuarse…
+y donde algunos descubren que ya no quieren quedarse solo aquí.
+El enlace está abajo.
+Tiene 24 horas para cruzar antes de que se cierre de nuevo.
+Entre con intención.
+👇"""
+
+    @staticmethod
+    def free_entry_expired() -> str:
+        """Mensaje cuando expira la suscripción durante el ritual VIP"""
+        return """🎩 <b>Lucien:</b>
+
+<i>Su acceso ha expirado antes de completar el ritual.</i>
+
+Diana cierra las puertas cuando el tiempo se agota. Si desea regresar, deberá obtener un nuevo enlace."""
+
+    @staticmethod
+    def vip_entry_stage_1() -> str:
+        """Fase 1 del ritual de entrada VIP: Confirmación"""
+        return """🎩 <b>Lucien:</b>
+
+Veo que ha dado el paso que muchos contemplan… y pocos toman.
+
+Su acceso al Diván de Diana está siendo preparado.
+
+Este no es un espacio público.
+No es un canal más.
+Y definitivamente no es para quien solo siente curiosidad.
+
+Antes de entregarle la entrada, hay algo que debe saber…"""
+
+    @staticmethod
+    def vip_entry_stage_2() -> str:
+        """Fase 2 del ritual de entrada VIP: Alineación de expectativas"""
+        return """🎩 <b>Lucien:</b>
+
+El Diván no es un lugar donde se mira y se olvida.
+Es un espacio íntimo, sin filtros, sin máscaras.
+
+Aquí Diana se muestra sin la distancia de las redes,
+y eso exige discreción, respeto y presencia real.
+
+Si ha llegado hasta aquí solo para observar de paso…
+este es el momento de detenerse.
+
+Si entiende lo que significa entrar… entonces sí."""
+
+    @staticmethod
+    def vip_entry_stage_3() -> str:
+        """Fase 3 del ritual de entrada VIP: Entrega del acceso"""
+        return """🎩 <b>Lucien:</b>
+
+Entonces no le haré esperar más.
+
+Diana le abre la puerta al Diván.
+
+Este acceso es personal.
+No se comparte.
+No se replica.
+Y se cierra cuando el vínculo termina.
+
+Tiene 24 horas para usar el enlace.
+
+Entre con intención.
+👇"""
+
     # ==================== CANAL VIP ====================
-    
+
     @staticmethod
     def vip_activated(tariff_name: str, expiration_date: datetime) -> str:
         """Mensaje cuando se activa membresía VIP"""
@@ -104,7 +209,7 @@ Si cambia de parecer, las puertas siempre están... casi abiertas."""
 más íntimas. Diana se complace de tenerle entre sus selectos.</i>
 
 👉 <i>Su enlace de acceso ha sido preparado especialmente para usted.</i>"""
-    
+
     @staticmethod
     def vip_renewal_reminder(expiration_date: datetime) -> str:
         """Recordatorio de renovación VIP (24h antes)"""
@@ -117,7 +222,7 @@ culmina mañana, {exp_date_str}.</i>
 Diana se pregunta si desea extender esta... relación privilegiada.
 
 👉 <i>Contacte al custodio del reino para renovar su membresía.</i>"""
-    
+
     @staticmethod
     def vip_expired() -> str:
         """Mensaje cuando expira la suscripción VIP"""
@@ -131,7 +236,7 @@ entre los privilegiados.
 
 👉 <i>Si desea regresar al círculo, el custodio del reino
 puede prepararle un nuevo enlace.</i>"""
-    
+
     @staticmethod
     def vip_renewed() -> str:
         """Mensaje cuando se renueva VIP"""
@@ -142,9 +247,9 @@ Lo esperaba.</i>
 
 Su membresía ha sido extendida.
 Que continúen los secretos compartidos..."""
-    
+
     # ==================== TOKENS ====================
-    
+
     @staticmethod
     def token_invalid() -> str:
         """Token inválido o inexistente"""
@@ -157,7 +262,7 @@ acceso registrado en los archivos de Diana.</i>
 
 <i>Verifique que haya copiado correctamente el enlace,
 o consulte con el custodio del reino.</i>"""
-    
+
     @staticmethod
     def token_used() -> str:
         """Token ya utilizado"""
@@ -171,7 +276,7 @@ las experiencias que otorgan.</i>
 
 <i>Si requiere un nuevo acceso, el custodio del reino
 puede preparar uno especialmente para usted.</i>"""
-    
+
     @staticmethod
     def token_expired() -> str:
         """Token expirado"""
@@ -184,7 +289,7 @@ Este enlace ha trascendido su vigencia.</i>
 
 <i>Los accesos de Diana tienen caducidad por razones...
 de discreción. Solicite uno nuevo al custodio.</i>"""
-    
+
     @staticmethod
     def token_generated(token_url: str, tariff_name: str) -> str:
         """Token generado exitosamente"""
@@ -197,9 +302,9 @@ de discreción. Solicite uno nuevo al custodio.</i>"""
 
 <i>Este enlace es único, como los secretos que revela.
 Compártalo con quien Diana considere digno.</i>"""
-    
+
     # ==================== PANEL ADMIN - CANALES ====================
-    
+
     @staticmethod
     def admin_channel_registered(channel_name: str, channel_type: str) -> str:
         """Canal registrado exitosamente"""
@@ -213,7 +318,7 @@ en los dominios de Diana.</i>
 
 <i>Los visitantes podrán solicitar acceso según las reglas
 que establezca para este espacio.</i>"""
-    
+
     @staticmethod
     def admin_channel_list(channels: list) -> str:
         """Lista de canales registrados"""
@@ -224,7 +329,7 @@ que establezca para este espacio.</i>"""
 El reino aún no tiene vestíbulos ni círculos exclusivos...</i>
 
 👉 <i>Use "Agregar canal" para expandir los territorios.</i>"""
-        
+
         text = f"""🎩 <b>Lucien:</b>
 
 <i>Los dominios bajo nuestra observación son los siguientes:</i>
@@ -235,9 +340,9 @@ El reino aún no tiene vestíbulos ni círculos exclusivos...</i>
             type_text = "Vestíbulo" if ch.channel_type == ChannelType.FREE else "Círculo VIP"
             text += f"{type_emoji} <b>{ch.channel_name or 'Sin nombre'}</b>\n"
             text += f"   └ {type_text} | ID: <code>{ch.channel_id}</code>\n\n"
-        
+
         return text
-    
+
     @staticmethod
     def admin_channel_deleted(channel_name: str) -> str:
         """Canal eliminado"""
@@ -249,9 +354,9 @@ de los archivos de Diana.</i>
 ✅ <b>Canal eliminado correctamente.</b>
 
 <i>Las puertas a ese espacio ya no están bajo nuestra gestión.</i>"""
-    
+
     # ==================== PANEL ADMIN - TARIFAS ====================
-    
+
     @staticmethod
     def admin_tariff_created(name: str, days: int, price: str) -> str:
         """Tarifa creada exitosamente"""
@@ -266,7 +371,7 @@ de los archivos de Diana.</i>
 ✅ <b>Tarifa creada correctamente.</b>
 
 <i>Ahora puede generar tokens vinculados a esta tarifa.</i>"""
-    
+
     @staticmethod
     def admin_tariff_list(tariffs: list) -> str:
         """Lista de tarifas"""
@@ -277,7 +382,7 @@ de los archivos de Diana.</i>
 Diana aún no ha establecido los términos de acceso privilegiado...</i>
 
 👉 <i>Use "Crear tarifa" para establecer las opciones VIP.</i>"""
-        
+
         text = f"""🎩 <b>Lucien:</b>
 
 <i>Las tarifas del círculo exclusivo son las siguientes:</i>
@@ -287,11 +392,11 @@ Diana aún no ha establecido los términos de acceso privilegiado...</i>
             status = "✅" if t.is_active else "❌"
             text += f"{status} <b>{t.name}</b>\n"
             text += f"   └ {t.duration_days} días | {t.price} {t.currency}\n\n"
-        
+
         return text
-    
+
     # ==================== PANEL ADMIN - SOLICITUDES ====================
-    
+
     @staticmethod
     def admin_pending_requests(count: int, requests: list) -> str:
         """Lista de solicitudes pendientes"""
@@ -302,7 +407,7 @@ Diana aún no ha establecido los términos de acceso privilegiado...</i>
 Todos los visitantes han sido atendidos...</i>
 
 El reino descansa tranquilo por ahora."""
-        
+
         text = f"""🎩 <b>Lucien:</b>
 
 <i>Hay <b>{count}</b> visitantes aguardando en los vestíbulos...</i>
@@ -313,9 +418,9 @@ El reino descansa tranquilo por ahora."""
             wait_time = req.scheduled_approval_at.strftime("%H:%M")
             text += f"👤 <b>{username}</b>\n"
             text += f"   └ Aprobación: {wait_time}\n\n"
-        
+
         return text
-    
+
     @staticmethod
     def admin_requests_cleared(count: int) -> str:
         """Solicitudes aprobadas en lote"""
@@ -327,9 +432,9 @@ que aguardaban en los vestíbulos.</i>
 ✅ <b>Solicitudes aprobadas en lote.</b>
 
 <i>Diana aprecia la eficiencia del custodio del reino.</i>"""
-    
+
     # ==================== PANEL ADMIN - CONFIGURACIÓN ====================
-    
+
     @staticmethod
     def admin_wait_time_updated(minutes: int) -> str:
         """Tiempo de espera actualizado"""
@@ -343,7 +448,7 @@ que aguardaban en los vestíbulos.</i>
 
 <i>Los nuevos visitantes experimentarán esta espera
 antes de acceder a los dominios de Diana.</i>"""
-    
+
     # ==================== ANALYTICS ====================
 
     @staticmethod
@@ -393,7 +498,7 @@ antes de acceder a los dominios de Diana.</i>"""
 <i>Solicite acceso a Diana si cree que esto es un error.</i>"""
 
     # ==================== ERRORES ====================
-    
+
     @staticmethod
     def error_message(context: str = "") -> str:
         """Mensaje de error general"""
@@ -404,7 +509,7 @@ antes de acceder a los dominios de Diana.</i>"""
 Permítame consultar con Diana sobre este inconveniente.</i>
 
 <i>Mientras tanto, ¿hay algo más en lo que pueda asistirle?</i>"""
-    
+
     @staticmethod
     def permission_error() -> str:
         """Error de permisos"""
@@ -421,7 +526,7 @@ realizar esta acción en el dominio seleccionado.</i>
 • Aprobar solicitudes</i>
 
 👉 <i>Verifique la configuración del canal y mis permisos.</i>"""
-    
+
     @staticmethod
     def not_admin_error() -> str:
         """Usuario no es administrador"""
@@ -436,9 +541,9 @@ de administración.</i>
 manejar los hilos del reino.</i>
 
 👉 <i>Su solicitud ha sido... registrada.</i>"""
-    
+
     # ==================== DESPEDIDAS ====================
-    
+
     @staticmethod
     def farewell() -> str:
         """Despedida"""
@@ -448,7 +553,7 @@ manejar los hilos del reino.</i>
 Diana estará... atenta a sus próximos movimientos.</i>
 
 Que la curiosidad lo guíe de vuelta pronto."""
-    
+
     @staticmethod
     def coming_soon() -> str:
         """Función en desarrollo"""
