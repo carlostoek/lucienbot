@@ -10,6 +10,7 @@ from services.channel_service import ChannelService
 from services.user_service import UserService
 from services.scheduler_service import get_scheduler
 from utils.lucien_voice import LucienVoice
+from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
@@ -135,7 +136,7 @@ async def handle_member_join(event: ChatMemberUpdated):
     pending = channel_service.get_pending_request(user.id, channel.id)
     if pending and pending.status == "pending":
         pending.status = "approved"
-        pending.approved_at = __import__('datetime').datetime.utcnow()
+        pending.approved_at = datetime.utcnow()
         channel_service.db.commit()
 
         logger.info(f"Solicitud marcada como aprobada: id={pending.id}")
@@ -152,7 +153,8 @@ async def handle_member_join(event: ChatMemberUpdated):
             if channel.invite_link:
                 await event.bot.send_message(
                     chat_id=user.id,
-                    text=channel.invite_link
+                    text=f"🔗 <b>Su enlace de acceso:</b>\n\n{channel.invite_link}",
+                    parse_mode="HTML"
                 )
 
             logger.info(f"Mensaje de bienvenida enviado a user={user.id}")

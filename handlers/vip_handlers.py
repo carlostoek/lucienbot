@@ -355,32 +355,34 @@ async def vip_entry_continue(callback: CallbackQuery):
     """Fase 1 → 2: Continuar ritual de entrada VIP"""
     user = callback.from_user
     vip_service = VIPService()
+    try:
+        # Guard against repeat clicks
+        status, _ = vip_service.get_vip_entry_state(user.id)
+        if status != "pending_entry":
+            await callback.answer("El ritual ya ha sido completado.")
+            return
 
-    # Guard against repeat clicks
-    status, _ = vip_service.get_vip_entry_state(user.id)
-    if status != "pending_entry":
-        await callback.answer("El ritual ya ha sido completado.")
-        return
+        # Guard against expired subscriptions
+        subscription = vip_service.get_active_subscription_for_entry(user.id)
+        if not subscription:
+            vip_service.clear_vip_entry_state(user.id)
+            await callback.message.edit_text(
+                LucienVoice.vip_entry_expired(),
+                parse_mode="HTML"
+            )
+            await callback.answer()
+            return
 
-    # Guard against expired subscriptions
-    subscription = vip_service.get_active_subscription_for_entry(user.id)
-    if not subscription:
-        vip_service.clear_vip_entry_state(user.id)
+        # Advance to stage 2
+        vip_service.advance_vip_entry_stage(user.id)
+
         await callback.message.edit_text(
-            LucienVoice.free_entry_expired(),
+            LucienVoice.vip_entry_stage_2(),
+            reply_markup=vip_entry_ready_keyboard(),
             parse_mode="HTML"
         )
-        await callback.answer()
-        return
-
-    # Advance to stage 2
-    vip_service.advance_vip_entry_stage(user.id)
-
-    await callback.message.edit_text(
-        LucienVoice.vip_entry_stage_2(),
-        reply_markup=vip_entry_ready_keyboard(),
-        parse_mode="HTML"
-    )
+    finally:
+        vip_service.close()
     await callback.answer()
 
 
@@ -389,49 +391,56 @@ async def vip_entry_ready(callback: CallbackQuery):
     """Fase 2 → 3: Estoy listo - genera link y completa ritual"""
     user = callback.from_user
     vip_service = VIPService()
+    try:
+        # Guard against repeat clicks
+        status, _ = vip_service.get_vip_entry_state(user.id)
+        if status != "pending_entry":
+            await callback.answer("El ritual ya ha sido completado.")
+            return
 
-    # Guard against repeat clicks
-    status, _ = vip_service.get_vip_entry_state(user.id)
-    if status != "pending_entry":
-        await callback.answer("El ritual ya ha sido completado.")
-        return
+        # Guard against expired subscriptions
+        subscription = vip_service.get_active_subscription_for_entry(user.id)
+        if not subscription:
+            vip_service.clear_vip_entry_state(user.id)
+            await callback.message.edit_text(
+                LucienVoice.vip_entry_expired(),
+                parse_mode="HTML"
+            )
+            await callback.answer()
+            return
 
-    # Guard against expired subscriptions
-    subscription = vip_service.get_active_subscription_for_entry(user.id)
-    if not subscription:
-        vip_service.clear_vip_entry_state(user.id)
+        # Advance to stage 3
+        vip_service.advance_vip_entry_stage(user.id)
+
+        # Send stage 3 message
         await callback.message.edit_text(
-            LucienVoice.free_entry_expired(),
+            LucienVoice.vip_entry_stage_3(),
             parse_mode="HTML"
         )
-        await callback.answer()
-        return
 
-    # Advance to stage 3
-    vip_service.advance_vip_entry_stage(user.id)
+        # Generate invite link
+        vip_channel = vip_service.get_vip_channel()
+        if vip_channel:
+            try:
+                invite_link = await callback.bot.create_chat_invite_link(
+                    chat_id=vip_channel.channel_id,
+                    name=f"VIP {user.id}",
+                    creates_join_request=False,
+                    member_limit=1
+                )
+                await callback.message.answer(
+                    f"🔗 <b>Su enlace de acceso exclusivo:</b>\n\n"
+                    f"{invite_link.invite_link}\n\n"
+                    f"<i>Diana le espera en el círculo íntimo...</i>",
+                    parse_mode="HTML"
+                )
+            except Exception as e:
+                logger.error(f"Error creando invite link: {e}")
+                if vip_channel.invite_link:
+                    await callback.message.answer(vip_channel.invite_link, parse_mode="HTML")
 
-    # Send stage 3 message
-    await callback.message.edit_text(
-        LucienVoice.vip_entry_stage_3(),
-        parse_mode="HTML"
-    )
-
-    # Generate invite link
-    vip_channel = vip_service.get_vip_channel()
-    if vip_channel:
-        try:
-            invite_link = await callback.bot.create_chat_invite_link(
-                chat_id=vip_channel.channel_id,
-                name=f"VIP {user.id}",
-                creates_join_request=False,
-                member_limit=1
-            )
-            await callback.message.answer(invite_link.invite_link, parse_mode="HTML")
-        except Exception as e:
-            logger.error(f"Error creando invite link: {e}")
-            if vip_channel.invite_link:
-                await callback.message.answer(vip_channel.invite_link, parse_mode="HTML")
-
-    # Complete the entry
-    vip_service.complete_vip_entry(user.id)
+        # Complete the entry
+        vip_service.complete_vip_entry(user.id)
+    finally:
+        vip_service.close()
     await callback.answer()

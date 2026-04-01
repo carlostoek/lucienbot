@@ -134,7 +134,7 @@ Entre con intención.
 👇"""
 
     @staticmethod
-    def free_entry_expired() -> str:
+    def vip_entry_expired() -> str:
         """Mensaje cuando expira la suscripción durante el ritual VIP"""
         return """🎩 <b>Lucien:</b>
 

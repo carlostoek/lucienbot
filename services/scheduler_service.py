@@ -117,18 +117,8 @@ async def _process_pending_requests():
                 request.approved_at = datetime.utcnow()
                 db.commit()
 
-                await bot.send_message(
-                    chat_id=request.user_id,
-                    text=LucienVoice.free_entry_welcome(channel.channel_name),
-                    parse_mode="HTML"
-                )
-
-                # Enviar enlace de invitación si está disponible
-                if channel.invite_link:
-                    await bot.send_message(
-                        chat_id=request.user_id,
-                        text=channel.invite_link
-                    )
+                # NOTE: Mensaje de bienvenida enviado por webhook handler (handle_member_join)
+                # para evitar duplicación. El webhook se dispara al unirse el usuario.
 
                 logger.info(f"Solicitud aprobada: user={request.user_id}, channel={channel.channel_id}")
 
