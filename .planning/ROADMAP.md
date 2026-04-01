@@ -151,5 +151,28 @@ Plans:
 - [ ] Phase 8: Cobertura de tests >= 70%, deuda tecnica reducida
 - [x] Phase 9: Bot hardened para produccion a escala (completed 2026-03-31)
 
+### Phase 10: Flujos de entrada @docs/req_fase10.md
+
+**Goal:** Implement ritualized entry flows for Free and VIP channels
+**Requirements**: FREE-01, VIP-01, SCHED-01
+**Depends on:** Phase 9
+**Status:** ✓ Complete (2026-03-31)
+**Plans:** 4/4 plans complete
+
+Plans:
+- [x] 10-01: Foundation — DB columns, LucienVoice, keyboards ✓
+- [x] 10-02: Free channel — 30s delay, impatience, approval loop ✓
+- [x] 10-03: VIP entry — 3-phase ritual, callbacks, state management ✓
+- [x] 10-04: Tests — VIP entry state, scheduler triggers, regression ✓
+
+**Success criteria:**
+1. Free channel: 30-second delayed ritual welcome with social links
+2. Free channel: Impatience message on repeated requests
+3. Free channel: Ritual welcome + invite link on approval
+4. VIP channel: 3-phase ritual on token redemption (confirm → align → deliver)
+5. VIP channel: Resumable flow if user abandons and returns
+6. VIP channel: Expired subscription guard cancels flow
+7. All new code covered by unit tests
+
 ---
 *Roadmap created: 2026-03-30 from codebase analysis and git history*

@@ -8,7 +8,9 @@ from aiogram.types import ChatJoinRequest, ChatMemberUpdated
 from aiogram.filters import ChatMemberUpdatedFilter, JOIN_TRANSITION, LEAVE_TRANSITION
 from services.channel_service import ChannelService
 from services.user_service import UserService
+from services.scheduler_service import get_scheduler
 from utils.lucien_voice import LucienVoice
+from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
@@ -51,6 +53,12 @@ async def handle_join_request(join_request: ChatJoinRequest):
     existing_request = channel_service.get_pending_request(user.id, channel.id)
     if existing_request:
         logger.info(f"Usuario {user.id} ya tiene solicitud pendiente")
+        # Enviar mensaje de impaciencia
+        await join_request.bot.send_message(
+            chat_id=user.id,
+            text=LucienVoice.free_entry_impatient(),
+            parse_mode="HTML"
+        )
         return
     
     # Crear solicitud pendiente
@@ -61,16 +69,14 @@ async def handle_join_request(join_request: ChatJoinRequest):
             username=user.username,
             first_name=user.first_name
         )
-        
-        # Notificar al usuario
-        await join_request.bot.send_message(
-            chat_id=user.id,
-            text=LucienVoice.free_request_received(channel.wait_time_minutes),
-            parse_mode="HTML"
-        )
-        
+
+        # Programar mensaje ritual con delay de 30 segundos
+        scheduler = get_scheduler()
+        if scheduler:
+            scheduler.schedule_free_welcome(user.id, channel.id)
+
         logger.info(f"Solicitud pendiente creada: id={pending.id}, approve_at={pending.scheduled_approval_at}")
-        
+
     except Exception as e:
         logger.error(f"Error procesando solicitud: {e}")
 
@@ -130,7 +136,27 @@ async def handle_member_join(event: ChatMemberUpdated):
     pending = channel_service.get_pending_request(user.id, channel.id)
     if pending and pending.status == "pending":
         pending.status = "approved"
-        pending.approved_at = __import__('datetime').datetime.utcnow()
+        pending.approved_at = datetime.utcnow()
         channel_service.db.commit()
-        
+
         logger.info(f"Solicitud marcada como aprobada: id={pending.id}")
+
+        # Enviar mensaje de bienvenida ritual
+        try:
+            await event.bot.send_message(
+                chat_id=user.id,
+                text=LucienVoice.free_entry_welcome(channel.channel_name),
+                parse_mode="HTML"
+            )
+
+            # Enviar enlace de invitación si está disponible
+            if channel.invite_link:
+                await event.bot.send_message(
+                    chat_id=user.id,
+                    text=f"🔗 <b>Su enlace de acceso:</b>\n\n{channel.invite_link}",
+                    parse_mode="HTML"
+                )
+
+            logger.info(f"Mensaje de bienvenida enviado a user={user.id}")
+        except Exception as e:
+            logger.error(f"Error enviando mensaje de bienvenida: {e}")

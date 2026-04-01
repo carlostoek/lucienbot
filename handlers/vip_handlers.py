@@ -12,7 +12,8 @@ from services.vip_service import VIPService
 from services.channel_service import ChannelService
 from keyboards.inline_keyboards import (
     vip_management_keyboard, tariffs_keyboard,
-    confirmation_keyboard, back_keyboard, token_actions_keyboard
+    confirmation_keyboard, back_keyboard, token_actions_keyboard,
+    vip_entry_continue_keyboard, vip_entry_ready_keyboard
 )
 from utils.lucien_voice import LucienVoice
 import logging
@@ -40,7 +41,7 @@ async def manage_tariffs(callback: CallbackQuery):
     """Gestión de tarifas VIP"""
     vip_service = VIPService()
     tariffs = vip_service.get_all_tariffs(active_only=False)
-    
+
     await callback.message.edit_text(
         LucienVoice.admin_tariff_list(tariffs),
         reply_markup=tariffs_keyboard(tariffs, for_selection=False),
@@ -68,7 +69,7 @@ async def create_tariff_start(callback: CallbackQuery, state: FSMContext):
 async def process_tariff_name(message: Message, state: FSMContext):
     """Procesa nombre de tarifa"""
     await state.update_data(name=message.text.strip())
-    
+
     await message.answer(
         f"🎩 <b>Lucien:</b>\n\n"
         f"<i>Excelente. Ahora, la duración...</i>\n\n"
@@ -87,9 +88,9 @@ async def process_tariff_days(message: Message, state: FSMContext):
         days = int(message.text.strip())
         if days <= 0:
             raise ValueError("Duración debe ser positiva")
-        
+
         await state.update_data(days=days)
-        
+
         await message.answer(
             f"🎩 <b>Lucien:</b>\n\n"
             f"<i>Perfecto. Finalmente, el valor...</i>\n\n"
@@ -99,7 +100,7 @@ async def process_tariff_days(message: Message, state: FSMContext):
             parse_mode="HTML"
         )
         await state.set_state(TariffStates.waiting_price)
-        
+
     except ValueError:
         await message.answer(
             f"🎩 <b>Lucien:</b>\n\n"
@@ -113,10 +114,10 @@ async def process_tariff_days(message: Message, state: FSMContext):
 async def process_tariff_price(message: Message, state: FSMContext):
     """Procesa precio y confirma tarifa"""
     price_text = message.text.strip()
-    
+
     await state.update_data(price=price_text)
     data = await state.get_data()
-    
+
     await message.answer(
         f"🎩 <b>Lucien:</b>\n\n"
         f"<i>Permítame confirmar los detalles de esta tarifa...</i>\n\n"
@@ -136,20 +137,20 @@ async def confirm_tariff(callback: CallbackQuery, state: FSMContext):
     """Crea la tarifa"""
     data = await state.get_data()
     vip_service = VIPService()
-    
+
     try:
         tariff = vip_service.create_tariff(
             name=data['name'],
             duration_days=data['days'],
             price=data['price']
         )
-        
+
         await callback.message.edit_text(
             LucienVoice.admin_tariff_created(data['name'], data['days'], data['price']),
             reply_markup=back_keyboard("manage_tariffs"),
             parse_mode="HTML"
         )
-        
+
     except Exception as e:
         logger.error(f"Error creando tarifa: {e}")
         await callback.message.edit_text(
@@ -157,7 +158,7 @@ async def confirm_tariff(callback: CallbackQuery, state: FSMContext):
             reply_markup=back_keyboard("manage_tariffs"),
             parse_mode="HTML"
         )
-    
+
     await state.clear()
     await callback.answer()
 
@@ -169,7 +170,7 @@ async def generate_token_start(callback: CallbackQuery, state: FSMContext):
     """Inicia generación de token"""
     vip_service = VIPService()
     tariffs = vip_service.get_all_tariffs(active_only=True)
-    
+
     if not tariffs:
         await callback.message.edit_text(
             f"🎩 <b>Lucien:</b>\n\n"
@@ -180,7 +181,7 @@ async def generate_token_start(callback: CallbackQuery, state: FSMContext):
         )
         await callback.answer()
         return
-    
+
     await callback.message.edit_text(
         f"🎩 <b>Lucien:</b>\n\n"
         f"<i>Seleccione la tarifa para la cual desea forjar un token de acceso...</i>",
@@ -195,24 +196,24 @@ async def generate_token_start(callback: CallbackQuery, state: FSMContext):
 async def generate_token(callback: CallbackQuery, state: FSMContext):
     """Genera el token para la tarifa seleccionada"""
     tariff_id = int(callback.data.replace("select_tariff_", ""))
-    
+
     vip_service = VIPService()
     tariff = vip_service.get_tariff(tariff_id)
-    
+
     if not tariff:
         await callback.answer("Tarifa no encontrada", show_alert=True)
         return
-    
+
     try:
         token = vip_service.generate_token(tariff_id)
         token_url = f"https://t.me/{(await callback.bot.get_me()).username}?start={token.token_code}"
-        
+
         await callback.message.edit_text(
             LucienVoice.token_generated(token_url, tariff.name),
             reply_markup=token_actions_keyboard(token.id),
             parse_mode="HTML"
         )
-        
+
     except Exception as e:
         logger.error(f"Error generando token: {e}")
         await callback.message.edit_text(
@@ -220,7 +221,7 @@ async def generate_token(callback: CallbackQuery, state: FSMContext):
             reply_markup=vip_management_keyboard(),
             parse_mode="HTML"
         )
-    
+
     await state.clear()
     await callback.answer()
 
@@ -232,7 +233,7 @@ async def list_tokens(callback: CallbackQuery):
     """Lista tokens generados"""
     vip_service = VIPService()
     tokens = vip_service.get_all_tokens()[:20]  # Limitar a 20 recientes
-    
+
     if not tokens:
         await callback.message.edit_text(
             f"🎩 <b>Lucien:</b>\n\n"
@@ -242,7 +243,7 @@ async def list_tokens(callback: CallbackQuery):
         )
         await callback.answer()
         return
-    
+
     text = f"""🎩 <b>Lucien:</b>
 
 <i>Los accesos forjados para el círculo exclusivo...</i>
@@ -250,7 +251,7 @@ async def list_tokens(callback: CallbackQuery):
 📋 <b>Tokens recientes:</b>
 
 """
-    
+
     buttons = []
     for token in tokens:
         status_emoji = {
@@ -258,22 +259,22 @@ async def list_tokens(callback: CallbackQuery):
             "used": "🔴",
             "expired": "⚫"
         }.get(token.status.value, "⚪")
-        
+
         text += f"{status_emoji} <code>{token.token_code[:16]}...</code> - {token.tariff.name}\n"
-        
+
         if token.status.value == "active":
             buttons.append([InlineKeyboardButton(
                 text=f"{status_emoji} {token.tariff.name} - Copiar",
                 callback_data=f"copy_token_{token.id}"
             )])
-    
+
     buttons.append([InlineKeyboardButton(
         text="🔙 Volver",
         callback_data="admin_vip"
     )])
-    
+
     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-    
+
     await callback.message.edit_text(
         text,
         reply_markup=keyboard,
@@ -286,17 +287,17 @@ async def list_tokens(callback: CallbackQuery):
 async def copy_token(callback: CallbackQuery):
     """Copia el enlace del token"""
     token_id = int(callback.data.replace("copy_token_", ""))
-    
+
     vip_service = VIPService()
     token = vip_service.get_token(token_id)
-    
+
     if not token:
         await callback.answer("Token no encontrado", show_alert=True)
         return
-    
+
     bot_info = await callback.bot.get_me()
     token_url = f"https://t.me/{bot_info.username}?start={token.token_code}"
-    
+
     await callback.message.answer(
         f"🔗 <b>Enlace del token:</b>\n<code>{token_url}</code>",
         parse_mode="HTML"
@@ -311,7 +312,7 @@ async def list_subscribers(callback: CallbackQuery):
     """Lista suscriptores VIP activos"""
     vip_service = VIPService()
     subscriptions = vip_service.get_active_subscriptions()
-    
+
     if not subscriptions:
         await callback.message.edit_text(
             f"🎩 <b>Lucien:</b>\n\n"
@@ -322,7 +323,7 @@ async def list_subscribers(callback: CallbackQuery):
         )
         await callback.answer()
         return
-    
+
     text = f"""🎩 <b>Lucien:</b>
 
 <i>Los privilegiados del círculo exclusivo...</i>
@@ -330,18 +331,116 @@ async def list_subscribers(callback: CallbackQuery):
 👑 <b>Suscriptores activos:</b> {len(subscriptions)}
 
 """
-    
+
     for sub in subscriptions[:10]:  # Mostrar primeros 10
         username = f"@{sub.user.username}" if sub.user and sub.user.username else f"ID:{sub.user_id}"
         expiry = sub.end_date.strftime("%d/%m/%Y")
         text += f"• {username} - Vence: {expiry}\n"
-    
+
     if len(subscriptions) > 10:
         text += f"\n<i>...y {len(subscriptions) - 10} más.</i>"
-    
+
     await callback.message.edit_text(
         text,
         reply_markup=vip_management_keyboard(),
         parse_mode="HTML"
     )
+    await callback.answer()
+
+
+# ==================== RITUAL DE ENTRADA VIP (PHASE 10) ====================
+
+@router.callback_query(F.data == "vip_entry_continue")
+async def vip_entry_continue(callback: CallbackQuery):
+    """Fase 1 → 2: Continuar ritual de entrada VIP"""
+    user = callback.from_user
+    vip_service = VIPService()
+    try:
+        # Guard against repeat clicks
+        status, _ = vip_service.get_vip_entry_state(user.id)
+        if status != "pending_entry":
+            await callback.answer("El ritual ya ha sido completado.")
+            return
+
+        # Guard against expired subscriptions
+        subscription = vip_service.get_active_subscription_for_entry(user.id)
+        if not subscription:
+            vip_service.clear_vip_entry_state(user.id)
+            await callback.message.edit_text(
+                LucienVoice.vip_entry_expired(),
+                parse_mode="HTML"
+            )
+            await callback.answer()
+            return
+
+        # Advance to stage 2
+        vip_service.advance_vip_entry_stage(user.id)
+
+        await callback.message.edit_text(
+            LucienVoice.vip_entry_stage_2(),
+            reply_markup=vip_entry_ready_keyboard(),
+            parse_mode="HTML"
+        )
+    finally:
+        vip_service.close()
+    await callback.answer()
+
+
+@router.callback_query(F.data == "vip_entry_ready")
+async def vip_entry_ready(callback: CallbackQuery):
+    """Fase 2 → 3: Estoy listo - genera link y completa ritual"""
+    user = callback.from_user
+    vip_service = VIPService()
+    try:
+        # Guard against repeat clicks
+        status, _ = vip_service.get_vip_entry_state(user.id)
+        if status != "pending_entry":
+            await callback.answer("El ritual ya ha sido completado.")
+            return
+
+        # Guard against expired subscriptions
+        subscription = vip_service.get_active_subscription_for_entry(user.id)
+        if not subscription:
+            vip_service.clear_vip_entry_state(user.id)
+            await callback.message.edit_text(
+                LucienVoice.vip_entry_expired(),
+                parse_mode="HTML"
+            )
+            await callback.answer()
+            return
+
+        # Advance to stage 3
+        vip_service.advance_vip_entry_stage(user.id)
+
+        # Send stage 3 message
+        await callback.message.edit_text(
+            LucienVoice.vip_entry_stage_3(),
+            parse_mode="HTML"
+        )
+
+        # Generate invite link
+        vip_channel = vip_service.get_vip_channel()
+        if vip_channel:
+            try:
+                invite_link = await callback.bot.create_chat_invite_link(
+                    chat_id=vip_channel.channel_id,
+                    name=f"VIP {user.id}",
+                    creates_join_request=False,
+                    member_limit=1
+                )
+                await callback.message.answer(
+                    f"🔗 <b>Su enlace de acceso exclusivo:</b>\n\n"
+                    f"{invite_link.invite_link}\n\n"
+                    f"<i>Diana le espera en el círculo íntimo...</i>",
+                    parse_mode="HTML"
+                )
+            except Exception as e:
+                logger.error(f"Error creando invite link: {e}")
+                if vip_channel.invite_link:
+                    await callback.message.answer(vip_channel.invite_link, parse_mode="HTML")
+
+        # Complete the entry
+        vip_service.complete_vip_entry(user.id)
+    finally:
+        vip_service.close()
     await callback.answer()
