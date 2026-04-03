@@ -376,12 +376,14 @@ class VIPService:
         return sub
 
     def complete_vip_entry(self, user_id: int) -> bool:
-        """Marks VIP entry as active and clears stage. Returns True if state was pending_entry."""
+        """Marks VIP entry as active and clears stage. Returns True if state was pending_entry and subscription is active."""
         db = self._get_db()
         user = db.query(User).filter(User.telegram_id == user_id).first()
-        if user and user.vip_entry_status == "pending_entry":
-            user.vip_entry_status = "active"
-            user.vip_entry_stage = None
-            db.commit()
-            return True
-        return False
+        if not user or user.vip_entry_status != "pending_entry":
+            return False
+        if not self.get_active_subscription_for_entry(user_id):
+            return False
+        user.vip_entry_status = "active"
+        user.vip_entry_stage = None
+        db.commit()
+        return True
