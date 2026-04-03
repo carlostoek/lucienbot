@@ -207,35 +207,38 @@ async def handle_reaction(callback: CallbackQuery):
     if reaction:
         emoji = reaction.reaction_emoji.emoji if reaction.reaction_emoji else "💋"
         besitos = reaction.besitos_awarded
-        
+
         # Obtener el broadcast para actualizar el mensaje
         broadcast = broadcast_service.get_broadcast(broadcast_id)
         if broadcast and broadcast.has_reactions:
-            # Obtener conteo actualizado de todas las reacciones
+            # Obtener TODOS los emojis originales del broadcast
+            selected_emoji_ids = broadcast_service.get_selected_emoji_ids(broadcast_id)
+
+            # Obtener conteo actualizado de reacciones
             reactions = broadcast_service.get_reactions_by_broadcast(broadcast_id)
-            
+
             # Contar reacciones por emoji
             emoji_counts = {}
-            emoji_objects = {}
             for r in reactions:
                 if r.reaction_emoji:
-                    emoji_char = r.reaction_emoji.emoji
                     emoji_id_val = r.reaction_emoji.id
                     emoji_counts[emoji_id_val] = emoji_counts.get(emoji_id_val, 0) + 1
-                    emoji_objects[emoji_id_val] = r.reaction_emoji
-            
-            # Reconstruir el teclado con conteos
+
+            # Reconstruir el teclado con TODOS los emojis originales (con o sin conteo)
             buttons = []
-            for eid, count in sorted(emoji_counts.items()):
-                emoji_obj = emoji_objects.get(eid)
+            for emoji_id in selected_emoji_ids:
+                emoji_obj = broadcast_service.get_reaction_emoji(emoji_id)
                 if emoji_obj:
-                    buttons.append([InlineKeyboardButton(
-                        text=f"{emoji_obj.emoji} {count}",
-                        callback_data=f"react_{broadcast_id}_{eid}"
-                    )])
-            
+                    count = emoji_counts.get(emoji_id, 0)
+                    # Mostrar el emoji con el conteo (o solo el emoji si no hay conteo)
+                    text = f"{emoji_obj.emoji} {count}" if count > 0 else emoji_obj.emoji
+                    buttons.append(InlineKeyboardButton(
+                        text=text,
+                        callback_data=f"react_{broadcast_id}_{emoji_id}"
+                    ))
+
             if buttons:
-                new_markup = InlineKeyboardMarkup(inline_keyboard=buttons)
+                new_markup = InlineKeyboardMarkup(inline_keyboard=[buttons])  # Una sola fila
                 try:
                     await callback.bot.edit_message_reply_markup(
                         chat_id=broadcast.channel_id,

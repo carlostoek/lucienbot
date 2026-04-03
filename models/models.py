@@ -235,6 +235,7 @@ class BroadcastMessage(Base):
     attachment_file_id = Column(String(500), nullable=True)  # ID del archivo en Telegram
     has_reactions = Column(Boolean, default=False)  # Si tiene botones de reacción
     is_protected = Column(Boolean, default=False)  # Protección contra copia/reenvío
+    selected_emoji_ids = Column(String(200), nullable=True)  # IDs de emojis seleccionados separados por coma
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relaciones

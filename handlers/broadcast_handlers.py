@@ -656,19 +656,19 @@ async def confirm_and_send_broadcast(callback: CallbackQuery, state: FSMContext,
     broadcast_service = BroadcastService()
     
     try:
-        # Construir teclado de reacciones
+        # Construir teclado de reacciones - todos los botones en una sola hilera
         reply_markup = None
         if selected_emojis:
             buttons = []
             for emoji_id in selected_emojis:
                 emoji = broadcast_service.get_reaction_emoji(emoji_id)
                 if emoji:
-                    buttons.append([InlineKeyboardButton(
+                    buttons.append(InlineKeyboardButton(
                         text=f"{emoji.emoji}",
                         callback_data=f"react_0_{emoji.id}"  # broadcast_id se actualizará después
-                    )])
+                    ))
             if buttons:
-                reply_markup = InlineKeyboardMarkup(inline_keyboard=buttons)
+                reply_markup = InlineKeyboardMarkup(inline_keyboard=[buttons])  # Una sola fila
         
         # Enviar mensaje
         protect_content = is_protected
@@ -723,6 +723,7 @@ async def confirm_and_send_broadcast(callback: CallbackQuery, state: FSMContext,
             )
         
         # Registrar en base de datos
+        selected_emoji_ids_str = ','.join(str(eid) for eid in selected_emojis)
         broadcast = broadcast_service.create_broadcast_message(
             message_id=sent_message.message_id,
             channel_id=channel_id,
@@ -732,7 +733,8 @@ async def confirm_and_send_broadcast(callback: CallbackQuery, state: FSMContext,
             attachment_type=attachment_type,
             attachment_file_id=attachment_file_id,
             has_reactions=len(selected_emojis) > 0,
-            is_protected=is_protected
+            is_protected=is_protected,
+            selected_emoji_ids=selected_emoji_ids_str
         )
         
         # Actualizar callback_data de los botones con el ID real del broadcast
@@ -741,11 +743,11 @@ async def confirm_and_send_broadcast(callback: CallbackQuery, state: FSMContext,
             for emoji_id in selected_emojis:
                 emoji = broadcast_service.get_reaction_emoji(emoji_id)
                 if emoji:
-                    buttons.append([InlineKeyboardButton(
+                    buttons.append(InlineKeyboardButton(
                         text=f"{emoji.emoji}",
                         callback_data=f"react_{broadcast.id}_{emoji.id}"
-                    )])
-            new_markup = InlineKeyboardMarkup(inline_keyboard=buttons)
+                    ))
+            new_markup = InlineKeyboardMarkup(inline_keyboard=[buttons])  # Una sola fila
             try:
                 await bot.edit_message_reply_markup(
                     chat_id=channel_id,

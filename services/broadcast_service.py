@@ -89,14 +89,15 @@ class BroadcastService:
         return False
     
     # ==================== MENSAJES DE BROADCAST ====================
-    
+
     def create_broadcast_message(self, message_id: int, channel_id: int,
                                   admin_id: int, text: str = None,
                                   has_attachment: bool = False,
                                   attachment_type: str = None,
                                   attachment_file_id: str = None,
                                   has_reactions: bool = False,
-                                  is_protected: bool = False) -> BroadcastMessage:
+                                  is_protected: bool = False,
+                                  selected_emoji_ids: str = None) -> BroadcastMessage:
         """Registra un mensaje de broadcast en la base de datos"""
         broadcast = BroadcastMessage(
             message_id=message_id,
@@ -107,7 +108,8 @@ class BroadcastService:
             attachment_type=attachment_type,
             attachment_file_id=attachment_file_id,
             has_reactions=has_reactions,
-            is_protected=is_protected
+            is_protected=is_protected,
+            selected_emoji_ids=selected_emoji_ids
         )
         self.db.add(broadcast)
         self.db.commit()
@@ -120,6 +122,16 @@ class BroadcastService:
         return self.db.query(BroadcastMessage).filter(
             BroadcastMessage.id == broadcast_id
         ).first()
+
+    def get_selected_emoji_ids(self, broadcast_id: int) -> List[int]:
+        """Obtiene la lista de IDs de emojis seleccionados para un broadcast"""
+        broadcast = self.get_broadcast(broadcast_id)
+        if not broadcast or not broadcast.selected_emoji_ids:
+            return []
+        try:
+            return [int(eid) for eid in broadcast.selected_emoji_ids.split(',') if eid]
+        except (ValueError, AttributeError):
+            return []
     
     def get_broadcast_by_message_id(self, message_id: int, channel_id: int) -> Optional[BroadcastMessage]:
         """Obtiene un broadcast por ID de mensaje de Telegram y canal"""
