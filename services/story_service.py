@@ -130,6 +130,21 @@ class StoryService:
         logger.info(f"Opcion creada para nodo {node_id}")
         return choice
 
+    def add_choice_to_node(self, node_id: int, text: str,
+                           next_node_id: int = None,
+                           choice_archetype: ArchetypeType = None,
+                           archetype_points: int = 0,
+                           additional_cost: int = 0) -> StoryChoice:
+        """Alias para crear una opcion de decision para un nodo"""
+        return self.create_choice(
+            node_id=node_id,
+            text=text,
+            next_node_id=next_node_id,
+            choice_archetype=choice_archetype,
+            archetype_points=archetype_points,
+            additional_cost=additional_cost
+        )
+
     def get_choice(self, choice_id: int) -> Optional[StoryChoice]:
         """Obtiene una opcion por ID"""
         return self.db.query(StoryChoice).filter(StoryChoice.id == choice_id).first()
@@ -168,6 +183,13 @@ class StoryService:
         return self.db.query(UserStoryProgress).filter(
             UserStoryProgress.user_id == user_id
         ).first()
+
+    def get_or_create_progress(self, user_id: int) -> UserStoryProgress:
+        """Obtiene el progreso de un usuario o lo crea si no existe"""
+        progress = self.get_user_progress(user_id)
+        if not progress:
+            progress = self.create_user_progress(user_id)
+        return progress
 
     def create_user_progress(self, user_id: int, starting_node_id: int = None) -> UserStoryProgress:
         """Crea el progreso inicial para un usuario"""
@@ -397,6 +419,10 @@ class StoryService:
         """Obtiene el arquetipo de un usuario"""
         progress = self.get_user_progress(user_id)
         return progress.archetype if progress else None
+
+    def calculate_archetype(self, progress: UserStoryProgress) -> Optional[ArchetypeType]:
+        """Calcula el arquetipo dominante basado en los puntos acumulados"""
+        return progress.get_dominant_archetype()
 
     def get_archetype_description(self, archetype_type: ArchetypeType) -> str:
         """Obtiene la descripcion de un arquetipo"""

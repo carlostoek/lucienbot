@@ -186,3 +186,101 @@ class TestBigIntegerOverflow:
         from sqlalchemy import BigInteger
 
         assert isinstance(BroadcastReaction.besitos_awarded.type, BigInteger)
+
+
+@pytest.mark.unit
+class TestStoryServiceCRUD:
+    def test_create_node(self, db_session, sample_admin):
+        service = StoryService(db_session)
+        node = service.create_node(
+            title="Node A", content="Content A",
+            node_type=NodeType.NARRATIVE, chapter=1,
+            created_by=sample_admin.telegram_id
+        )
+        assert node.title == "Node A"
+        assert node.node_type == NodeType.NARRATIVE
+
+    def test_add_choice_to_node(self, db_session, sample_story_node):
+        service = StoryService(db_session)
+        choice = service.add_choice_to_node(
+            sample_story_node.id, text="Choice 1",
+            next_node_id=None, archetype_points=5
+        )
+        assert choice.node_id == sample_story_node.id
+        assert choice.text == "Choice 1"
+        assert choice.archetype_points == 5
+
+    def test_get_node_choices(self, db_session, sample_story_node, sample_story_choice):
+        service = StoryService(db_session)
+        choices = service.get_node_choices(sample_story_node.id)
+        assert any(c.id == sample_story_choice.id for c in choices)
+
+
+@pytest.mark.unit
+class TestStoryServiceArchetype:
+    def test_calculate_archetype(self, db_session, sample_user):
+        service = StoryService(db_session)
+        progress = service.get_or_create_progress(sample_user.id)
+        progress.explorador_points = 10
+        progress.seductor_points = 5
+        db_session.commit()
+        archetype = service.calculate_archetype(progress)
+        assert archetype == ArchetypeType.EXPLORADOR
+
+    def test_get_user_archetype(self, db_session, sample_user):
+        service = StoryService(db_session)
+        progress = service.get_or_create_progress(sample_user.id)
+        progress.archetype = ArchetypeType.MISTERIOSO
+        db_session.commit()
+        assert service.get_user_archetype(sample_user.id) == ArchetypeType.MISTERIOSO
+
+
+@pytest.mark.unit
+class TestStoryServiceBranching:
+    def test_advance_to_node_with_choice_updates_archetype_points(self, db_session, sample_user):
+        service = StoryService(db_session)
+        from models.models import BesitoBalance
+        bb = BesitoBalance(user_id=sample_user.id, balance=100, total_earned=100, total_spent=0)
+        db_session.add(bb)
+        db_session.commit()
+
+        node_a = service.create_node("Decision", "Choose", NodeType.DECISION, chapter=1)
+        node_b = service.create_node("Outcome B", "You chose B", NodeType.NARRATIVE, chapter=1)
+        choice = service.add_choice_to_node(
+            node_a.id, "Go to B", node_b.id,
+            choice_archetype=ArchetypeType.EXPLORADOR, archetype_points=7
+        )
+
+        success, msg, progress = service.advance_to_node(sample_user.id, node_b.id, choice_id=choice.id)
+        assert success is True
+        db_session.refresh(progress)
+        assert progress.current_node_id == node_b.id
+        assert progress.explorador_points == 7
+
+    def test_advance_to_node_deducts_besitos(self, db_session, sample_user):
+        service = StoryService(db_session)
+        from models.models import BesitoBalance
+        bb = BesitoBalance(user_id=sample_user.id, balance=100, total_earned=100, total_spent=0)
+        db_session.add(bb)
+        db_session.commit()
+
+        node = service.create_node("Costly", "Costs 10", NodeType.NARRATIVE, chapter=1, cost_besitos=10)
+        success, msg, progress = service.advance_to_node(sample_user.id, node.id)
+        assert success is True
+        db_session.refresh(progress)
+        assert progress.current_node_id == node.id
+        assert service.besito_service.get_balance(sample_user.id) == 90
+
+
+@pytest.mark.unit
+class TestStoryServiceStats:
+    def test_get_story_stats(self, db_session, sample_user):
+        service = StoryService(db_session)
+        progress = service.get_or_create_progress(sample_user.id)
+        stats = service.get_story_stats()
+        assert "total_nodes" in stats
+        assert "total_chapters" in stats
+        assert "total_users" in stats
+        assert "completed_users" in stats
+        assert "archetype_distribution" in stats
+        assert "total_achievements" in stats
