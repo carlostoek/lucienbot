@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: "Phase 10 shipped — PR #12"
-last_updated: "2026-03-31T23:58:34.239Z"
+status: Milestone complete
+last_updated: "2026-04-03T05:44:31.162Z"
 progress:
-  total_phases: 11
-  completed_phases: 3
-  total_plans: 10
-  completed_plans: 11
-  percent: 100
+  total_phases: 12
+  completed_phases: 4
+  total_plans: 17
+  completed_plans: 18
+  percent: 71
 ---
 
 # State: Lucien Bot
@@ -22,13 +22,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Crear una experiencia premium y gamificada que incentiva el compromiso de la comunidad con Diana a través de un sistema de recompensas, acceso exclusivo VIP y narrativa inmersiva.
-**Current focus:** Phase 10 — Flujos de entrada (Plan 10-01 Complete)
+**Current focus:** Phase 11 — cubrir-los-servicios-cr-ticos-en-los-tests-realizar-test-e2e
 
 ## Milestone
 
 **Name:** v1.0 — Core bot functionality
 **Started:** ~2025 (inferred from git history)
-**Progress:** [██████████] 100%
+**Progress:** [███████░░░] 71%
 
 ## Phase Status
 
@@ -48,7 +48,16 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 ## Current Phase
 
-**Phase 10: Flujos de entrada @docs/req_fase10.md** — ✅ COMPLETE
+**Phase 11: cubrir-los-servicios-cr-ticos-en-los-tests-realizar-test-e2e** — ▶️ IN PROGRESS
+
+### Phase 11 Summary
+
+| Plan | Status | Commits | Description |
+|------|--------|---------|-------------|
+| 11-01 | ✓ | 0bf6f6d, 1c38b43, cc05571 | Wave 0 test infrastructure: fixtures, e2e marker, stub files |
+| 11-02 | ✓ | 0bf6f6d, c8faa81 | StoreService tests + race condition fix with SELECT FOR UPDATE |
+| 11-03 | ✓ | 084dcbd, d14cf40, ead2f2b, 50ad430 | PromotionService + BroadcastService tests + race condition fixes |
+| 11-05 | ✓ | e13119a, 2a2d730, 9c76de8 | UserService + AnalyticsService + StoryService unit tests |
 
 ### Phase 10 Summary
 
@@ -59,7 +68,7 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 | 10-03 | ✓ | e3374f8, 089cdea, 4389368, 635831e | VIP entry: 3-phase ritual, callbacks, state management |
 | 10-04 | ✓ | ca076f3, e887eb8 | Tests: VIP entry state, scheduler triggers, regression |
 
-**Tests:** 98/98 unit tests passing
+**Tests:** 129/129 unit tests passing
 
 ## Execution Log
 
@@ -78,11 +87,14 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 | 2026-03-31 | 10-02 | Free channel 30s delay mechanism — scheduler handlers, impatience messages — commits d82e88d, 72f99a6 |
 | 2026-03-31 | 10-03 | VIP 3-phase entry ritual — state management, callbacks, link generation — commits e3374f8, 089cdea, 4389368 |
 | 2026-03-31 | 10-04 | Tests: VIP entry state, scheduler triggers, channel regression — commit ca076f3 |
+| 2026-04-03 | 11-01 | Wave 0 test infrastructure: fixtures, e2e marker, 13 stub files — commits 0bf6f6d, 1c38b43, cc05571 |
+| 2026-04-03 | 11-03 | PromotionService + BroadcastService tests + race condition fixes — commits 084dcbd, d14cf40, ead2f2b, 50ad430 |
+| 2026-04-03 | 11-05 | UserService + AnalyticsService + StoryService unit tests — commits e13119a, 2a2d730, 9c76de8 |
 
 ## What's Next
 
-→ Phase 10 COMPLETE — All entry flow rituals implemented
-→ Ready for `/gsd:verify-work` to validate implementation
+→ Phase 11 IN PROGRESS — Plans 11-01, 11-02, 11-03, 11-05 complete
+→ Next: 11-04 or next uncompleted plan
 
 ### Quick Tasks Completed
 
@@ -105,6 +117,8 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 | ~2025 | SQLite → PostgreSQL en Railway | SQLite no escala con writes concurrentes |
 | 2026-03-31 | BackupService usa subprocess.run para pg_dump y sqlite3 | Consistencia con patrones del proyecto |
 | 2026-03-31 | Backup cada 100 ciclos del scheduler (~50 min) | Evita refactorizar arquitectura del scheduler |
+| 2026-04-03 | Keep existing conftest pattern for new fixtures | Consistency with existing test codebase |
+| 2026-04-03 | Stub files include minimal pass test | Ensures pytest --collect-only never fails on new modules |
 
 ## Execution Log
 

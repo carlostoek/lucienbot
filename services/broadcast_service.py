@@ -151,8 +151,12 @@ class BroadcastService:
         Registra una reacción y otorga besitos al usuario.
         Retorna None si el usuario ya reaccionó.
         """
-        # Verificar si ya reaccionó
-        if self.has_user_reacted(broadcast_id, user_id):
+        # Verificar si ya reaccionó (con lock para evitar race conditions)
+        existing = self.db.query(BroadcastReaction).filter(
+            BroadcastReaction.broadcast_id == broadcast_id,
+            BroadcastReaction.user_id == user_id
+        ).with_for_update().first()
+        if existing:
             logger.info(f"Usuario {user_id} ya reaccionó al broadcast {broadcast_id}")
             return None
         

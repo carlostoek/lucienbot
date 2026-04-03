@@ -580,6 +580,201 @@ meticulosa atención.</i>
 <i>Los secretos más profundos requieren tiempo para
 ser revelados correctamente.</i>"""
 
+    # ==================== SERVICIOS - TIENDA ====================
+
+    @staticmethod
+    def store_product_not_found() -> str:
+        return "Producto no encontrado"
+
+    @staticmethod
+    def store_product_unavailable(product_name: str = None) -> str:
+        if product_name:
+            return f"Producto no disponible: {product_name}"
+        return "Producto no disponible"
+
+    @staticmethod
+    def store_cart_updated(quantity: int, product_name: str) -> str:
+        return f"Cantidad actualizada: {quantity} x {product_name}"
+
+    @staticmethod
+    def store_cart_added(product_name: str) -> str:
+        return f"Agregado al carrito: {product_name}"
+
+    @staticmethod
+    def store_cart_empty() -> str:
+        return "El carrito esta vacio"
+
+    @staticmethod
+    def store_stock_insufficient(product_name: str, available: int) -> str:
+        return f"Stock insuficiente para: {product_name} (disponible: {available})"
+
+    @staticmethod
+    def store_balance_insufficient(needed: int, have: int) -> str:
+        return f"Saldo insuficiente. Necesitas: {needed} besitos. Tienes: {have}"
+
+    @staticmethod
+    def store_order_not_found() -> str:
+        return "Orden no encontrada"
+
+    @staticmethod
+    def store_order_already_processed() -> str:
+        return "La orden ya fue procesada"
+
+    @staticmethod
+    def store_payment_failed() -> str:
+        return "Error al procesar el pago"
+
+    @staticmethod
+    def store_purchase_completed(total_price: int) -> str:
+        return f"Compra completada! Se debitaron {total_price} besitos."
+
+    # ==================== SERVICIOS - PAQUETES ====================
+
+    @staticmethod
+    def package_not_found() -> str:
+        return "Paquete no encontrado"
+
+    @staticmethod
+    def package_empty_files() -> str:
+        return "El paquete no contiene archivos"
+
+    @staticmethod
+    def package_delivery_success(package_name: str) -> str:
+        return f"Paquete '{package_name}' entregado exitosamente"
+
+    @staticmethod
+    def package_delivery_failed() -> str:
+        return "Error al entregar el paquete"
+
+    @staticmethod
+    def package_delivery_intro(package_name: str, description: str = None) -> str:
+        desc = description or "Un obsequio del reino..."
+        return f"""🎩 <b>Lucien:</b>
+
+<i>Diana ha preparado algo especial para usted...</i>
+
+📦 <b>{package_name}</b>
+
+<i>{desc}</i>
+
+Enviando archivo(s)..."""
+
+    # ==================== SERVICIOS - RECOMPENSAS ====================
+
+    @staticmethod
+    def reward_not_found() -> str:
+        return "Recompensa no encontrada"
+
+    @staticmethod
+    def reward_inactive() -> str:
+        return "Recompensa inactiva"
+
+    @staticmethod
+    def reward_type_unsupported() -> str:
+        return "Tipo de recompensa no soportado"
+
+    @staticmethod
+    def reward_delivery_error(error: str = None) -> str:
+        if error:
+            return f"Error al entregar recompensa: {error}"
+        return "Error al entregar recompensa"
+
+    @staticmethod
+    def reward_besitos_received(amount: int, balance: int) -> str:
+        return f"Has recibido {amount} besitos! Tu saldo es: {balance}"
+
+    @staticmethod
+    def reward_besitos_failed() -> str:
+        return "Error al acreditar besitos"
+
+    @staticmethod
+    def reward_package_not_configured() -> str:
+        return "Paquete no configurado"
+
+    @staticmethod
+    def reward_package_not_found() -> str:
+        return "Paquete no encontrado"
+
+    @staticmethod
+    def reward_package_unavailable() -> str:
+        return "Paquete no disponible para recompensas"
+
+    @staticmethod
+    def reward_stock_depleted() -> str:
+        return "Stock de recompensas agotado"
+
+    @staticmethod
+    def reward_vip_not_configured() -> str:
+        return "Tarifa VIP no configurada"
+
+    @staticmethod
+    def reward_tariff_not_found() -> str:
+        return "Tarifa no encontrada"
+
+    @staticmethod
+    def reward_vip_received(tariff_name: str, days: int) -> str:
+        return f"Has recibido acceso VIP: {tariff_name} ({days} dias)"
+
+    @staticmethod
+    def reward_vip_message(tariff_name: str, duration_days: int, token_url: str) -> str:
+        return f"""🎩 Lucien:
+
+Diana te ha concedido acceso al circulo exclusivo...
+
+👑 Recompensa VIP Activada
+
+📋 Tarifa: {tariff_name}
+⏱ Duracion: {duration_days} dias
+
+🔗 Tu enlace de acceso:
+{token_url}
+
+Haz clic para activar tu membresia VIP."""
+
+    # ==================== SERVICIOS - PROMOCIONES ====================
+
+    @staticmethod
+    def promotion_blocked(reason: str) -> str:
+        return f"No puedes expresar interes. Razon: {reason}"
+
+    @staticmethod
+    def promotion_not_found() -> str:
+        return "Promocion no encontrada"
+
+    @staticmethod
+    def promotion_unavailable() -> str:
+        return "Esta promocion no esta disponible actualmente"
+
+    @staticmethod
+    def promotion_already_interested() -> str:
+        return "Ya has expresado interes en esta promocion"
+
+    @staticmethod
+    def promotion_interest_registered() -> str:
+        return "Interes registrado correctamente"
+
+    # ==================== SERVICIOS - NARRATIVA ====================
+
+    @staticmethod
+    def story_fragment_unavailable() -> str:
+        return "Este fragmento no esta disponible"
+
+    @staticmethod
+    def story_fragment_vip_required() -> str:
+        return "Este fragmento requiere acceso al circulo exclusivo"
+
+    @staticmethod
+    def story_fragment_archetype_required(archetype_name: str) -> str:
+        return f"Este fragmento solo esta disponible para quienes han despertado el arquetipo del {archetype_name}"
+
+    @staticmethod
+    def story_fragment_cost_needed(cost: int) -> str:
+        return f"Necesita {cost} besitos para acceder a este fragmento"
+
+    @staticmethod
+    def story_payment_failed() -> str:
+        return "No se pudo procesar el pago"
+
 
 # Import para evitar dependencia circular
 from models.models import ChannelType

@@ -12,6 +12,7 @@ from models.database import SessionLocal
 from services.besito_service import BesitoService
 from services.package_service import PackageService
 from models.models import TransactionSource
+from utils.lucien_voice import LucienVoice
 import logging
 
 logger = logging.getLogger(__name__)
@@ -136,10 +137,10 @@ class StoreService:
         db = self._get_db()
         product = self.get_product(product_id)
         if not product:
-            return False, "Producto no encontrado"
+            return False, LucienVoice.store_product_not_found()
 
         if not product.is_available:
-            return False, "Producto no disponible"
+            return False, LucienVoice.store_product_unavailable()
 
         # Verificar si ya esta en el carrito
         existing = db.query(CartItem).filter(
@@ -150,7 +151,7 @@ class StoreService:
         if existing:
             existing.quantity += quantity
             db.commit()
-            return True, f"Cantidad actualizada: {existing.quantity} x {product.name}"
+            return True, LucienVoice.store_cart_updated(existing.quantity, product.name)
 
         # Crear nuevo item
         cart_item = CartItem(
@@ -161,7 +162,7 @@ class StoreService:
         db.add(cart_item)
         db.commit()
 
-        return True, f"Agregado al carrito: {product.name}"
+        return True, LucienVoice.store_cart_added(product.name)
 
     def remove_from_cart(self, user_id: int, cart_item_id: int) -> bool:
         """Elimina un item del carrito"""
@@ -214,7 +215,7 @@ class StoreService:
         cart_items = self.get_cart_items(user_id)
 
         if not cart_items:
-            return None, "El carrito esta vacio"
+            return None, LucienVoice.store_cart_empty()
 
         # Verificar disponibilidad y calcular total
         total_price = 0
@@ -225,11 +226,13 @@ class StoreService:
             product = cart_item.product
 
             if not product or not product.is_available:
-                return None, f"Producto no disponible: {product.name if product else 'Desconocido'}"
+                return None, LucienVoice.store_product_unavailable(
+                    product.name if product else "Desconocido"
+                )
 
             # Verificar stock
             if product.stock != -1 and product.stock < cart_item.quantity:
-                return None, f"Stock insuficiente para: {product.name} (disponible: {product.stock})"
+                return None, LucienVoice.store_stock_insufficient(product.name, product.stock)
 
             item_total = product.price * cart_item.quantity
             total_price += item_total
@@ -245,7 +248,7 @@ class StoreService:
         # Verificar saldo del usuario
         balance = self.besito_service.get_balance(user_id)
         if balance < total_price:
-            return None, f"Saldo insuficiente. Necesitas: {total_price} besitos. Tienes: {balance}"
+            return None, LucienVoice.store_balance_insufficient(total_price, balance)
 
         # Crear la orden
         order = Order(
@@ -309,7 +312,12 @@ class StoreService:
 
         # Procesar cada item
         for order_item in order.items:
-            product = order_item.product
+            product = db.query(StoreProduct).filter(
+                StoreProduct.id == order_item.product_id
+            ).with_for_update().first()
+
+            if not product:
+                continue
 
             # Decrementar stock
             if product.stock != -1:
