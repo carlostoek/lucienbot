@@ -144,6 +144,12 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 ## Accumulated Context
 
+### Pending Todos
+
+| # | Title | Area | Created |
+|---|-------|------|---------|
+| 1 | Costo en besitos para mensajes anónimos VIP | vip | 2026-04-05 |
+
 ### Roadmap Evolution
 
 - Phase 07.1 inserted after Phase 7: Integrar completamente sistema de migraciones alembic (URGENT)
