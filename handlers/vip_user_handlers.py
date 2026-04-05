@@ -77,7 +77,7 @@ async def vip_area_menu(callback: CallbackQuery):
             f"🎩 <b>Lucien:</b>\n\n"
             f"<i>Bienvenido a El Diván, donde los privilegiados "
             f"tienen acceso a experiencias únicas...</i>\n\n"
-            f"💎 <b>El Diván de Diana</b>\n\n"
+            f"💎 <b>El Diván</b>\n\n"
             f"Aquí encontrará funciones reservadas solo para quienes "
             f"han sido admitidos en la intimidad de Diana.",
             reply_markup=vip_area_keyboard(),
@@ -112,12 +112,12 @@ async def start_anonymous_message(callback: CallbackQuery, state: FSMContext):
 
         await callback.message.edit_text(
             f"🎩 <b>Lucien:</b>\n\n"
-            f"<i>¿Desea enviar un susurro anónimo a Diana?</i>\n\n"
-            f"💌 <b>Mensaje a Diana</b>\n\n"
-            f"Escriba su mensaje con total libertad. Diana lo recibirá "
-            f"sin saber quién lo envió, a menos que sea necesario revelarlo "
-            f"por alguna cuestión delicada.\n\n"
-            f"<i>Escriba su mensaje a continuación...</i>",
+            f"Este es uno de los pocos espacios donde puede dirigirse a Diana… sin ser visto.\n\n"
+            f"Su mensaje será completamente anónimo.\n"
+            f"Sin nombre. Sin rastro.\n\n"
+            f"Algo que debe saber:\n"
+            f"Diana <b>no</b> responde a todo.\n"
+            f"Solo a lo que… le interesa.",
             reply_markup=back_keyboard("vip_area"),
             parse_mode="HTML"
         )
@@ -160,10 +160,10 @@ async def process_anonymous_message(message: Message, state: FSMContext):
 
     await message.answer(
         f"🎩 <b>Lucien:</b>\n\n"
-        f"<i>Permítame mostrarle lo que será enviado...</i>\n\n"
-        f"💌 <b>Su mensaje anónimo:</b>\n"
+        f"Antes de enviarlo… léalo de nuevo.\n\n"
+        f"Esto es lo que Diana recibirá:\n\n"
         f"<blockquote>{preview}</blockquote>\n\n"
-        f"<i>¿Desea enviar este mensaje a Diana?</i>",
+        f"¿Está seguro de que esto… merece su atención?",
         reply_markup=anonymous_message_confirm_keyboard(),
         parse_mode="HTML"
     )
@@ -214,11 +214,11 @@ async def confirm_anonymous_send(callback: CallbackQuery, state: FSMContext):
 
             await callback.message.edit_text(
                 f"🎩 <b>Lucien:</b>\n\n"
-                f"<i>Su susurro ha sido enviado a Diana...</i>\n\n"
-                f"✅ <b>Mensaje anónimo enviado</b>\n\n"
-                f"Diana lo recibirá pronto. Si desea responder, "
-                f"lo hará a través de este mismo canal.\n\n"
-                f"<i>Gracias por confiar en El Diván.</i>",
+                f"Listo.\n"
+                f"Su mensaje ha sido entregado.\n\n"
+                f"Ahora queda en manos de Diana… decidir si responde, ignora…\n"
+                f"o simplemente recuerda.\n\n"
+                f"<i>Le sugiero no obsesionarse con la respuesta.</i>",
                 reply_markup=back_keyboard("vip_area"),
                 parse_mode="HTML"
             )
