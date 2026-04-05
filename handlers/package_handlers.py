@@ -74,7 +74,7 @@ async def manage_packages_menu(callback: CallbackQuery):
         )],
         [InlineKeyboardButton(
             text="🗑️ Eliminar archivos de paquete",
-            callback_data="delete_package_files_menu"
+            callback_data="pkgfiles_delete_menu"
         )],
         [InlineKeyboardButton(
             text="📤 Enviar paquete a usuario",
@@ -1187,8 +1187,8 @@ async def confirm_update_package(callback: CallbackQuery, state: FSMContext):
 
 # ==================== ELIMINAR ARCHIVOS DE PAQUETE ====================
 
-@router.callback_query(F.data == "delete_package_files_menu", lambda cb: is_admin(cb.from_user.id))
-async def delete_package_files_menu(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data == "pkgfiles_delete_menu", lambda cb: is_admin(cb.from_user.id))
+async def pkgfiles_delete_menu(callback: CallbackQuery, state: FSMContext):
     """Inicia el flujo de eliminar archivos desde el menú principal"""
     package_service = PackageService()
     packages = package_service.get_all_packages(active_only=True)
@@ -1317,7 +1317,7 @@ async def select_package_for_delete_files(callback: CallbackQuery, state: FSMCon
 <i>Este paquete no tiene archivos...</i>
 
 👉 <i>No hay nada que eliminar.</i>""",
-            reply_markup=back_keyboard("delete_package_files_menu"),
+            reply_markup=back_keyboard("pkgfiles_delete_menu"),
             parse_mode="HTML"
         )
         await callback.answer()
@@ -1334,7 +1334,7 @@ async def select_package_for_delete_files(callback: CallbackQuery, state: FSMCon
 
 <i>Enviando archivos con opción de eliminar...</i>""",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="❌ Cancelar", callback_data="delete_package_files_menu")]
+            [InlineKeyboardButton(text="❌ Cancelar", callback_data="pkgfiles_delete_menu")]
         ]),
         parse_mode="HTML"
     )
