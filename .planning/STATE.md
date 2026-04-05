@@ -102,7 +102,7 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 |---|-------------|------|--------|-----------|
 | 260330-bpj | Agregar columna invite_link a Channel via migración Alembic | 2026-03-30 | d66b8b7 | [260330-bpj-agregar-columna-invite-link-a-channel-vi](./quick/260330-bpj-agregar-columna-invite-link-a-channel-vi/) |
 | 260330-reg | Regenerar migración inicial limpia de Alembic | 2026-03-30 | 2d68422 | — |
-| 260404-vjx | Crear función para eliminar fotos de paquetes: mostrar fotos existentes con botón de eliminar en cada una | 2026-04-05 | TBD | [260404-vjx-crear-funci-n-para-eliminar-fotos-de-paq](./quick/260404-vjx-crear-funci-n-para-eliminar-fotos-de-paq/) |
+| 260404-vjx | Crear función para eliminar fotos de paquetes: mostrar fotos existentes con botón de eliminar en cada una | 2026-04-05 | 457639f | [260404-vjx-crear-funci-n-para-eliminar-fotos-de-paq](./quick/260404-vjx-crear-funci-n-para-eliminar-fotos-de-paq/) |
 
 ## Decision Log
 
