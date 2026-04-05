@@ -34,6 +34,13 @@ class SendPackageStates(StatesGroup):
     confirming = State()
 
 
+# Estados para actualizar paquete (agregar archivos)
+class UpdatePackageStates(StatesGroup):
+    selecting_package = State()
+    waiting_files = State()
+    confirming = State()
+
+
 # Función helper para verificar admin
 def is_admin(user_id: int) -> bool:
     return user_id in bot_config.ADMIN_IDS
@@ -54,6 +61,10 @@ async def manage_packages_menu(callback: CallbackQuery):
         [InlineKeyboardButton(
             text="➕ Crear nuevo paquete",
             callback_data="create_package"
+        )],
+        [InlineKeyboardButton(
+            text="📝 Actualizar paquete (agregar archivos)",
+            callback_data="update_package_add_files"
         )],
         [InlineKeyboardButton(
             text="📤 Enviar paquete a usuario",
@@ -204,45 +215,6 @@ async def package_detail(callback: CallbackQuery):
 
 <i>¿Qué desea hacer con este paquete?</i>""",
         reply_markup=keyboard,
-        parse_mode="HTML"
-    )
-    await callback.answer()
-
-
-@router.callback_query(F.data.startswith("view_package_files_"), lambda cb: is_admin(cb.from_user.id))
-async def view_package_files(callback: CallbackQuery):
-    """Muestra los archivos de un paquete"""
-    package_id = int(callback.data.replace("view_package_files_", ""))
-    
-    package_service = PackageService()
-    package = package_service.get_package(package_id)
-    files = package_service.get_package_files(package_id)
-    
-    if not files:
-        await callback.answer("El paquete no tiene archivos", show_alert=True)
-        return
-    
-    text = f"""🎩 <b>Lucien:</b>
-
-<i>Contenido del paquete <b>{package.name}</b>...</i>
-
-📁 <b>Archivos ({len(files)}):</b>
-
-"""
-    
-    for i, file in enumerate(files, 1):
-        file_type_emoji = {
-            "photo": "🖼️",
-            "video": "🎬",
-            "animation": "🎞️",
-            "document": "📄"
-        }.get(file.file_type, "📎")
-        
-        text += f"{i}. {file_type_emoji} {file.file_name or file.file_type}\n"
-    
-    await callback.message.edit_text(
-        text,
-        reply_markup=back_keyboard(f"package_detail_{package_id}"),
         parse_mode="HTML"
     )
     await callback.answer()
@@ -920,3 +892,280 @@ Enviando previews...""",
                 chat_id=callback.from_user.id,
                 text=f"❌ Error al mostrar archivo {i}"
             )
+
+
+# ==================== ACTUALIZAR PAQUETE (AGREGAR ARCHIVOS) ====================
+
+@router.callback_query(F.data == "update_package_add_files", lambda cb: is_admin(cb.from_user.id))
+async def update_package_start(callback: CallbackQuery, state: FSMContext):
+    """Inicia el proceso de actualizar un paquete agregando archivos"""
+    package_service = PackageService()
+    packages = package_service.get_all_packages(active_only=True)
+
+    if not packages:
+        await callback.message.edit_text(
+            """🎩 <b>Lucien:</b>
+
+<i>No hay paquetes disponibles para actualizar...</i>
+
+👉 <i>Cree un paquete primero usando "Crear nuevo paquete".</i>""",
+            reply_markup=back_keyboard("manage_packages"),
+            parse_mode="HTML"
+        )
+        await callback.answer()
+        return
+
+    buttons = []
+    for pkg in packages:
+        status = "✅" if pkg.is_active else "❌"
+        buttons.append([InlineKeyboardButton(
+            text=f"{status} {pkg.name[:35]} ({pkg.file_count} archivos)",
+            callback_data=f"updatepkg_select_{pkg.id}"
+        )])
+
+    buttons.append([InlineKeyboardButton(
+        text="🔙 Volver",
+        callback_data="manage_packages"
+    )])
+
+    await callback.message.edit_text(
+        """🎩 <b>Lucien:</b>
+
+<i>Seleccione el tesoro al que desea agregar más archivos...</i>
+
+📦 <b>Paquetes disponibles:</b>
+
+<i>Haga clic en un paquete para agregar archivos.</i>""",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
+        parse_mode="HTML"
+    )
+    await state.set_state(UpdatePackageStates.selecting_package)
+    await callback.answer()
+
+
+@router.callback_query(UpdatePackageStates.selecting_package, F.data.startswith("updatepkg_select_"))
+async def select_package_to_update(callback: CallbackQuery, state: FSMContext):
+    """Selecciona el paquete a actualizar y pide archivos"""
+    try:
+        package_id = int(callback.data.replace("updatepkg_select_", ""))
+    except ValueError:
+        await callback.answer("ID de paquete inválido", show_alert=True)
+        return
+
+    package_service = PackageService()
+    package = package_service.get_package(package_id)
+
+    if not package:
+        await callback.answer("Paquete no encontrado", show_alert=True)
+        return
+
+    # Guardar datos en el estado
+    await state.update_data(
+        package_id=package_id,
+        package_name=package.name,
+        current_file_count=len(package_service.get_package_files(package_id)),
+        new_files=[]
+    )
+
+    await callback.message.edit_text(
+        f"""🎩 <b>Lucien:</b>
+
+<i>Paquete seleccionado: <b>{package.name}</b></i>
+
+📊 <b>Archivos actuales:</b> {len(package_service.get_package_files(package_id))}
+
+📋 <b>Paso 1:</b> Envíe los nuevos archivos
+
+Envíe las fotos, videos o archivos que desea <b>agregar</b> al paquete.
+
+Puede enviar varios archivos uno por uno.
+
+Cuando termine, envíe <code>/done</code>""",
+        reply_markup=cancel_keyboard(),
+        parse_mode="HTML"
+    )
+    await state.set_state(UpdatePackageStates.waiting_files)
+    await callback.answer()
+
+
+@router.message(UpdatePackageStates.waiting_files)
+async def process_update_files(message: Message, state: FSMContext):
+    """Procesa los archivos nuevos para agregar al paquete"""
+    if message.text == "/done":
+        # Verificar que hay archivos nuevos
+        data = await state.get_data()
+        new_files = data.get('new_files', [])
+
+        if not new_files:
+            await message.answer(
+                f"""🎩 <b>Lucien:</b>
+
+<i>No ha agregado ningún archivo nuevo...</i>
+
+Envíe archivos o /cancel para cancelar.""",
+                reply_markup=cancel_keyboard(),
+                parse_mode="HTML"
+            )
+            return
+
+        # Mostrar confirmación
+        await show_update_confirmation(message, state)
+        return
+
+    # Procesar archivo
+    file_id = None
+    file_type = None
+    file_name = None
+    file_size = None
+
+    if message.photo:
+        file_id = message.photo[-1].file_id
+        file_type = "photo"
+        file_size = message.photo[-1].file_size
+    elif message.video:
+        file_id = message.video.file_id
+        file_type = "video"
+        file_name = message.video.file_name
+        file_size = message.video.file_size
+    elif message.document:
+        file_id = message.document.file_id
+        file_type = "document"
+        file_name = message.document.file_name
+        file_size = message.document.file_size
+    elif message.animation:
+        file_id = message.animation.file_id
+        file_type = "animation"
+        file_name = message.animation.file_name
+        file_size = message.animation.file_size
+    else:
+        await message.answer(
+            f"""🎩 <b>Lucien:</b>
+
+<i>No reconocí el tipo de archivo.
+Por favor envíe fotos, videos, documentos o GIFs...</i>""",
+            reply_markup=cancel_keyboard(),
+            parse_mode="HTML"
+        )
+        return
+
+    # Agregar a la lista de nuevos archivos
+    data = await state.get_data()
+    new_files = data.get('new_files', [])
+    new_files.append({
+        'file_id': file_id,
+        'file_type': file_type,
+        'file_name': file_name,
+        'file_size': file_size
+    })
+    await state.update_data(new_files=new_files)
+
+    await message.answer(
+        f"""🎩 <b>Lucien:</b>
+
+✅ <b>Archivo agregado:</b> {file_type}
+
+📊 <b>Nuevos archivos:</b> {len(new_files)}
+
+<i>Envíe más archivos o /done para finalizar.</i>""",
+        reply_markup=cancel_keyboard(),
+        parse_mode="HTML"
+    )
+
+
+async def show_update_confirmation(message: Message, state: FSMContext):
+    """Muestra confirmación antes de actualizar el paquete"""
+    data = await state.get_data()
+
+    package_name = data.get('package_name', '')
+    current_count = data.get('current_file_count', 0)
+    new_files = data.get('new_files', [])
+    total_files = current_count + len(new_files)
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="✅ Confirmar y agregar archivos",
+            callback_data="confirm_update_package"
+        )],
+        [InlineKeyboardButton(
+            text="❌ Cancelar",
+            callback_data="manage_packages"
+        )]
+    ])
+
+    await message.answer(
+        f"""🎩 <b>Lucien:</b>
+
+<i>Permítame mostrarle el resumen de la actualización...</i>
+
+📦 <b>Paquete:</b> {package_name}
+
+📊 <b>Cambios:</b>
+   • Archivos actuales: {current_count}
+   • Archivos nuevos: {len(new_files)}
+   • <b>Total después de actualizar:</b> {total_files}
+
+<i>¿Desea confirmar la actualización?</i>""",
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+    await state.set_state(UpdatePackageStates.confirming)
+
+
+@router.callback_query(UpdatePackageStates.confirming, F.data == "confirm_update_package")
+async def confirm_update_package(callback: CallbackQuery, state: FSMContext):
+    """Confirma la actualización y agrega los archivos al paquete"""
+    data = await state.get_data()
+
+    package_id = data.get('package_id')
+    package_name = data.get('package_name')
+    new_files = data.get('new_files', [])
+
+    package_service = PackageService()
+
+    try:
+        # Obtener el último índice de orden actual
+        existing_files = package_service.get_package_files(package_id)
+        last_index = len(existing_files)
+
+        # Agregar cada archivo nuevo
+        for i, file_data in enumerate(new_files):
+            package_service.add_file_to_package(
+                package_id=package_id,
+                file_id=file_data['file_id'],
+                file_type=file_data['file_type'],
+                file_name=file_data.get('file_name'),
+                file_size=file_data.get('file_size'),
+                order_index=last_index + i
+            )
+
+        total_files = len(existing_files) + len(new_files)
+
+        await callback.message.edit_text(
+            f"""🎩 <b>Lucien:</b>
+
+<i>El tesoro ha sido actualizado en los archivos de Diana...</i>
+
+✅ <b>Paquete actualizado exitosamente!</b>
+
+📦 <b>{package_name}</b>
+   • Archivos agregados: {len(new_files)}
+   • <b>Total de archivos:</b> {total_files}
+
+<i>Los nuevos archivos están disponibles inmediatamente.</i>""",
+            reply_markup=back_keyboard("manage_packages"),
+            parse_mode="HTML"
+        )
+
+        logger.info(f"Paquete actualizado: {package_name} (ID: {package_id}) - "
+                   f"{len(new_files)} archivos agregados por admin {callback.from_user.id}")
+
+    except Exception as e:
+        logger.error(f"Error actualizando paquete: {e}")
+        await callback.message.edit_text(
+            LucienVoice.error_message("la actualización del paquete"),
+            reply_markup=back_keyboard("manage_packages"),
+            parse_mode="HTML"
+        )
+
+    await state.clear()
+    await callback.answer()
