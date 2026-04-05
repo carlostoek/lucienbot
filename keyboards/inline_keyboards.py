@@ -368,3 +368,18 @@ def returning_user_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="🔍 Explorar", callback_data="back_to_main")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def admin_anonymous_notification_keyboard(message_id: int) -> InlineKeyboardMarkup:
+    """Teclado para notificación de mensaje anónimo a administradores"""
+    buttons = [
+        [InlineKeyboardButton(
+            text="📨 Ver mensaje",
+            callback_data=f"anon_view_{message_id}"
+        )],
+        [InlineKeyboardButton(
+            text="🔙 Cerrar",
+            callback_data="back_to_admin"
+        )]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
