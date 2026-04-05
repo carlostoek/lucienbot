@@ -41,6 +41,12 @@ class UpdatePackageStates(StatesGroup):
     confirming = State()
 
 
+# Estados para eliminar archivos de paquete
+class DeleteFileStates(StatesGroup):
+    selecting_package = State()
+    deleting_files = State()
+
+
 # Función helper para verificar admin
 def is_admin(user_id: int) -> bool:
     return user_id in bot_config.ADMIN_IDS
@@ -65,6 +71,10 @@ async def manage_packages_menu(callback: CallbackQuery):
         [InlineKeyboardButton(
             text="📝 Actualizar paquete (agregar archivos)",
             callback_data="update_package_add_files"
+        )],
+        [InlineKeyboardButton(
+            text="🗑️ Eliminar archivos de paquete",
+            callback_data="delete_package_files_menu"
         )],
         [InlineKeyboardButton(
             text="📤 Enviar paquete a usuario",
@@ -184,11 +194,15 @@ async def package_detail(callback: CallbackQuery):
             callback_data=f"view_package_files_{package_id}"
         )],
         [InlineKeyboardButton(
+            text="🗑️ Eliminar archivos",
+            callback_data=f"delete_package_files_{package_id}"
+        )],
+        [InlineKeyboardButton(
             text=f"{'Desactivar' if package.is_active else 'Activar'}",
             callback_data=f"toggle_package_{package_id}"
         )],
         [InlineKeyboardButton(
-            text="🗑️ Eliminar",
+            text="🗑️ Eliminar paquete",
             callback_data=f"delete_package_{package_id}"
         )],
         [InlineKeyboardButton(
@@ -1168,4 +1182,364 @@ async def confirm_update_package(callback: CallbackQuery, state: FSMContext):
         )
 
     await state.clear()
+    await callback.answer()
+
+
+# ==================== ELIMINAR ARCHIVOS DE PAQUETE ====================
+
+@router.callback_query(F.data == "delete_package_files_menu", lambda cb: is_admin(cb.from_user.id))
+async def delete_package_files_menu(callback: CallbackQuery, state: FSMContext):
+    """Inicia el flujo de eliminar archivos desde el menú principal"""
+    package_service = PackageService()
+    packages = package_service.get_all_packages(active_only=True)
+
+    if not packages:
+        await callback.message.edit_text(
+            """🎩 <b>Lucien:</b>
+
+<i>No hay paquetes disponibles...</i>
+
+👉 <i>Cree un paquete primero.</i>""",
+            reply_markup=back_keyboard("manage_packages"),
+            parse_mode="HTML"
+        )
+        await callback.answer()
+        return
+
+    buttons = []
+    for pkg in packages:
+        file_count = len(package_service.get_package_files(pkg.id))
+        if file_count > 0:  # Solo mostrar paquetes con archivos
+            buttons.append([InlineKeyboardButton(
+                text=f"{pkg.name[:30]} ({file_count} archivos)",
+                callback_data=f"delfile_pkg_{pkg.id}"
+            )])
+
+    if not buttons:
+        await callback.message.edit_text(
+            """🎩 <b>Lucien:</b>
+
+<i>No hay paquetes con archivos para eliminar...</i>
+
+👉 <i>Agregue archivos a un paquete primero.</i>""",
+            reply_markup=back_keyboard("manage_packages"),
+            parse_mode="HTML"
+        )
+        await callback.answer()
+        return
+
+    buttons.append([InlineKeyboardButton(
+        text="🔙 Volver",
+        callback_data="manage_packages"
+    )])
+
+    await callback.message.edit_text(
+        """🎩 <b>Lucien:</b>
+
+<i>Seleccione el paquete del cual desea eliminar archivos...</i>
+
+🗑️ <b>Eliminar archivos:</b>
+
+<i>Solo se muestran paquetes que contienen archivos.</i>""",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
+        parse_mode="HTML"
+    )
+    await state.set_state(DeleteFileStates.selecting_package)
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("delete_package_files_"), lambda cb: is_admin(cb.from_user.id))
+async def delete_package_files_start(callback: CallbackQuery, state: FSMContext):
+    """Inicia el flujo de eliminar archivos desde el detalle del paquete"""
+    package_id = int(callback.data.replace("delete_package_files_", ""))
+
+    package_service = PackageService()
+    package = package_service.get_package(package_id)
+    files = package_service.get_package_files(package_id)
+
+    if not package:
+        await callback.answer("Paquete no encontrado", show_alert=True)
+        return
+
+    if not files:
+        await callback.message.edit_text(
+            """🎩 <b>Lucien:</b>
+
+<i>Este paquete no tiene archivos...</i>
+
+👉 <i>No hay nada que eliminar.</i>""",
+            reply_markup=back_keyboard(f"package_detail_{package_id}"),
+            parse_mode="HTML"
+        )
+        await callback.answer()
+        return
+
+    await state.update_data(package_id=package_id, package_name=package.name)
+    await callback.message.edit_text(
+        f"""🎩 <b>Lucien:</b>
+
+<i>Preparando vista de archivos para eliminar...</i>
+
+📦 <b>{package.name}</b>
+📁 {len(files)} archivo(s)
+
+<i>Enviando archivos con opción de eliminar...</i>""",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="❌ Cancelar", callback_data=f"package_detail_{package_id}")]
+        ]),
+        parse_mode="HTML"
+    )
+    await callback.answer()
+    await show_files_for_deletion(callback, state, bot=callback.bot)
+
+
+@router.callback_query(DeleteFileStates.selecting_package, F.data.startswith("delfile_pkg_"))
+async def select_package_for_delete_files(callback: CallbackQuery, state: FSMContext):
+    """Selecciona el paquete para eliminar archivos"""
+    try:
+        package_id = int(callback.data.replace("delfile_pkg_", ""))
+    except ValueError:
+        await callback.answer("ID inválido", show_alert=True)
+        return
+
+    package_service = PackageService()
+    package = package_service.get_package(package_id)
+    files = package_service.get_package_files(package_id)
+
+    if not package:
+        await callback.answer("Paquete no encontrado", show_alert=True)
+        return
+
+    if not files:
+        await callback.message.edit_text(
+            """🎩 <b>Lucien:</b>
+
+<i>Este paquete no tiene archivos...</i>
+
+👉 <i>No hay nada que eliminar.</i>""",
+            reply_markup=back_keyboard("delete_package_files_menu"),
+            parse_mode="HTML"
+        )
+        await callback.answer()
+        return
+
+    await state.update_data(package_id=package_id, package_name=package.name)
+    await callback.message.edit_text(
+        f"""🎩 <b>Lucien:</b>
+
+<i>Preparando vista de archivos para eliminar...</i>
+
+📦 <b>{package.name}</b>
+📁 {len(files)} archivo(s)
+
+<i>Enviando archivos con opción de eliminar...</i>""",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="❌ Cancelar", callback_data="delete_package_files_menu")]
+        ]),
+        parse_mode="HTML"
+    )
+    await callback.answer()
+    await show_files_for_deletion(callback, state, bot=callback.bot)
+
+
+async def show_files_for_deletion(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """Muestra cada archivo con botón para eliminar"""
+    data = await state.get_data()
+    package_id = data.get('package_id')
+    package_name = data.get('package_name')
+
+    package_service = PackageService()
+    files = package_service.get_package_files(package_id)
+
+    if not files:
+        await callback.message.edit_text(
+            """🎩 <b>Lucien:</b>
+
+<i>El paquete ya no tiene archivos...</i>
+
+✅ <b>Todos los archivos han sido eliminados.</b>""",
+            reply_markup=back_keyboard(f"package_detail_{package_id}"),
+            parse_mode="HTML"
+        )
+        await state.clear()
+        return
+
+    await state.set_state(DeleteFileStates.deleting_files)
+
+    # Enviar mensaje con instrucciones
+    await bot.send_message(
+        chat_id=callback.from_user.id,
+        text=f"""🎩 <b>Lucien:</b>
+
+<i>Archivos del paquete: <b>{package_name}</b></i>
+
+🗑️ <b>Haga clic en "Eliminar" para remover un archivo.</b>
+
+<i>Los archivos se muestran uno por uno con su preview.</i>""",
+        parse_mode="HTML"
+    )
+
+    # Enviar cada archivo con botón de eliminar
+    for i, file_entry in enumerate(files, 1):
+        try:
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(
+                    text="🗑️ Eliminar este archivo",
+                    callback_data=f"confirm_delfile_{file_entry.id}"
+                )],
+                [InlineKeyboardButton(
+                    text="✅ Terminar",
+                    callback_data=f"finish_delfile_{package_id}"
+                )]
+            ])
+
+            caption = f"📁 {i}/{len(files)} | ID: {file_entry.id} | {file_entry.file_type}"
+
+            if file_entry.file_type == "photo":
+                await bot.send_photo(
+                    chat_id=callback.from_user.id,
+                    photo=file_entry.file_id,
+                    caption=caption,
+                    reply_markup=keyboard
+                )
+            elif file_entry.file_type == "video":
+                await bot.send_video(
+                    chat_id=callback.from_user.id,
+                    video=file_entry.file_id,
+                    caption=caption,
+                    reply_markup=keyboard
+                )
+            elif file_entry.file_type == "animation":
+                await bot.send_animation(
+                    chat_id=callback.from_user.id,
+                    animation=file_entry.file_id,
+                    caption=caption,
+                    reply_markup=keyboard
+                )
+            else:  # document y otros
+                await bot.send_document(
+                    chat_id=callback.from_user.id,
+                    document=file_entry.file_id,
+                    caption=caption,
+                    reply_markup=keyboard
+                )
+        except Exception as e:
+            logger.error(f"Error enviando archivo {file_entry.id}: {e}")
+            await bot.send_message(
+                chat_id=callback.from_user.id,
+                text=f"❌ Error al mostrar archivo {i} (ID: {file_entry.id})"
+            )
+
+
+@router.callback_query(DeleteFileStates.deleting_files, F.data.startswith("confirm_delfile_"))
+async def confirm_delete_file(callback: CallbackQuery, state: FSMContext):
+    """Muestra confirmación antes de eliminar el archivo"""
+    try:
+        file_id = int(callback.data.replace("confirm_delfile_", ""))
+    except ValueError:
+        await callback.answer("ID inválido", show_alert=True)
+        return
+
+    data = await state.get_data()
+    package_id = data.get('package_id')
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="✅ Sí, eliminar",
+            callback_data=f"execute_delfile_{file_id}"
+        )],
+        [InlineKeyboardButton(
+            text="❌ Cancelar",
+            callback_data=f"continue_delfile_{package_id}"
+        )]
+    ])
+
+    await callback.message.edit_caption(
+        caption=f"{callback.message.caption}\n\n⚠️ <b>¿Eliminar este archivo?</b>",
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+    await callback.answer()
+
+
+@router.callback_query(DeleteFileStates.deleting_files, F.data.startswith("execute_delfile_"))
+async def execute_delete_file(callback: CallbackQuery, state: FSMContext):
+    """Ejecuta la eliminación del archivo"""
+    try:
+        file_id = int(callback.data.replace("execute_delfile_", ""))
+    except ValueError:
+        await callback.answer("ID inválido", show_alert=True)
+        return
+
+    data = await state.get_data()
+    package_id = data.get('package_id')
+    package_name = data.get('package_name')
+
+    package_service = PackageService()
+
+    try:
+        success = package_service.remove_file_from_package(file_id)
+
+        if success:
+            await callback.message.edit_caption(
+                caption="✅ <b>Archivo eliminado correctamente.</b>",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(
+                        text="🗑️ Eliminar más archivos",
+                        callback_data=f"continue_delfile_{package_id}"
+                    )],
+                    [InlineKeyboardButton(
+                        text="✅ Terminar",
+                        callback_data=f"finish_delfile_{package_id}"
+                    )]
+                ]),
+                parse_mode="HTML"
+            )
+            logger.info(f"Archivo {file_id} eliminado del paquete {package_id} por admin {callback.from_user.id}")
+        else:
+            await callback.answer("No se pudo eliminar el archivo", show_alert=True)
+
+    except Exception as e:
+        logger.error(f"Error eliminando archivo {file_id}: {e}")
+        await callback.answer("Error al eliminar el archivo", show_alert=True)
+
+
+@router.callback_query(F.data.startswith("continue_delfile_"))
+async def continue_delete_files(callback: CallbackQuery, state: FSMContext):
+    """Continúa mostrando archivos para eliminar"""
+    try:
+        package_id = int(callback.data.replace("continue_delfile_", ""))
+    except ValueError:
+        await callback.answer("ID inválido", show_alert=True)
+        return
+
+    await callback.message.delete()
+    await show_files_for_deletion(callback, state, bot=callback.bot)
+
+
+@router.callback_query(F.data.startswith("finish_delfile_"))
+async def finish_delete_files(callback: CallbackQuery, state: FSMContext):
+    """Termina el flujo de eliminación de archivos"""
+    try:
+        package_id = int(callback.data.replace("finish_delfile_", ""))
+    except ValueError:
+        await callback.answer("ID inválido", show_alert=True)
+        return
+
+    await state.clear()
+
+    await callback.message.edit_caption(
+        caption="✅ <b>Operación finalizada.</b>",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text="📦 Ver paquete",
+                callback_data=f"package_detail_{package_id}"
+            )],
+            [InlineKeyboardButton(
+                text="🔙 Menú de paquetes",
+                callback_data="manage_packages"
+            )]
+        ]),
+        parse_mode="HTML"
+    )
     await callback.answer()
