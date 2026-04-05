@@ -86,6 +86,68 @@ class StoreService:
             (StoreProduct.stock == -1) | (StoreProduct.stock > 0)
         ).order_by(desc(StoreProduct.created_at)).all()
 
+    def search_products(self, query: str, active_only: bool = True) -> List[StoreProduct]:
+        """Busca productos por nombre o descripcion"""
+        db = self._get_db()
+        search = f"%{query}%"
+        q = db.query(StoreProduct).filter(
+            (StoreProduct.name.ilike(search)) | (StoreProduct.description.ilike(search))
+        )
+        if active_only:
+            q = q.filter(StoreProduct.is_active == True)
+        return q.order_by(desc(StoreProduct.created_at)).all()
+
+    def get_products_by_price_range(self, min_price: int = 0, max_price: int = None,
+                                    active_only: bool = True) -> List[StoreProduct]:
+        """Obtiene productos en rango de precio"""
+        db = self._get_db()
+        q = db.query(StoreProduct).filter(StoreProduct.price >= min_price)
+        if max_price is not None:
+            q = q.filter(StoreProduct.price <= max_price)
+        if active_only:
+            q = q.filter(StoreProduct.is_active == True)
+        return q.order_by(StoreProduct.price).all()
+
+    def get_products_by_category(self, category_id: int, active_only: bool = True) -> List[StoreProduct]:
+        """Obtiene productos por categoria (via package)"""
+        db = self._get_db()
+        # Get packages in category
+        packages = db.query(Package).filter(Package.category_id == category_id).all()
+        package_ids = [p.id for p in packages]
+
+        q = db.query(StoreProduct).filter(StoreProduct.package_id.in_(package_ids))
+        if active_only:
+            q = q.filter(StoreProduct.is_active == True)
+        return q.order_by(desc(StoreProduct.created_at)).all()
+
+    def filter_products(self, category_id: int = None, min_price: int = None,
+                        max_price: int = None, in_stock_only: bool = False,
+                        active_only: bool = True) -> List[StoreProduct]:
+        """Filtra productos por multiples criterios"""
+        db = self._get_db()
+        q = db.query(StoreProduct)
+
+        if active_only:
+            q = q.filter(StoreProduct.is_active == True)
+
+        if category_id:
+            packages = db.query(Package).filter(Package.category_id == category_id).all()
+            package_ids = [p.id for p in packages]
+            q = q.filter(StoreProduct.package_id.in_(package_ids))
+
+        if min_price is not None:
+            q = q.filter(StoreProduct.price >= min_price)
+
+        if max_price is not None:
+            q = q.filter(StoreProduct.price <= max_price)
+
+        if in_stock_only:
+            q = q.filter(
+                (StoreProduct.stock == -1) | (StoreProduct.stock > 0)
+            )
+
+        return q.order_by(desc(StoreProduct.created_at)).all()
+
     def update_product(self, product_id: int, **kwargs) -> bool:
         """Actualiza un producto"""
         db = self._get_db()
@@ -93,7 +155,7 @@ class StoreService:
         if not product:
             return False
 
-        allowed_fields = ['name', 'description', 'price', 'stock', 'is_active']
+        allowed_fields = ['name', 'description', 'price', 'stock', 'is_active', 'low_stock_threshold']
         for field, value in kwargs.items():
             if field in allowed_fields and hasattr(product, field):
                 setattr(product, field, value)
@@ -361,6 +423,106 @@ class StoreService:
         return db.query(Order).filter(
             Order.user_id == user_id
         ).order_by(desc(Order.created_at)).limit(limit).all()
+
+    # ==================== ALERTAS DE STOCK ====================
+
+    def get_low_stock_products(self) -> List[StoreProduct]:
+        """Obtiene productos con stock bajo"""
+        db = self._get_db()
+        return db.query(StoreProduct).filter(
+            StoreProduct.is_active == True,
+            StoreProduct.stock != -1,  # Not unlimited
+            StoreProduct.stock <= StoreProduct.low_stock_threshold,
+            StoreProduct.stock > 0  # Not out of stock
+        ).order_by(StoreProduct.stock).all()
+
+    def get_out_of_stock_products(self) -> List[StoreProduct]:
+        """Obtiene productos agotados"""
+        db = self._get_db()
+        return db.query(StoreProduct).filter(
+            StoreProduct.is_active == True,
+            StoreProduct.stock == 0
+        ).order_by(desc(StoreProduct.updated_at)).all()
+
+    def update_low_stock_threshold(self, product_id: int, threshold: int) -> bool:
+        """Actualiza el umbral de stock bajo para un producto"""
+        db = self._get_db()
+        product = self.get_product(product_id)
+        if not product:
+            return False
+
+        if threshold < 0:
+            return False
+
+        product.low_stock_threshold = threshold
+        db.commit()
+        logger.info(f"Umbral de stock bajo actualizado para producto {product_id}: {threshold}")
+        return True
+
+    def check_stock_alert(self, product_id: int) -> dict:
+        """Verifica el estado de stock de un producto y retorna alerta si aplica"""
+        product = self.get_product(product_id)
+        if not product:
+            return {'alert': False, 'message': 'Producto no encontrado'}
+
+        if product.stock == -1:
+            return {'alert': False, 'status': 'unlimited'}
+
+        if product.stock == 0:
+            return {
+                'alert': True,
+                'status': 'out',
+                'message': f"Producto '{product.name}' AGOTADO",
+                'product': product
+            }
+
+        if product.stock <= product.low_stock_threshold:
+            return {
+                'alert': True,
+                'status': 'low',
+                'message': f"Producto '{product.name}' con stock bajo: {product.stock} unidades restantes",
+                'product': product,
+                'threshold': product.low_stock_threshold
+            }
+
+        return {'alert': False, 'status': 'available', 'stock': product.stock}
+
+    async def notify_stock_alert(self, bot, product_id: int):
+        """Envia notificacion de alerta de stock a admins"""
+        from config.settings import bot_config
+        from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+        alert = self.check_stock_alert(product_id)
+        if not alert.get('alert'):
+            return
+
+        product = alert.get('product')
+        message = alert.get('message')
+
+        alert_text = (
+            f"🎩 <b>Lucien - Alerta de Inventario</b>\n\n"
+            f"{message}\n\n"
+            f"<i>Gestiona el stock desde el panel de administracion.</i>"
+        )
+
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text="📝 Gestionar stock",
+                callback_data=f"restock_product_{product_id}"
+            )]
+        ])
+
+        # Send to all admins
+        for admin_id in bot_config.ADMIN_IDS:
+            try:
+                await bot.send_message(
+                    chat_id=admin_id,
+                    text=alert_text,
+                    reply_markup=keyboard,
+                    parse_mode="HTML"
+                )
+            except Exception as e:
+                logger.error(f"Error enviando alerta de stock a admin {admin_id}: {e}")
 
     # ==================== ESTADISTICAS ====================
 
