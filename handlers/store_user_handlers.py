@@ -4,7 +4,9 @@ Handlers de Tienda para Usuarios - Lucien Bot
 Catalogo, carrito, checkout y historial de compras.
 """
 from aiogram import Router, F, Bot
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, Message
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from services.store_service import StoreService
 from services.besito_service import BesitoService
 from services.package_service import PackageService
@@ -13,6 +15,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 router = Router()
+
+
+class SearchStates(StatesGroup):
+    waiting_query = State()
+    showing_results = State()
+
+
+class FilterStates(StatesGroup):
+    selecting_category = State()
+    selecting_price_range = State()
+    showing_results = State()
 
 
 @router.callback_query(F.data == "shop")
@@ -27,12 +40,20 @@ async def shop_menu(callback: CallbackQuery):
     
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
-            text="🛍️ Ver catalogo",
-            callback_data="store_catalog"
+            text="🔍 Buscar productos",
+            callback_data="store_search"
         )],
         [InlineKeyboardButton(
             text="📁 Ver por categorias",
             callback_data="store_categories"
+        )],
+        [InlineKeyboardButton(
+            text="🛍️ Ver catalogo completo",
+            callback_data="store_catalog"
+        )],
+        [InlineKeyboardButton(
+            text="⚡ Filtros",
+            callback_data="store_filters"
         )],
         [InlineKeyboardButton(
             text=f"🛒 Mi carrito ({cart_count})",
@@ -605,4 +626,199 @@ async def purchase_history(callback: CallbackQuery):
             [InlineKeyboardButton(text="🔙 Volver", callback_data="shop")]
         ])
     )
+    await callback.answer()
+
+
+# ==================== BUSQUEDA Y FILTROS ====================
+
+@router.callback_query(F.data == "store_search")
+async def store_search_start(callback: CallbackQuery, state: FSMContext):
+    """Inicia busqueda de productos"""
+    await callback.message.edit_text(
+        "🎩 <b>Lucien:</b>\n\n"
+        "<i>¿Que tesoro buscas?</i>\n\n"
+        "Escribe el nombre o una palabra clave del producto:",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="❌ Cancelar", callback_data="shop")]
+        ])
+    )
+    await state.set_state(SearchStates.waiting_query)
+    await callback.answer()
+
+
+@router.message(SearchStates.waiting_query)
+async def process_search_query(message: Message, state: FSMContext):
+    """Procesa busqueda de productos"""
+    query = message.text.strip()
+    if len(query) < 2:
+        await message.answer(
+            "Por favor escribe al menos 2 caracteres para buscar.",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="❌ Cancelar", callback_data="shop")]
+            ])
+        )
+        return
+
+    store_service = StoreService()
+    products = store_service.search_products(query, active_only=True)
+
+    if not products:
+        await message.answer(
+            f"🎩 <b>Lucien:</b>\n\n"
+            f"<i>No encontre tesoros para '{query}'...</i>\n\n"
+            f"Intenta con otra palabra o explora el catalogo.",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🛍️ Ver catalogo", callback_data="store_catalog")],
+                [InlineKeyboardButton(text="🔙 Volver", callback_data="shop")]
+            ])
+        )
+        await state.clear()
+        return
+
+    # Show search results
+    text = f"🎩 <b>Lucien:</b>\n\n" \
+           f"<i>Resultados para '{query}':</i>\n\n" \
+           f"{len(products)} tesoro(s) encontrado(s)\n\n"
+
+    buttons = []
+    for product in products:
+        stock_text = "∞" if product.stock == -1 else f"Stock: {product.stock}"
+        status_emoji = "📦" if product.is_available else "🔒"
+        text += f"{status_emoji} <b>{product.name}</b>\n"
+        text += f"   💰 {product.price} besitos | {stock_text}\n\n"
+
+        buttons.append([InlineKeyboardButton(
+            text=f"👁️ Ver: {product.name[:20]}",
+            callback_data=f"product_detail_{product.id}"
+        )])
+
+    buttons.append([InlineKeyboardButton(
+        text="🔍 Nueva busqueda",
+        callback_data="store_search"
+    )])
+    buttons.append([InlineKeyboardButton(
+        text="🔙 Volver",
+        callback_data="shop"
+    )])
+
+    await message.answer(
+        text,
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons)
+    )
+    await state.clear()
+
+
+@router.callback_query(F.data == "store_filters")
+async def store_filters(callback: CallbackQuery):
+    """Muestra opciones de filtrado"""
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="💰 Por precio: Menor a mayor",
+            callback_data="filter_price_asc"
+        )],
+        [InlineKeyboardButton(
+            text="💰 Por precio: Mayor a menor",
+            callback_data="filter_price_desc"
+        )],
+        [InlineKeyboardButton(
+            text="📦 Solo disponibles",
+            callback_data="filter_in_stock"
+        )],
+        [InlineKeyboardButton(
+            text="🆕 Mas recientes",
+            callback_data="filter_recent"
+        )],
+        [InlineKeyboardButton(text="🔙 Volver", callback_data="shop")]
+    ])
+
+    await callback.message.edit_text(
+        "🎩 <b>Lucien:</b>\n\n"
+        "<i>Filtrar tesoros...</i>\n\n"
+        "Selecciona como ordenar los productos:",
+        reply_markup=keyboard
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "filter_price_asc")
+async def filter_price_asc(callback: CallbackQuery):
+    """Muestra productos ordenados por precio ascendente"""
+    store_service = StoreService()
+    products = store_service.get_all_products(active_only=True)
+    products.sort(key=lambda p: p.price)
+
+    await show_filtered_products(callback, products, "Precio: menor a mayor")
+
+
+@router.callback_query(F.data == "filter_price_desc")
+async def filter_price_desc(callback: CallbackQuery):
+    """Muestra productos ordenados por precio descendente"""
+    store_service = StoreService()
+    products = store_service.get_all_products(active_only=True)
+    products.sort(key=lambda p: p.price, reverse=True)
+
+    await show_filtered_products(callback, products, "Precio: mayor a menor")
+
+
+@router.callback_query(F.data == "filter_in_stock")
+async def filter_in_stock(callback: CallbackQuery):
+    """Muestra solo productos disponibles"""
+    store_service = StoreService()
+    products = store_service.get_available_products()
+
+    await show_filtered_products(callback, products, "Solo disponibles")
+
+
+@router.callback_query(F.data == "filter_recent")
+async def filter_recent(callback: CallbackQuery):
+    """Muestra productos mas recientes"""
+    store_service = StoreService()
+    products = store_service.get_all_products(active_only=True)
+    # Already sorted by created_at desc from service
+
+    await show_filtered_products(callback, products, "Mas recientes")
+
+
+async def show_filtered_products(callback: CallbackQuery, products: list, filter_name: str):
+    """Helper para mostrar productos filtrados"""
+    if not products:
+        await callback.message.edit_text(
+            "🎩 <b>Lucien:</b>\n\n"
+            "<i>No hay tesoros que coincidan...</i>",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🔙 Volver", callback_data="store_filters")]
+            ])
+        )
+        await callback.answer()
+        return
+
+    text = f"🎩 <b>Lucien:</b>\n\n" \
+           f"<i>Filtrado: {filter_name}</i>\n\n" \
+           f"{len(products)} tesoro(s)\n\n"
+
+    buttons = []
+    for product in products[:10]:  # Limit to 10 for display
+        stock_text = "∞" if product.stock == -1 else f"Stock: {product.stock}"
+        status_emoji = "📦" if product.is_available else "🔒"
+        text += f"{status_emoji} <b>{product.name}</b>\n"
+        text += f"   💰 {product.price} besitos | {stock_text}\n\n"
+
+        buttons.append([InlineKeyboardButton(
+            text=f"👁️ Ver: {product.name[:20]}",
+            callback_data=f"product_detail_{product.id}"
+        )])
+
+    if len(products) > 10:
+        text += f"<i>...y {len(products) - 10} mas</i>\n\n"
+
+    buttons.append([InlineKeyboardButton(
+        text="⚡ Otros filtros",
+        callback_data="store_filters"
+    )])
+    buttons.append([InlineKeyboardButton(
+        text="🔙 Volver",
+        callback_data="shop"
+    )])
+
+    await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
     await callback.answer()
