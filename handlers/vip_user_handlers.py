@@ -13,7 +13,7 @@ from services.vip_service import VIPService
 from services.anonymous_message_service import AnonymousMessageService
 from services.besito_service import BesitoService
 from models.models import TransactionSource
-from keyboards.inline_keyboards import back_keyboard, main_menu_keyboard
+from keyboards.inline_keyboards import back_keyboard, main_menu_keyboard, admin_anonymous_notification_keyboard
 from utils.lucien_voice import LucienVoice
 import logging
 
@@ -258,6 +258,19 @@ async def confirm_anonymous_send(callback: CallbackQuery, state: FSMContext):
             message = anon_service.send_message(user.id, content)
 
             logger.info(f"Mensaje anónimo enviado: id={message.id}, sender={user.id}, cost={ANONYMOUS_MESSAGE_COST}")
+
+            # Notificar a admins (no fallar si no se puede notificar)
+            from config.settings import bot_config
+            for admin_id in bot_config.ADMIN_IDS:
+                try:
+                    await callback.bot.send_message(
+                        chat_id=admin_id,
+                        text="🎩 <b>Lucien:</b>\n\nAlguien ha buscado su atención de manera anónima",
+                        reply_markup=admin_anonymous_notification_keyboard(message.id),
+                        parse_mode="HTML"
+                    )
+                except Exception as e:
+                    logger.warning(f"No se pudo notificar al admin {admin_id}: {e}")
 
             await callback.message.edit_text(
                 f"🎩 <b>Lucien:</b>\n\n"
