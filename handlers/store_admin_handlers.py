@@ -42,6 +42,7 @@ async def admin_store_menu(callback: CallbackQuery):
         [InlineKeyboardButton(text="➕ Crear producto", callback_data="create_product")],
         [InlineKeyboardButton(text="📋 Ver productos", callback_data="list_products")],
         [InlineKeyboardButton(text="📊 Estadisticas", callback_data="store_stats")],
+        [InlineKeyboardButton(text="📁 Gestionar categorías", callback_data="manage_categories")],
         [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_gamification")]
     ])
     
