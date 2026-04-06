@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a1a">
+    <title>Lucien - Lanzamiento de Dados</title>
+
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/dice.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="title">Los Dados del Destino</h1>
+            <p class="subtitle">Que la fortuna te sonria, Visitante</p>
+        </header>
+
+        <!-- 3D Canvas Container -->
+        <div id="canvas-container" class="canvas-container">
+            <canvas id="dice-canvas"></canvas>
+        </div>
+
+        <!-- Result Display -->
+        <div id="result-display" class="result-display hidden">
+            <div class="dice-values">
+                <span id="die-1-value" class="die-value">-</span>
+                <span class="separator">+</span>
+                <span id="die-2-value" class="die-value">-</span>
+                <span class="equals">=</span>
+                <span id="total-value" class="total-value">-</span>
+            </div>
+            <p id="result-message" class="result-message"></p>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button id="roll-btn" class="roll-button">
+                <span class="button-text">Lanzar Dados</span>
+                <span class="button-icon">🎲</span>
+            </button>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Los dados giran...</p>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Una experiencia de Lucien para Diana</p>
+        </footer>
+    </div>
+
+    <!-- Main Script -->
+    <script src="js/dice.js"></script>
+</body>
+</html>
