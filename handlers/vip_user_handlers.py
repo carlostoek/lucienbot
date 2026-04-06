@@ -442,13 +442,13 @@ async def confirm_anonymous_send(callback: CallbackQuery, state: FSMContext):
             await callback.answer()
             return
 
-        # Debitar besitos antes de enviar el mensaje
+        # Debitar besitos (sin commit todavía)
         debit_success = besito_service.debit_besitos(
             user_id=user.id,
             amount=ANONYMOUS_MESSAGE_COST,
             source=TransactionSource.ANONYMOUS_MESSAGE,
             description="Envío de mensaje anónimo a Diana",
-            commit=True
+            commit=False
         )
 
         if not debit_success:
@@ -468,6 +468,9 @@ async def confirm_anonymous_send(callback: CallbackQuery, state: FSMContext):
         anon_service = AnonymousMessageService()
         try:
             message = anon_service.send_message(user.id, content)
+
+            # Commit solo después de enviar exitosamente
+            besito_service.commit()
 
             logger.info(f"Mensaje anónimo enviado: id={message.id}, sender={user.id}, cost={ANONYMOUS_MESSAGE_COST}")
 

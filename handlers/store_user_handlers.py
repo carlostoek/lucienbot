@@ -185,13 +185,8 @@ async def store_category_products(callback: CallbackQuery):
         await callback.answer("Categoria no encontrada", show_alert=True)
         return
 
-    # Get products that have packages in this category
-    packages = package_service.get_packages_by_category(category_id, active_only=True)
-    package_ids = [p.id for p in packages]
-
-    # Get all active products and filter by category packages
-    all_products = store_service.get_all_products(active_only=True)
-    products = [p for p in all_products if p.package_id in package_ids]
+    # Get products in this category via service filter
+    products = store_service.filter_products(category_id=category_id, active_only=True)
 
     if not products:
         await callback.message.edit_text(
@@ -603,7 +598,7 @@ async def store_search_start(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-@router.message(SearchStates.waiting_query)
+@router.message(SearchStates.waiting_query, F.text)
 async def process_search_query(message: Message, state: FSMContext):
     """Procesa busqueda de productos"""
     query = message.text.strip()

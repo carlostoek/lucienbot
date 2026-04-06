@@ -577,8 +577,10 @@ class StoreService:
             )]
         ])
 
-        # Send to all admins
-        for admin_id in bot_config.ADMIN_IDS:
+        # Send to all admins concurrently
+        import asyncio
+
+        async def send_alert_to_admin(admin_id: int):
             try:
                 await bot.send_message(
                     chat_id=admin_id,
@@ -588,6 +590,8 @@ class StoreService:
                 )
             except Exception as e:
                 logger.error(f"Error enviando alerta de stock a admin {admin_id}: {e}")
+
+        await asyncio.gather(*[send_alert_to_admin(admin_id) for admin_id in bot_config.ADMIN_IDS])
 
     # ==================== ESTADISTICAS ====================
 
