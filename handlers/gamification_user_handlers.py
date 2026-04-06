@@ -548,33 +548,50 @@ async def handle_dice_webapp(message: Message):
                 # Seleccionar mensaje aleatorio de victoria
                 win_msg = random.choice(WIN_MESSAGES)
                 result_text = "✨ <b>¡Victoria!</b>"
-                win_text = f"💋 {win_msg}"
                 logger.info(f"[webapp_dice] User {user_id} won 1 besito ({dice1}, {dice2})")
             else:
                 result_text = "✨ <b>¡Victoria!</b>"
-                win_text = "<i>Los dados te favorecieron...</i>"
+                win_msg = "Los dados te favorecieron..."
                 logger.error(f"[webapp_dice] Failed to credit besitos for user {user_id}")
         else:
             # Seleccionar mensaje aleatorio de derrota
             loss_msg = random.choice(LOSS_MESSAGES)
             result_text = "💫 <b>No fue esta vez...</b>"
-            win_text = f"<i>{loss_msg}</i>"
+            win_msg = loss_msg
             logger.info(f"[webapp_dice] User {user_id} lost ({dice1}, {dice2})")
 
-        # 6. Construir mensaje final
-        text = f"""🎩 <b>Lucien:</b>
+        # 6. Construir mensaje final con DOPAMINA extra para victorias
+        if is_win:
+            text = f"""🎉🎊 <b>¡FELICIDADES!</b> 🎊🎉
+
+🎩 <b>Lucien:</b>
+
+<i>¡Los dioses del azar han hablado!</i>
+
+🎲 <b>Dados de Diana</b>
+   {dice_str}
+
+✨ <b>¡VICTORIA!</b> ✨
+   <i>{condition}</i>
+
+💋 <b>+1 BESITO GANADO</b> 💋
+   <i>{win_msg}</i>
+
+🎁 Diana sonríe ante tu suerte..."""
+        else:
+            text = f"""🎩 <b>Lucien:</b>
 
 <i>Los dados han sido lanzados desde el reino digital...</i>
 
 🎲 <b>Dados de Diana</b>
+   {dice_str}
 
-{dice_str}
+💫 <b>No fue esta vez...</b>
+   <i>{condition}</i>
 
-{result_text}
+<i>{win_msg}</i>
 
-<i>{condition}</i>
-
-{win_text}"""
+🎲 ¿Lo intentas de nuevo?"""
 
         await message.answer(text, reply_markup=main_menu_keyboard(), parse_mode="HTML")
 

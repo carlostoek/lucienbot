@@ -451,6 +451,13 @@ function showResultModal(die1, die2, total, isWin) {
 
         modalReward.textContent = '+1 besito 💋';
         modalReward.style.display = 'block';
+
+        // Mensaje adicional para revisar el chat
+        const chatNotice = document.createElement('p');
+        chatNotice.className = 'modal-chat-notice';
+        chatNotice.textContent = '✨ Revisa el chat para ver tu recompensa';
+        chatNotice.style.cssText = 'font-size: 0.9rem; color: #d4af37; margin-top: 0.5rem; font-style: italic;';
+        modalReward.appendChild(chatNotice);
     } else {
         // Derrota
         modalEmoji.textContent = '😔';
@@ -543,10 +550,8 @@ function sendResultToBot(die1, die2, total) {
         tg.sendData(JSON.stringify(data));
         console.log('Resultado enviado al bot:', data);
 
-        // Cerrar WebApp despues de un breve delay para que el usuario vea el resultado
-        setTimeout(() => {
-            tg.close();
-        }, 2000);
+        // NO cerrar WebApp automaticamente - permitir que el usuario vea
+        // la notificacion del bot en el chat antes de cerrar manualmente
     }
 }
 
