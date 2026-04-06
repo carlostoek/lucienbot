@@ -24,6 +24,10 @@ def main_menu_keyboard(is_vip: bool = False) -> InlineKeyboardMarkup:
             callback_data="my_missions"
         )],
         [InlineKeyboardButton(
+            text="🎁 Recompensas",
+            callback_data="rewards_list"
+        )],
+        [InlineKeyboardButton(
             text="🛍️ Tienda de Diana",
             callback_data="shop"
         )],
@@ -326,6 +330,10 @@ def token_actions_keyboard(token_id: int) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(
             text="🗑️ Revocar token",
             callback_data=f"revoke_token_{token_id}"
+        )],
+        [InlineKeyboardButton(
+            text="🔄 Generar otro token",
+            callback_data="generate_another_token"
         )],
         [InlineKeyboardButton(
             text="🔙 Volver a tokens",

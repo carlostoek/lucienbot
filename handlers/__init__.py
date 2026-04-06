@@ -13,6 +13,7 @@ from .package_handlers import router as package_router
 from .mission_user_handlers import router as mission_user_router
 from .mission_admin_handlers import router as mission_admin_router
 from .reward_admin_handlers import router as reward_admin_router
+from .reward_user_handlers import router as reward_user_router
 # Fase 4 - Tienda
 from .store_user_handlers import router as store_user_router
 from .store_admin_handlers import router as store_admin_router
@@ -46,6 +47,7 @@ __all__ = [
     'mission_user_router',
     'mission_admin_router',
     'reward_admin_router',
+    'reward_user_router',
     # Fase 4 - Tienda
     'store_user_router',
     'store_admin_router',
