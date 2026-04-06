@@ -222,6 +222,39 @@ lucien_bot/
 6. 24h antes del vencimiento: recordatorio
 7. Al vencer: expulsión automática y notificación
 
+### 🎲 Juego de Dados (WebApp)
+
+El bot incluye un juego de dados integrado que permite a los usuarios ganar besitos (puntos de gamificación).
+
+#### Desarrollo Local
+
+```bash
+# Iniciar servidor de archivos estáticos
+python -m http.server 8080 --directory webapp/
+```
+
+Luego configura en `.env`:
+```env
+WEBAPP_URL=http://localhost:8080/webapp/dice.html
+WEBAPP_DEV_URL=http://localhost:8080/webapp/dice.html
+```
+
+#### Producción (Railway)
+
+1. Deploy del bot a Railway
+2. Configurar la variable `WEBAPP_URL` con la URL de producción
+3. Configurar el botón de WebApp en @BotFather
+
+#### Configurar en BotFather
+
+1. Ve a @BotFather
+2. Selecciona tu bot
+3. Bot Settings → Menu Button → Configure menu button
+4. Establece el texto del botón: "🎲 Lanzar dados"
+5. Establece la URL de WebApp (producción o URL de ngrok para testing)
+
+---
+
 ## 🛡️ Seguridad
 
 - Tokens de un solo uso por defecto
