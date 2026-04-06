@@ -441,20 +441,30 @@ function sendResultToBot(die1, die2, total) {
     if (window.Telegram && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
 
+        // Determinar si es victoria segun reglas del juego
+        // Victoria: ambos pares (2,4,6) o dobles (mismo numero)
+        const die1Even = die1 % 2 === 0;
+        const die2Even = die2 % 2 === 0;
+        const isDouble = die1 === die2;
+        const isWin = (die1Even && die2Even) || isDouble;
+
         const data = {
-            action: 'dice_roll',
-            die1: die1,
-            die2: die2,
-            total: total,
+            dice1: die1,
+            dice2: die2,
+            sum: total,
+            win: isWin,
             user_id: state.telegramUser ? state.telegramUser.id : null,
             timestamp: Date.now()
         };
 
         // Enviar datos al bot
         tg.sendData(JSON.stringify(data));
-
-        // Tambien mostrar alerta si es necesario
         console.log('Resultado enviado al bot:', data);
+
+        // Cerrar WebApp despues de un breve delay para que el usuario vea el resultado
+        setTimeout(() => {
+            tg.close();
+        }, 2000);
     }
 }
 

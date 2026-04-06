@@ -4,16 +4,17 @@ Handlers de Gamificación para Usuarios - Lucien Bot
 Handlers para funcionalidades de gamificación accesibles por usuarios.
 """
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.filters import Command
 from services.besito_service import BesitoService
 from services.daily_gift_service import DailyGiftService
 from services.broadcast_service import BroadcastService
 from keyboards.inline_keyboards import back_keyboard, main_menu_keyboard
-from utils.lucien_voice import LucienVoice
+from config.settings import bot_config
 import asyncio
 import random
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -300,7 +301,10 @@ async def minigames_menu(callback: CallbackQuery):
 <i>¿Se siente con suerte?</i>"""
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🎲 Lanzar dados", callback_data="dice_game")],
+        [InlineKeyboardButton(
+            text="🎲 Lanzar dados",
+            web_app=WebAppInfo(url=bot_config.WEBAPP_URL)
+        )],
         [InlineKeyboardButton(text="🔙 Volver", callback_data="back_to_main")]
     ])
 
@@ -389,4 +393,80 @@ async def dice_game(callback: CallbackQuery):
     await callback.answer(f"+1 besito" if is_win else "Intenta de nuevo")
 
 
+# ==================== WEBAPP DICE GAME ====================
 
+@router.message(F.web_app_data)
+async def handle_dice_webapp(message: Message):
+    """Recibe datos del WebApp de dados y procesa el resultado"""
+    user_id = message.from_user.id
+
+    try:
+        # Parsear datos JSON del WebApp
+        data = json.loads(message.web_app_data.data)
+
+        dice1 = data.get('dice1', 0)
+        dice2 = data.get('dice2', 0)
+        total = data.get('sum', 0)
+        is_win = data.get('win', False)
+
+        logger.info(f"[webapp_dice] User {user_id} rolled: {dice1}+{dice2}={total}, win={is_win}")
+
+        # Procesar victoria si aplica
+        if is_win:
+            besito_service = BesitoService()
+            besito_service.add_besitos(user_id, 1, source="dice_game")
+            result_text = "✨ <b>¡Victoria!</b>"
+            win_text = "💋 <b>+1 besito</b> añadido a tu saldo"
+        else:
+            result_text = "💫 <b>No fue esta vez...</b>"
+            win_text = "<i>Vuelve a intentarlo...</i>"
+
+        # Formatear dados
+        dice_faces = {
+            1: "⚀", 2: "⚁", 3: "⚂",
+            4: "⚃", 5: "⚄", 6: "⚅"
+        }
+        dice_str = f"{dice_faces.get(dice1, '?')} {dice_faces.get(dice2, '?')}"
+
+        # Determinar condicion de victoria para mostrar
+        die1_even = dice1 % 2 == 0
+        die2_even = dice2 % 2 == 0
+        is_double = dice1 == dice2
+
+        if is_double:
+            condition = "¡Dobles!"
+        elif die1_even and die2_even:
+            condition = "¡Ambos pares!"
+        else:
+            condition = "Inténtalo de nuevo"
+
+        text = f"""🎩 <b>Lucien:</b>
+
+<i>Los dados han sido lanzados desde el reino digital...</i>
+
+🎲 <b>Dados de Diana</b>
+
+{dice_str}
+
+{result_text}
+
+<i>{condition}</i>
+
+{win_text}"""
+
+        await message.answer(text, reply_markup=main_menu_keyboard(), parse_mode="HTML")
+
+    except json.JSONDecodeError as e:
+        logger.error(f"[webapp_dice] Invalid JSON from WebApp: {e}")
+        await message.answer(
+            "🎩 <b>Lucien:</b>\n\n<i>Hubo un problema al procesar los dados...</i>",
+            reply_markup=main_menu_keyboard(),
+            parse_mode="HTML"
+        )
+    except Exception as e:
+        logger.error(f"[webapp_dice] Error processing WebApp data: {e}")
+        await message.answer(
+            "🎩 <b>Lucien:</b>\n\n<i>Los dados se resisten a revelar su secreto...</i>",
+            reply_markup=main_menu_keyboard(),
+            parse_mode="HTML"
+        )
