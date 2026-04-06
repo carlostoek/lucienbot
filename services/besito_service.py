@@ -36,6 +36,11 @@ class BesitoService:
             self.db.close()
             self.db = None
 
+    def commit(self):
+        """Hace commit de la transacción actual si el servicio posee la sesión."""
+        if self._owns_session and self.db:
+            self.db.commit()
+
     # ==================== GESTIÓN DE SALDO ====================
 
     def get_or_create_balance(self, user_id: int, lock: bool = False) -> BesitoBalance:

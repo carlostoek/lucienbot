@@ -171,6 +171,7 @@ class TransactionSource(str, enum.Enum):
     MISSION = "mission"            # Recompensa por misión
     PURCHASE = "purchase"          # Compra en tienda
     ADMIN = "admin"                # Ajuste manual por admin
+    ANONYMOUS_MESSAGE = "anonymous_message"  # Mensaje anónimo VIP
 
 
 class BesitoBalance(Base):
@@ -312,9 +313,13 @@ class Package(Base):
     created_by = Column(BigInteger, nullable=True)  # Admin que creó el paquete
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
+
+    # Categoría
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=True, index=True)
+
     # Relaciones
     files = relationship("PackageFile", back_populates="package", cascade="all, delete-orphan")
+    category = relationship("Category", back_populates="packages")
     
     @property
     def is_available_in_store(self) -> bool:
@@ -402,6 +407,22 @@ class PackageFile(Base):
     
     # Relaciones
     package = relationship("Package", back_populates="files")
+
+
+class Category(Base):
+    """Categorías para organizar paquetes en la tienda"""
+    __tablename__ = "categories"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False, unique=True)
+    description = Column(Text, nullable=True)
+    order_index = Column(Integer, default=0)  # For ordering categories in UI
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relaciones
+    packages = relationship("Package", back_populates="category")
 
 
 # ============================================================
@@ -553,21 +574,26 @@ class StoreProduct(Base):
     
     # Relacion con paquete
     package_id = Column(Integer, ForeignKey("packages.id"), nullable=False)
-    
+
+    # Categoría
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=True, index=True)
+
     # Precio en besitos
     price = Column(Integer, nullable=False)
-    
+
     # Stock (-1 = ilimitado, 0+ = stock limitado)
     stock = Column(Integer, default=-1)
-    
+    low_stock_threshold = Column(Integer, default=5)  # Alert when stock <= this value
+
     # Estado
     is_active = Column(Boolean, default=True)
     created_by = Column(BigInteger, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
+
     # Relaciones
     package = relationship("Package")
+    category = relationship("Category")
     cart_items = relationship("CartItem", back_populates="product", cascade="all, delete-orphan")
     order_items = relationship("OrderItem", back_populates="product")
     
@@ -586,7 +612,25 @@ class StoreProduct(Base):
         if self.stock == -1:
             return "Ilimitado"
         return str(self.stock)
-    
+
+    @property
+    def is_low_stock(self) -> bool:
+        """Verifica si el stock está bajo"""
+        if self.stock == -1:  # Ilimitado
+            return False
+        return self.stock <= self.low_stock_threshold
+
+    @property
+    def stock_status(self) -> str:
+        """Retorna estado del stock: 'unlimited', 'low', 'out', 'available'"""
+        if self.stock == -1:
+            return "unlimited"
+        if self.stock == 0:
+            return "out"
+        if self.stock <= self.low_stock_threshold:
+            return "low"
+        return "available"
+
     def decrement_stock(self, amount: int = 1) -> bool:
         """Decrementa el stock. Retorna True si tuvo exito."""
         if self.stock == -1:  # Ilimitado
@@ -691,6 +735,7 @@ class Promotion(Base):
 
     # Estado
     is_active = Column(Boolean, default=True)
+    is_vip_exclusive = Column(Boolean, default=False, nullable=False)  # Solo visible para VIPs
     created_by = Column(BigInteger, nullable=True)  # Admin que creó la promoción
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

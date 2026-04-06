@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Milestone complete
-last_updated: "2026-04-03T05:44:31.162Z"
+last_updated: "2026-04-05T20:28:11.421Z"
 progress:
-  total_phases: 12
-  completed_phases: 4
-  total_plans: 17
-  completed_plans: 18
-  percent: 71
+  total_phases: 13
+  completed_phases: 5
+  total_plans: 25
+  completed_plans: 23
+  percent: 90
 ---
 
 # State: Lucien Bot
@@ -22,13 +22,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Crear una experiencia premium y gamificada que incentiva el compromiso de la comunidad con Diana a través de un sistema de recompensas, acceso exclusivo VIP y narrativa inmersiva.
-**Current focus:** Phase 11 — cubrir-los-servicios-cr-ticos-en-los-tests-realizar-test-e2e
+**Current focus:** Phase 12 — mejorar-tienda
 
 ## Milestone
 
 **Name:** v1.0 — Core bot functionality
 **Started:** ~2025 (inferred from git history)
-**Progress:** [███████░░░] 71%
+**Progress:** [██████████] 95%
 
 ## Phase Status
 
@@ -45,10 +45,34 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 | 8: Testing & Technical Debt | ✓ Complete | 2266d56 |
 | 9: Polish & Hardening | ✓ Complete | All 5 plans done (09-01 through 09-05) — SCHED-01 fulfilled |
 | 10: Flujos de entrada @docs/req_fase10.md | ✓ Complete | All 4 plans done (10-01 through 10-04) |
+| 12: Mejorar tienda | ✓ Complete | All 5 plans done |
+| 13: El Mapa del Deseo | ✓ Complete | 3 planes completados |
 
 ## Current Phase
 
-**Phase 11: cubrir-los-servicios-cr-ticos-en-los-tests-realizar-test-e2e** — ▶️ IN PROGRESS
+**Phase 13: el-mapa-del-deseo** — ✅ COMPLETE
+
+### Phase 13 Summary
+
+| Plan | Status | Description |
+|------|--------|-------------|
+| 13-01 | ✓ | Foundation: Modelo, migración, service methods |
+| 13-02 | ✓ | Handlers: Botón en VIP area, flujo completo |
+| 13-03 | ✓ | Seed: Crear 3 promociones VIP en BD |
+
+**Previous Phase:**
+
+**Phase 12: mejorar-tienda** — ✓ COMPLETE
+
+### Phase 12 Summary
+
+| Plan | Status | Commits | Description |
+|------|--------|---------|-------------|
+| 12-01 | ✓ | ca7f848, 70ef436, 64ef1ec | Category System Foundation: models, migration, PackageService methods |
+| 12-02 | ✓ | 0495b49, 7bef6f4, 9280bca | Admin Category Management Interface: handlers, FSM wizards, menu integration |
+| 12-03 | ✓ | 93ea80f, 1eb7d6b, 1e367e3 | Product Detail View: preview photos, locked product CTA, category browsing |
+| 12-04 | ✓ | f328568, b545dd4, d63c37b, 05548ca | Stock Alert System: low_stock_threshold, admin alerts, purchase notifications |
+| 12-05 | ✓ | 772ca70 | Search and Filter: product search by name, price/availability filters |
 
 ### Phase 11 Summary
 
@@ -90,11 +114,19 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 | 2026-04-03 | 11-01 | Wave 0 test infrastructure: fixtures, e2e marker, 13 stub files — commits 0bf6f6d, 1c38b43, cc05571 |
 | 2026-04-03 | 11-03 | PromotionService + BroadcastService tests + race condition fixes — commits 084dcbd, d14cf40, ead2f2b, 50ad430 |
 | 2026-04-03 | 11-05 | UserService + AnalyticsService + StoryService unit tests — commits e13119a, 2a2d730, 9c76de8 |
+| 2026-04-05 | 12-01 | Category System Foundation — commits ca7f848, 70ef436, 64ef1ec |
+| 2026-04-05 | 12-02 | Admin Category Management Interface — commits 0495b49, 7bef6f4, 9280bca |
+| 2026-04-05 | 12-03 | Product Detail View with preview — commits 93ea80f, 1eb7d6b, 1e367e3 |
+| 2026-04-05 | 12-04 | Stock Alert System — commits f328568, b545dd4, d63c37b, 05548ca |
+| 2026-04-05 | 12-05 | Search and Filter Products — commit 772ca70 |
+| 2026-04-05 | 13-01 | El Mapa del Deseo Foundation — model, migration, service methods |
+| 2026-04-05 | 13-02 | El Mapa del Deseo Handlers — vip_user_handlers updated |
+| 2026-04-05 | 13-03 | El Mapa del Deseo Seed — 3 VIP promotions created |
 
 ## What's Next
 
-→ Phase 11 IN PROGRESS — Plans 11-01, 11-02, 11-03, 11-05 complete
-→ Next: 11-04 or next uncompleted plan
+→ Phase 13 COMPLETE — El Mapa del Deseo implementado
+→ Milestone v1.0 ✅ COMPLETE
 
 ### Quick Tasks Completed
 
@@ -103,6 +135,8 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 | 260330-bpj | Agregar columna invite_link a Channel via migración Alembic | 2026-03-30 | d66b8b7 | [260330-bpj-agregar-columna-invite-link-a-channel-vi](./quick/260330-bpj-agregar-columna-invite-link-a-channel-vi/) |
 | 260330-reg | Regenerar migración inicial limpia de Alembic | 2026-03-30 | 2d68422 | — |
 | 260404-vjx | Crear función para eliminar fotos de paquetes: mostrar fotos existentes con botón de eliminar en cada una | 2026-04-05 | 457639f | [260404-vjx-crear-funci-n-para-eliminar-fotos-de-paq](./quick/260404-vjx-crear-funci-n-para-eliminar-fotos-de-paq/) |
+| 260405-vip | Agregar costo de 50 besitos para mensajes anónimos VIP | 2026-04-05 | 8ad214c | [260405-vip-anon-besito-cost](./quick/260405-vip-anon-besito-cost/) |
+| 260405-hje | Notificar a admin al recibir mensaje anónimo VIP | 2026-04-05 | b1487ac, 9607389 | [260405-hje-notificaci-n-admin-al-recibir-mensaje-an](./quick/260405-hje-notificaci-n-admin-al-recibir-mensaje-an/) |
 
 ## Decision Log
 
@@ -120,6 +154,8 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 | 2026-03-31 | Backup cada 100 ciclos del scheduler (~50 min) | Evita refactorizar arquitectura del scheduler |
 | 2026-04-03 | Keep existing conftest pattern for new fixtures | Consistency with existing test codebase |
 | 2026-04-03 | Stub files include minimal pass test | Ensures pytest --collect-only never fails on new modules |
+| 2026-04-05 | Default low_stock_threshold set to 5 | Sensible default for most products |
+| 2026-04-05 | Stock status indicators: ♾️ ⚠️ 🚨 📦 | Visual distinction for admin quick scanning |
 
 ## Execution Log
 
@@ -148,14 +184,17 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 
 | # | Title | Area | Created |
 |---|-------|------|---------|
-| 1 | Costo en besitos para mensajes anónimos VIP | vip | 2026-04-05 |
-| 2 | Expandir sistema de promociones a El Diván VIP - El Mapa del Deseo | promotions | 2026-04-05 |
+| 1 | Expandir sistema de promociones a El Diván VIP - El Mapa del Deseo | promotions | 2026-04-05 |
+| 2 | Sección de recompensas en menú principal de usuarios | rewards | 2026-04-05 |
+| 3 | Sistema de auditoría de economía con historial de movimientos | gamification | 2026-04-05 |
 
 ### Roadmap Evolution
 
 - Phase 07.1 inserted after Phase 7: Integrar completamente sistema de migraciones alembic (URGENT)
 - Phase 10 added: Flujos de entrada @docs/req_fase10.md
 - Plan 10-01 complete: Foundation for ritualized entry flows
+- Phase 12 added: Mejorar tienda — mejoras al sistema de tienda
+- Phase 13 added: El Mapa del Deseo — promociones VIP exclusivas
 
 ## Notes
 

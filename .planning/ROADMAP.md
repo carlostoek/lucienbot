@@ -12,12 +12,14 @@
 | 2 | Canales | Canal Free con aprobacion + Canal VIP con acceso | CHAN-01, CHAN-02, CHAN-03, CHAN-04 | Usuarios acceden a canales segun flujo esperado |
 | 3 | Suscripciones VIP | Tokens, tarifas, suscripciones, expiracion | VIP-01, VIP-02, VIP-03, VIP-04, VIP-05, VIP-06, ADMIN-02 | Flujo completo VIP funcional |
 | 4 | Gamificacion | Besitos, hugs, gifts, balance, top | BESI-01, BESI-02, BESI-03, BESI-04 | Sistema de besitos activo y balance correcto |
-| 5 | Misiones | Misiones, progreso, recompensas | MISS-01, MISS-02, MISS-03, ADMIN-03 | Visitantes completan misiones y reciben recompensas |
+| 5 | Misiones | Misiones, progreso, recompensas | MISS-01, MISS-02, MISS-03, MISS-04, ADMIN-03 | Visitantes completan misiones y reciben recompensas |
 | 6 | Tienda + Promociones + Narrativa | Compra de paquetes, codigos, historias interactivas | STOR-01-04, PROM-01-03, NARR-01-04, ADMIN-04, ADMIN-05 | Store, promociones y narrativa funcionando |
 | 7 | **VIP Invite Links Dinamicos** ✓ | Links de invitacion de un solo uso para canal VIP | VIP-07 | Un token = un link de un solo uso generado dinamicamente |
 | 07.1 | **Integrar Alembic** ✓ | Sistema de migraciones Alembic reemplazar create_all() | Complete    | 2026-03-30 |
 | 8 | Testing & Technical Debt | Tests, linting, manejo de sessiones, refactor handlers | TEST-01, TEST-02, TEST-03, SCHED-02, SEC-03 | Cobertura de tests y codigo mas mantenible |
 | 9 | Polish & Hardening | Rate limiting, FSM persistente, backups, analytics | Complete    | 2026-03-31 |
+| 12 | Mejorar tienda | 5/5 | Complete    | 2026-04-05 |
+| 13 | El Mapa del Deseo | 3/3 | Complete    | 2026-04-05 |
 
 ## Phase Details
 
@@ -194,5 +196,43 @@ Plans:
 7. Cross-service atomicity patterns verified
 8. Full test suite passes with coverage >= 70%
 
+### Phase 12: Mejorar tienda
+
+**Goal:** Mejoras al sistema de tienda: gestión de fotos de paquetes, organización por categorías, y flujo de compra optimizado
+**Requirements:** STOR-05, STOR-06, STOR-07
+**Depends on:** Phase 11
+**Status:** ✓ Complete
+**Plans:** 5/5 plans complete
+
+### Phase 13: El Mapa del Deseo - Promociones VIP Exclusivas
+
+**Goal:** Sistema de promociones exclusivas dentro de El Diván con 3 niveles: Premium, Círculo Íntimo y El Secreto
+**Requirements:** PROM-04, VIP-08
+**Depends on:** Phase 12
+**Status:** ✓ Complete
+**Plans:** 3/3 plans complete
+
+**Success criteria:**
+1. Usuario VIP ve botón "🗺️ El Mapa del Deseo" en El Diván ✓
+2. Ve 3 promociones exclusivas con descripciones completas ✓
+3. Flujo "Me Interesa" funciona y notifica a admins ✓
+4. Promociones VIP no aparecen en catálogo general ✓
+5. Solo VIPs pueden acceder (no-VIPs redirigidos) ✓
+
+**Success criteria:**
+1. Admin puede eliminar fotos de paquetes existentes ✓ (Already completed in quick task 260404-vjx)
+2. Paquetes organizados por categorías/tipos
+3. Flujo de compra más intuitivo con preview de contenido
+4. Búsqueda y filtrado de paquetes en tienda
+5. Mejor gestión de stock (alertas de bajo stock)
+
+**Plans:**
+- [x] 12-01-PLAN.md — Category System Foundation: models, migrations, PackageService methods (STOR-05) ✓
+- [x] 12-02-PLAN.md — Admin Category Management: handlers for CRUD and package assignment (STOR-05) ✓
+- [x] 12-03-PLAN.md — User Store with Categories: category browsing, product detail with preview (STOR-05, STOR-06)
+- [x] 12-04-PLAN.md — Stock Alerts and Management: thresholds, visual indicators, admin notifications (STOR-07)
+- [x] 12-05-PLAN.md — Search and Filter: search by name, filter by price/availability (STOR-05, STOR-06)
+
 ---
 *Roadmap created: 2026-03-30 from codebase analysis and git history*
+*Updated: 2026-04-05 — Phase 12 plans created*
