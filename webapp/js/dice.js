@@ -7,12 +7,19 @@
 // CONFIGURACION
 // ============================================
 const CONFIG = {
-    diceSize: 1.5,
-    diceSpacing: 2.5,
+    diceSize: 0.9,
+    diceSpacing: 1.6,
     floorY: -2,
     animationDuration: 2000, // ms
     gravity: 0.5,
     bounceDamping: 0.6,
+    // Limites para que los dados no salgan de pantalla
+    bounds: {
+        minX: -3.5,
+        maxX: 3.5,
+        minZ: -4,
+        maxZ: 4
+    },
     colors: {
         dice: 0xf5f5f5,
         dots: 0x1a1a1a,
@@ -274,6 +281,18 @@ function updateDicePhysics() {
                 snapToNearestFace(die);
             }
         }
+
+        // Limitar posicion para que no salgan de pantalla
+        die.position.x = Math.max(CONFIG.bounds.minX, Math.min(CONFIG.bounds.maxX, die.position.x));
+        die.position.z = Math.max(CONFIG.bounds.minZ, Math.min(CONFIG.bounds.maxZ, die.position.z));
+
+        // Reducir velocidad si se acerca a los limites
+        if (Math.abs(die.position.x) > CONFIG.bounds.maxX * 0.8) {
+            die.userData.velocity.x *= 0.8;
+        }
+        if (Math.abs(die.position.z) > CONFIG.bounds.maxZ * 0.8) {
+            die.userData.velocity.z *= 0.8;
+        }
     });
 
     // Verificar si ambos dados se detuvieron
@@ -348,23 +367,23 @@ function rollDice() {
 
     // Configurar cada dado
     state.dice.forEach((die, index) => {
-        // Posicion inicial aleatoria
+        // Posicion inicial aleatoria pero dentro de limites
         die.position.y = 3 + Math.random() * 2;
-        die.position.x = (index === 0 ? -1 : 1) + (Math.random() - 0.5);
-        die.position.z = (Math.random() - 0.5) * 2;
+        die.position.x = (index === 0 ? -1 : 1) * (0.8 + Math.random() * 0.4);
+        die.position.z = (Math.random() - 0.5) * 1.5;
 
-        // Velocidad inicial aleatoria
+        // Velocidad inicial aleatoria (mas controlada para no salir de pantalla)
         die.userData.velocity.set(
-            (Math.random() - 0.5) * 0.5,
-            Math.random() * 0.5,
-            (Math.random() - 0.5) * 0.5
+            (Math.random() - 0.5) * 0.3,
+            Math.random() * 0.3,
+            (Math.random() - 0.5) * 0.3
         );
 
-        // Velocidad angular aleatoria
+        // Velocidad angular aleatoria (menos intensa para no volar fuera)
         die.userData.angularVelocity.set(
-            (Math.random() - 0.5) * 0.8,
-            (Math.random() - 0.5) * 0.8,
-            (Math.random() - 0.5) * 0.8
+            (Math.random() - 0.5) * 0.5,
+            (Math.random() - 0.5) * 0.5,
+            (Math.random() - 0.5) * 0.5
         );
 
         die.userData.isSettled = false;
@@ -384,8 +403,16 @@ function onRollComplete() {
     state.diceValues = state.dice.map(die => calculateDieValue(die));
     const total = state.diceValues[0] + state.diceValues[1];
 
-    // Actualizar UI
-    updateResultDisplay(state.diceValues[0], state.diceValues[1], total);
+    // Determinar si es victoria
+    const die1 = state.diceValues[0];
+    const die2 = state.diceValues[1];
+    const die1Even = die1 % 2 === 0;
+    const die2Even = die2 % 2 === 0;
+    const isDouble = die1 === die2;
+    const isWin = (die1Even && die2Even) || isDouble;
+
+    // Mostrar modal con resultado
+    showResultModal(die1, die2, total, isWin);
 
     // Ocultar loading
     const loading = document.getElementById('loading');
@@ -396,7 +423,62 @@ function onRollComplete() {
     rollBtn.disabled = false;
 
     // Enviar resultado a Telegram si esta disponible
-    sendResultToBot(state.diceValues[0], state.diceValues[1], total);
+    sendResultToBot(die1, die2, total);
+}
+
+// ============================================
+// MOSTRAR MODAL DE RESULTADO
+// ============================================
+function showResultModal(die1, die2, total, isWin) {
+    const modal = document.getElementById('result-modal');
+    const modalEmoji = document.getElementById('modal-emoji');
+    const modalTitle = document.getElementById('modal-title');
+    const modalMessage = document.getElementById('modal-message');
+    const modalReward = document.getElementById('modal-reward');
+
+    if (isWin) {
+        // Victoria
+        modalEmoji.textContent = '🎉💖';
+        modalTitle.textContent = '¡Ganaste!';
+        modalTitle.style.color = 'var(--accent-gold)';
+
+        // Mensaje de victoria
+        if (die1 === die2) {
+            modalMessage.textContent = `¡Doble ${die1}! Los dados te sonríen.`;
+        } else {
+            modalMessage.textContent = `${die1} + ${die2} = ${total}. Ambas son pares.`;
+        }
+
+        modalReward.textContent = '+1 besito 💋';
+        modalReward.style.display = 'block';
+    } else {
+        // Derrota
+        modalEmoji.textContent = '😔';
+        modalTitle.textContent = 'No fue esta vez';
+        modalTitle.style.color = 'var(--text-secondary)';
+
+        if (total === 12) {
+            modalMessage.textContent = '¡Doble seis! Pero no fue suficiente...';
+        } else if (total === 2) {
+            modalMessage.textContent = 'Snake eyes... la suerte cambiará.';
+        } else {
+            modalMessage.textContent = `${die1} + ${die2} = ${total}. Intenta de nuevo.`;
+        }
+
+        modalReward.style.display = 'none';
+    }
+
+    // Mostrar modal
+    modal.classList.remove('hidden');
+
+    // Configurar boton de cerrar
+    const closeBtn = document.getElementById('modal-close');
+    closeBtn.onclick = () => {
+        modal.classList.add('hidden');
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.close();
+        }
+    };
 }
 
 // ============================================

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a1a1a">
-    <title>Lucien - Lanzamiento de Dados</title>
+    <title>Lucien - Dados Kinky</title>
 
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -19,8 +19,8 @@
     <div id="app">
         <!-- Header -->
         <header class="header">
-            <h1 class="title">Los Dados del Destino</h1>
-            <p class="subtitle">Que la fortuna te sonria, Visitante</p>
+            <h1 class="title">Dados Kinky</h1>
+            <p class="subtitle">Que la suerte te acompañe, Visitante</p>
         </header>
 
         <!-- 3D Canvas Container -->
@@ -52,6 +52,17 @@
         <div id="loading" class="loading hidden">
             <div class="spinner"></div>
             <p>Los dados giran...</p>
+        </div>
+
+        <!-- Modal de Resultado -->
+        <div id="result-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-emoji" id="modal-emoji"></div>
+                <h2 class="modal-title" id="modal-title"></h2>
+                <p class="modal-message" id="modal-message"></p>
+                <p class="modal-reward" id="modal-reward"></p>
+                <button class="modal-button" id="modal-close">Continuar</button>
+            </div>
         </div>
 
         <!-- Footer -->

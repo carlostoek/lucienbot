@@ -233,6 +233,28 @@ Plans:
 - [x] 12-04-PLAN.md — Stock Alerts and Management: thresholds, visual indicators, admin notifications (STOR-07)
 - [x] 12-05-PLAN.md — Search and Filter: search by name, filter by price/availability (STOR-05, STOR-06)
 
+### Phase 14: WebApp Dados 3D
+
+**Goal:** Reemplazar el minijuego de dados actual con experiencia 3D interactiva usando Three.js como Telegram WebApp
+**Requirements:** DICE-01, DICE-02, DICE-03, DICE-04, DICE-05
+**Depends on:** Phase 13
+**Status:** In Progress
+**Plans:** 4/4 plans complete
+
+**Success criteria:**
+1. WebApp carga correctamente con dos dados 3D visibles
+2. Animación de lanzamiento con física realista
+3. Resultados se envían al bot vía Telegram WebApp API
+4. Backend valida resultados y aplica cooldown
+5. Besitos se otorgan automáticamente al ganar
+6. Diseño responsive y elegante acorde a Lucien
+
+**Plans:**
+- [x] 14-01-PLAN.md — WebApp Frontend 3D: HTML/CSS/JS con Three.js (DICE-01, DICE-02)
+- [x] 14-02-PLAN.md — Integración Telegram WebApp: SDK, handlers, WebAppInfo (DICE-02, DICE-04)
+- [x] 14-03-PLAN.md — Validación y Recompensas: validación de resultados, cooldown, besitos (DICE-03, DICE-05)
+- [x] 14-04-PLAN.md — Deployment: configuración URLs, servir estáticos, producción (DICE-02)
+
 ---
 *Roadmap created: 2026-03-30 from codebase analysis and git history*
-*Updated: 2026-04-05 — Phase 12 plans created*
+*Updated: 2026-04-05 — Phase 14 added (WebApp Dados 3D)*
