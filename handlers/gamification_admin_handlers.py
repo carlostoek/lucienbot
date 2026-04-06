@@ -284,6 +284,8 @@ async def toggle_emoji(callback: CallbackQuery):
     
     if success:
         await callback.answer("Estado actualizado")
+        # Reconstruir callback.data para editar el emoji
+        callback.data = f"edit_emoji_{emoji_id}"
         await edit_emoji(callback)
     else:
         await callback.answer("Error al actualizar", show_alert=True)
