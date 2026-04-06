@@ -1,0 +1,1 @@
+- [Games UI improvements](session-2026-04-06-games-ui-improvements.md) — Fixed Chinese text bug, enhanced victory messages for dopamine injection

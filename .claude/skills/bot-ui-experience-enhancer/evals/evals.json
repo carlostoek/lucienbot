@@ -1,0 +1,23 @@
+{
+  "skill_name": "bot-ui-experience-enhancer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Haz una auditoría de UI del menú de tienda (store_user_handlers.py y los keyboards relacionados). Identifica inconsistencias con la guía de estilo en docs/guia-estilo.md y propone mejoras específicas para los botones del menú y los mensajes de compra.",
+      "expected_output": "Informe de auditoría con tabla de hallazgos,文件名行号 para cada issue, y recomendaciones priorizadas",
+      "files": ["handlers/store_user_handlers.py", "keyboards/inline_keyboards.py"]
+    },
+    {
+      "id": 2,
+      "prompt": "El flujo de compra en la tienda no da feedback claro cuando el usuario no tiene suficientes besitos. Revisa cómo se manejan los errores de saldo insuficiente en los handlers de tienda y propón usar los métodos de LucienVoice correspondientes, o crea nuevos si no existen.",
+      "expected_output": "Cambios propuestos en código (antes/después), nuevos métodos en LucienVoice si son necesarios",
+      "files": ["handlers/store_user_handlers.py", "utils/lucien_voice.py"]
+    },
+    {
+      "id": 3,
+      "prompt": "Crea un nuevo template de mensaje en LucienVoice para el flujo de onboarding de nuevos usuarios VIP. Debe incluir: 1) Mensaje de bienvenida al círculo exclusivo, 2) Explicación de los privilegios disponibles, 3) keyboard con las opciones principales. Sigue la guía de estilo en docs/guia-estilo.md.",
+      "expected_output": "Nuevo método estático en LucienVoice con el template, y ejemplo de cómo usarlo en un handler",
+      "files": ["utils/lucien_voice.py"]
+    }
+  ]
+}

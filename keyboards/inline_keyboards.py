@@ -394,8 +394,8 @@ def admin_anonymous_notification_keyboard(message_id: int) -> InlineKeyboardMark
 def game_menu_keyboard() -> InlineKeyboardMarkup:
     """Menú de selección de juegos"""
     buttons = [
-        [InlineKeyboardButton(text="🎲 Dados", callback_data="game_dice")],
-        [InlineKeyboardButton(text="❓ Trivia", callback_data="game_trivia")],
+        [InlineKeyboardButton(text="🎲 Lanzar los dados del destino", callback_data="game_dice")],
+        [InlineKeyboardButton(text="❓ El examen de Diana", callback_data="game_trivia")],
         [InlineKeyboardButton(text="🔙 Volver", callback_data="back_to_main")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
@@ -404,7 +404,7 @@ def game_menu_keyboard() -> InlineKeyboardMarkup:
 def dice_play_keyboard() -> InlineKeyboardMarkup:
     """Botón para jugar dados"""
     buttons = [
-        [InlineKeyboardButton(text="🎲 Tirar dados", callback_data="dice_play")],
+        [InlineKeyboardButton(text="🎲 Invocar el destino", callback_data="dice_play")],
         [InlineKeyboardButton(text="🔙 Menú de juegos", callback_data="game_menu")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
@@ -412,12 +412,10 @@ def dice_play_keyboard() -> InlineKeyboardMarkup:
 
 def trivia_keyboard(question: dict, question_idx: int) -> InlineKeyboardMarkup:
     """Teclado con opciones de trivia A, B, C"""
-    options = ["A", "B", "C"]
     buttons = []
-    for idx, opt in enumerate(options):
-        text = f"{opt}) {question['opts'][idx]}"
+    for idx, opt_text in enumerate(question['opts']):
         buttons.append([InlineKeyboardButton(
-            text=text,
+            text=opt_text,
             callback_data=f"trivia_answer_{idx}_{question_idx}"
         )])
     buttons.append([InlineKeyboardButton(
