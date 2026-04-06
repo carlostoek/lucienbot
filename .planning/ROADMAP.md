@@ -20,7 +20,7 @@
 | 9 | Polish & Hardening | Rate limiting, FSM persistente, backups, analytics | Complete    | 2026-03-31 |
 | 12 | Mejorar tienda | 5/5 | Complete    | 2026-04-05 |
 | 13 | El Mapa del Deseo | 3/3 | Complete    | 2026-04-05 |
-| 14 | Minijuegos | Sistema de dados y trivia para ganar besitos | GAME-01, GAME-02, GAME-03 | Pending |
+| 14 | Minijuegos | Sistema de dados y trivia para ganar besitos | Complete    | 2026-04-06 |
 
 ## Phase Details
 
@@ -240,7 +240,7 @@ Plans:
 **Requirements:** GAME-01, GAME-02, GAME-03
 **Depends on:** Phase 13
 **Status:** Pending
-**Plans:** 2/2 plans pending
+**Plans:** 1/1 plans complete
 
 **Plans:**
 - [x] 14-01-PLAN.md — Game Service + TransactionSource.GAME: lógica de minijuegos (dados, trivia) ✓ (plan created)
