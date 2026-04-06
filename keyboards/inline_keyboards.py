@@ -34,6 +34,10 @@ def main_menu_keyboard(is_vip: bool = False) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(
             text="📖 Fragmentos de la historia",
             callback_data="narrative"
+        )],
+        [InlineKeyboardButton(
+            text="🎲 Minijuegos",
+            callback_data="minigames"
         )]
     ]
 

@@ -44,7 +44,7 @@ class MessagesConfig:
 @dataclass
 class RateLimitConfig:
     """Configuración de rate limiting"""
-    RATE_LIMIT_RATE: int = 5        # max requests per window
+    RATE_LIMIT_RATE: int = 100       # max requests per window
     RATE_LIMIT_PERIOD: float = 10.0 # seconds window
     ADMIN_BYPASS: bool = True       # skip throttling for Custodios
 

@@ -11,6 +11,8 @@ from services.daily_gift_service import DailyGiftService
 from services.broadcast_service import BroadcastService
 from keyboards.inline_keyboards import back_keyboard, main_menu_keyboard
 from utils.lucien_voice import LucienVoice
+import asyncio
+import random
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,6 +20,10 @@ router = Router()
 
 # Deduplication set for reaction callbacks (prevents duplicate processing from Telegram retries)
 _reaction_callbacks_being_processed = set()
+
+# Cooldown for dice game per user (prevents rate limit issues)
+_dice_game_cooldown: dict[int, float] = {}
+_DICE_COOLDOWN_SECONDS = 3  # Minimum seconds between dice games
 
 
 # ==================== CONSULTAR SALDO ====================
@@ -269,6 +275,118 @@ async def handle_reaction(callback: CallbackQuery):
     finally:
         # Siempre remover el dedup key al finalizar
         _reaction_callbacks_being_processed.discard(dedup_key)
+
+
+# ==================== MINIJUEGOS ====================
+
+import random
+
+
+@router.callback_query(F.data == "minigames")
+async def minigames_menu(callback: CallbackQuery):
+    """Menú de minijuegos"""
+    text = f"""🎩 <b>Lucien:</b>
+
+<i>¿Busca un momento de entretenimiento?</i>
+
+🎲 <b>Minijuegos</b>
+
+<b>🎲 Dados de Diana</b>
+<i>Lance dos dados:</i>
+• Si caen <b>ambos pares</b> (2,4,6) → ¡Ganas 1 besito!
+• Si caen <b>dobles</b> (mismo número) → ¡Ganas 1 besito!
+• Probabilidad de victoria: ~33%
+
+<i>¿Se siente con suerte?</i>"""
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🎲 Lanzar dados", callback_data="dice_game")],
+        [InlineKeyboardButton(text="🔙 Volver", callback_data="back_to_main")]
+    ])
+
+    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
+    await callback.answer()
+
+
+@router.callback_query(F.data == "dice_game")
+async def dice_game(callback: CallbackQuery):
+    """Juego de dados con dos dados - cooldown interno para evitar rate limits"""
+    user_id = callback.from_user.id
+    import time
+
+    logger.info(f"[dice_game] Handler called for user {user_id}")
+
+    # Verificar cooldown ANTES de enviar dados
+    now = time.monotonic()
+    if user_id in _dice_game_cooldown:
+        elapsed = now - _dice_game_cooldown[user_id]
+        if elapsed < _DICE_COOLDOWN_SECONDS:
+            remaining = int(_DICE_COOLDOWN_SECONDS - elapsed)
+            await callback.answer(
+                f"🎩 Lucien:\n\n"
+                f"<i>Calma, visitante...</i>\n\n"
+                f"Espera {remaining} segundos antes de volver a lanzar.",
+                show_alert=True
+            )
+            return
+
+    # Actualizar cooldown
+    _dice_game_cooldown[user_id] = now
+
+    # Lanzar dos dados (valores aleatorios 1-6)
+    value1 = random.randint(1, 6)
+    value2 = random.randint(1, 6)
+    logger.info(f"[dice_game] Dice values: {value1}, {value2} for user {user_id}")
+
+    # Verificar victoria: ambos pares o ambos iguales
+    dice1_even = value1 % 2 == 0
+    dice2_even = value2 % 2 == 0
+    is_double = value1 == value2
+    is_win = (dice1_even and dice2_even) or is_double
+
+    if is_win:
+        besito_service = BesitoService()
+        besito_service.add_besitos(user_id, 1, source="dice_game")
+        result_text = "✨ <b>¡Victoria!</b>"
+    else:
+        result_text = "💫 <b>No fue esta vez...</b>"
+
+    # Formatear dados
+    dice_faces = {
+        1: "⚀", 2: "⚁", 3: "⚂",
+        4: "⚃", 5: "⚄", 6: "⚅"
+    }
+    dice_str = f"{dice_faces[value1]} {dice_faces[value2]}"
+
+    if is_double:
+        condition = "¡Dobles!"
+    elif dice1_even and dice2_even:
+        condition = "¡Ambos pares!"
+    else:
+        condition = "Inténtalo de nuevo"
+
+    text = f"""🎩 <b>Lucien:</b>
+
+<i>Los dados han sido lanzados...</i>
+
+🎲 <b>Dados de Diana</b>
+
+{dice_str}
+
+{result_text}
+
+<i>{condition}</i>
+
+{'💋 <b>+1 besito</b> añadido a tu saldo' if is_win else '<i>Vuelve a intentarlo...</i>'}"""
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🎲 Lanzar de nuevo", callback_data="dice_game")],
+        [InlineKeyboardButton(text="🎲 Ver otros juegos", callback_data="minigames")],
+        [InlineKeyboardButton(text="🔙 Volver", callback_data="back_to_main")]
+    ])
+
+    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
+    await callback.answer(f"+1 besito" if is_win else "Intenta de nuevo")
 
 
 

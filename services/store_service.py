@@ -266,6 +266,58 @@ class StoreService:
         db.commit()
         return True
 
+    # ==================== COMPRA DIRECTA ====================
+
+    def direct_purchase(self, user_id: int, product_id: int) -> tuple:
+        """
+        Crea una orden directa para un producto sin usar carrito.
+        Retorna (orden, mensaje_error)
+        """
+        db = self._get_db()
+        product = self.get_product(product_id)
+
+        if not product:
+            return None, LucienVoice.store_product_not_found()
+
+        if not product.is_available:
+            return None, LucienVoice.store_product_unavailable(product.name)
+
+        # Verificar stock
+        if product.stock != -1 and product.stock < 1:
+            return None, LucienVoice.store_stock_insufficient(product.name, product.stock)
+
+        # Verificar saldo
+        balance = self.besito_service.get_balance(user_id)
+        if balance < product.price:
+            return None, LucienVoice.store_balance_insufficient(product.price, balance)
+
+        # Crear la orden
+        order = Order(
+            user_id=user_id,
+            total_items=1,
+            total_price=product.price,
+            status=OrderStatus.PENDING
+        )
+        db.add(order)
+        db.flush()
+
+        # Crear item de la orden
+        order_item = OrderItem(
+            order_id=order.id,
+            product_id=product.id,
+            product_name=product.name,
+            quantity=1,
+            unit_price=product.price,
+            total_price=product.price
+        )
+        db.add(order_item)
+
+        db.commit()
+        db.refresh(order)
+
+        logger.info(f"Orden directa creada: {order.id} para usuario {user_id}, producto {product_id}")
+        return order, None
+
     # ==================== ORDENES/COMPRAS ====================
 
     def create_order(self, user_id: int) -> tuple:
