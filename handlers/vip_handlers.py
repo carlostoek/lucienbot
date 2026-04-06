@@ -226,6 +226,33 @@ async def generate_token(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
+@router.callback_query(F.data == "generate_another_token")
+async def generate_another_token(callback: CallbackQuery, state: FSMContext):
+    """Reinicia el flujo para generar otro token"""
+    vip_service = VIPService()
+    tariffs = vip_service.get_all_tariffs(active_only=True)
+
+    if not tariffs:
+        await callback.message.edit_text(
+            f"🎩 <b>Lucien:</b>\n\n"
+            f"<i>No hay tarifas activas para generar tokens...</i>\n\n"
+            f"👉 <i>Cree una tarifa primero en 'Gestionar tarifas'.</i>",
+            reply_markup=vip_management_keyboard(),
+            parse_mode="HTML"
+        )
+        await callback.answer()
+        return
+
+    await callback.message.edit_text(
+        f"🎩 <b>Lucien:</b>\n\n"
+        f"<i>Seleccione la tarifa para la cual desea forjar un token de acceso...</i>",
+        reply_markup=tariffs_keyboard(tariffs, for_selection=True),
+        parse_mode="HTML"
+    )
+    await state.set_state(TokenStates.selecting_tariff)
+    await callback.answer()
+
+
 # ==================== LISTAR TOKENS ====================
 
 @router.callback_query(F.data == "list_tokens")

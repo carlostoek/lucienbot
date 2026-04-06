@@ -10,27 +10,45 @@ from models.models import Channel, Tariff
 
 def main_menu_keyboard(is_vip: bool = False) -> InlineKeyboardMarkup:
     """Menú principal de usuario con gamificación"""
-    buttons = [
+    buttons = []
+
+    # Solo VIP: El Diván
+    if is_vip:
+        buttons.append([InlineKeyboardButton(
+            text="💎 El Diván",
+            callback_data="vip_area"
+        )])
+
+    # Menú principal reorganizado
+    buttons.extend([
         [InlineKeyboardButton(
-            text="💋 Mi saldo de besitos",
-            callback_data="my_balance"
+            text="🎮 Minijuegos",
+            callback_data="game_menu"
         )],
-        [InlineKeyboardButton(
-            text="🎁 Regalo diario",
-            callback_data="daily_gift"
-        )],
-        [InlineKeyboardButton(
-            text="🎯 Mis misiones",
-            callback_data="my_missions"
-        )],
-        [InlineKeyboardButton(
-            text="🎁 Recompensas",
-            callback_data="rewards_list"
-        )],
+        [
+            InlineKeyboardButton(
+                text="💋 Mi saldo de besitos",
+                callback_data="my_balance"
+            ),
+            InlineKeyboardButton(
+                text="🎁 Regalo diario",
+                callback_data="daily_gift"
+            )
+        ],
         [InlineKeyboardButton(
             text="🛍️ Tienda de Diana",
             callback_data="shop"
         )],
+        [
+            InlineKeyboardButton(
+                text="🎯 Mis misiones",
+                callback_data="my_missions"
+            ),
+            InlineKeyboardButton(
+                text="🎁 Recompensas",
+                callback_data="rewards_list"
+            )
+        ],
         [InlineKeyboardButton(
             text="✨ Ofertas especiales",
             callback_data="offers"
@@ -38,18 +56,8 @@ def main_menu_keyboard(is_vip: bool = False) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(
             text="📖 Fragmentos de la historia",
             callback_data="narrative"
-        )],
-        [InlineKeyboardButton(
-            text="🎮 Minijuegos",
-            callback_data="game_menu"
         )]
-    ]
-
-    if is_vip:
-        buttons.insert(0, [InlineKeyboardButton(
-            text="💎 El Diván",
-            callback_data="vip_area"
-        )])
+    ])
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
