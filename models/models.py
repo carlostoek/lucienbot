@@ -172,6 +172,7 @@ class TransactionSource(str, enum.Enum):
     PURCHASE = "purchase"          # Compra en tienda
     ADMIN = "admin"                # Ajuste manual por admin
     ANONYMOUS_MESSAGE = "anonymous_message"  # Mensaje anónimo VIP
+    DICE_GAME = "dice_game"        # Victoria en juego de dados
 
 
 class BesitoBalance(Base):

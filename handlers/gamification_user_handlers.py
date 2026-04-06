@@ -24,7 +24,68 @@ _reaction_callbacks_being_processed = set()
 
 # Cooldown for dice game per user (prevents rate limit issues)
 _dice_game_cooldown: dict[int, float] = {}
-_DICE_COOLDOWN_SECONDS = 3  # Minimum seconds between dice games
+_DICE_COOLDOWN_SECONDS = 5  # Minimum seconds between dice games
+
+# ==================== DICE GAME HELPERS ====================
+
+
+def validate_dice_result(dice1: int, dice2: int) -> bool:
+    """Validar que el resultado de los dados sea posible (no manipulado).
+
+    Args:
+        dice1: Valor del primer dado (1-6)
+        dice2: Valor del segundo dado (1-6)
+
+    Returns:
+        True si el resultado es válido
+    """
+    # Ambos valores deben estar entre 1 y 6
+    if not (1 <= dice1 <= 6 and 1 <= dice2 <= 6):
+        logger.warning(f"[validate_dice_result] Invalid dice values: {dice1}, {dice2}")
+        return False
+
+    # La suma debe estar entre 2 y 12
+    total = dice1 + dice2
+    if not (2 <= total <= 12):
+        logger.warning(f"[validate_dice_result] Invalid sum: {total}")
+        return False
+
+    # Verificar consistencia: la suma debe ser igual a dice1 + dice2
+    return True
+
+
+def check_win(dice1: int, dice2: int) -> bool:
+    """Determinar si el resultado de los dados es una victoria.
+
+    Victoria ocurre cuando:
+    - Ambos dados son pares (2, 4, 6)
+    - Ambos dados son iguales (dobles)
+
+    Args:
+        dice1: Valor del primer dado
+        dice2: Valor del segundo dado
+
+    Returns:
+        True si es victoria
+    """
+    both_even = (dice1 % 2 == 0) and (dice2 % 2 == 0)
+    is_double = dice1 == dice2
+    return both_even or is_double
+
+
+# Mensajes de victoria (voz de Lucien)
+WIN_MESSAGES = [
+    "¡La fortuna te sonríe! Has ganado 1 besito.",
+    "Los dados han hablado... y traen buenas nuevas. +1 besito",
+    "Diana sonríe ante tu suerte. Toma tu recompensa."
+]
+
+# Mensajes de derrota (voz de Lucien)
+LOSS_MESSAGES = [
+    "Los dados han decidido... pero la noche es joven.",
+    "No esta vez, querido visitante. Prueba de nuevo más tarde.",
+    "La fortuna es caprichosa hoy."
+]
 
 
 # ==================== CONSULTAR SALDO ====================
@@ -397,8 +458,16 @@ async def dice_game(callback: CallbackQuery):
 
 @router.message(F.web_app_data)
 async def handle_dice_webapp(message: Message):
-    """Recibe datos del WebApp de dados y procesa el resultado"""
+    """Recibe datos del WebApp de dados y procesa el resultado con validación completa.
+
+    Flujo:
+    1. Validar que el resultado sea posible (no manipulado)
+    2. Verificar cooldown de 5 segundos
+    3. Calcular victoria internamente (no confiar en WebApp)
+    4. Otorgar besitos si hay victoria
+    """
     user_id = message.from_user.id
+    import time
 
     try:
         # Parsear datos JSON del WebApp
@@ -407,31 +476,54 @@ async def handle_dice_webapp(message: Message):
         dice1 = data.get('dice1', 0)
         dice2 = data.get('dice2', 0)
         total = data.get('sum', 0)
-        is_win = data.get('win', False)
 
-        logger.info(f"[webapp_dice] User {user_id} rolled: {dice1}+{dice2}={total}, win={is_win}")
+        logger.info(f"[webapp_dice] User {user_id} submitted: {dice1}+{dice2}={total}")
 
-        # Procesar victoria si aplica
-        if is_win:
-            besito_service = BesitoService()
-            besito_service.add_besitos(user_id, 1, source="dice_game")
-            result_text = "✨ <b>¡Victoria!</b>"
-            win_text = "💋 <b>+1 besito</b> añadido a tu saldo"
-        else:
-            result_text = "💫 <b>No fue esta vez...</b>"
-            win_text = "<i>Vuelve a intentarlo...</i>"
+        # 1. VALIDAR resultado (detectar manipulación)
+        if not validate_dice_result(dice1, dice2):
+            logger.warning(f"[webapp_dice] Invalid dice result from user {user_id}: {dice1}, {dice2}")
+            await message.answer(
+                "🎩 <b>Lucien:</b>\n\n"
+                "<i>Los dados han sido alterados... eso no está bien.</i>\n\n"
+                "Algo huele a trampa en este juego.",
+                reply_markup=main_menu_keyboard(),
+                parse_mode="HTML"
+            )
+            return
 
-        # Formatear dados
+        # 2. VERIFICAR cooldown
+        now = time.monotonic()
+        if user_id in _dice_game_cooldown:
+            elapsed = now - _dice_game_cooldown[user_id]
+            if elapsed < _DICE_COOLDOWN_SECONDS:
+                remaining = int(_DICE_COOLDOWN_SECONDS - elapsed)
+                logger.info(f"[webapp_dice] User {user_id} in cooldown: {remaining}s remaining")
+                await message.answer(
+                    f"🎩 <b>Lucien:</b>\n\n"
+                    f"<i>Calma, querido visitante...</i>\n\n"
+                    f"Debes esperar {remaining} segundos antes de volver a lanzar los dados.",
+                    reply_markup=main_menu_keyboard(),
+                    parse_mode="HTML"
+                )
+                return
+
+        # Actualizar cooldown
+        _dice_game_cooldown[user_id] = now
+
+        # 3. CALCULAR victoria internamente (no confiar en is_win del WebApp)
+        is_win = check_win(dice1, dice2)
+
+        # 4. Formatear dados para mostrar
         dice_faces = {
             1: "⚀", 2: "⚁", 3: "⚂",
             4: "⚃", 5: "⚄", 6: "⚅"
         }
         dice_str = f"{dice_faces.get(dice1, '?')} {dice_faces.get(dice2, '?')}"
 
-        # Determinar condicion de victoria para mostrar
+        # Determinar condición de victoria para mostrar
+        is_double = dice1 == dice2
         die1_even = dice1 % 2 == 0
         die2_even = dice2 % 2 == 0
-        is_double = dice1 == dice2
 
         if is_double:
             condition = "¡Dobles!"
@@ -440,6 +532,36 @@ async def handle_dice_webapp(message: Message):
         else:
             condition = "Inténtalo de nuevo"
 
+        # 5. OTORGAR besitos si hay victoria
+        if is_win:
+            # Usar credit_besitos con TransactionSource
+            from models.models import TransactionSource
+            besito_service = BesitoService()
+            success = besito_service.credit_besitos(
+                user_id=user_id,
+                amount=1,
+                source=TransactionSource.DICE_GAME,
+                description=f"Dados: {dice1}+{dice2}={dice1+dice2}"
+            )
+
+            if success:
+                # Seleccionar mensaje aleatorio de victoria
+                win_msg = random.choice(WIN_MESSAGES)
+                result_text = "✨ <b>¡Victoria!</b>"
+                win_text = f"💋 {win_msg}"
+                logger.info(f"[webapp_dice] User {user_id} won 1 besito ({dice1}, {dice2})")
+            else:
+                result_text = "✨ <b>¡Victoria!</b>"
+                win_text = "<i>Los dados te favorecieron...</i>"
+                logger.error(f"[webapp_dice] Failed to credit besitos for user {user_id}")
+        else:
+            # Seleccionar mensaje aleatorio de derrota
+            loss_msg = random.choice(LOSS_MESSAGES)
+            result_text = "💫 <b>No fue esta vez...</b>"
+            win_text = f"<i>{loss_msg}</i>"
+            logger.info(f"[webapp_dice] User {user_id} lost ({dice1}, {dice2})")
+
+        # 6. Construir mensaje final
         text = f"""🎩 <b>Lucien:</b>
 
 <i>Los dados han sido lanzados desde el reino digital...</i>
@@ -457,14 +579,14 @@ async def handle_dice_webapp(message: Message):
         await message.answer(text, reply_markup=main_menu_keyboard(), parse_mode="HTML")
 
     except json.JSONDecodeError as e:
-        logger.error(f"[webapp_dice] Invalid JSON from WebApp: {e}")
+        logger.error(f"[webapp_dice] Invalid JSON from user {user_id}: {e}")
         await message.answer(
             "🎩 <b>Lucien:</b>\n\n<i>Hubo un problema al procesar los dados...</i>",
             reply_markup=main_menu_keyboard(),
             parse_mode="HTML"
         )
     except Exception as e:
-        logger.error(f"[webapp_dice] Error processing WebApp data: {e}")
+        logger.error(f"[webapp_dice] Error processing WebApp data for user {user_id}: {e}")
         await message.answer(
             "🎩 <b>Lucien:</b>\n\n<i>Los dados se resisten a revelar su secreto...</i>",
             reply_markup=main_menu_keyboard(),
