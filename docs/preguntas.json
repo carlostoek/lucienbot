@@ -152,6 +152,506 @@
   { "q": "¿Qué videojuego usa ‘Rapture’ como metáfora de utopía fallida?", "opts": ["Bioshock", "Fallout", "Prey"], "answer": 0 },
   { "q": "¿Qué serie explora la cultura hacker?", "opts": ["Mr. Robot", "Black Mirror", "Silicon Valley"], "answer": 0 },
 
+  {
+    "q": "¿En qué año fue lanzado 'The Legend of Zelda: Ocarina of Time'?",
+    "opts": ["1996", "1998", "2000"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cómo se llama el protagonista de la saga 'Devil May Cry'?",
+    "opts": ["Kratos", "Dante", "Vergil"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el nombre del villano principal en 'Final Fantasy VII'?",
+    "opts": ["Kefka", "Sephiroth", "Ultimecia"],
+    "answer": 1
+  },
+  {
+    "q": "En 'The Witcher 3', ¿a quién busca Geralt durante gran parte del juego?",
+    "opts": ["Yennefer", "Ciri", "Triss"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos Chaos Emeralds existen en el universo de Sonic?",
+    "opts": ["6", "7", "8"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué ciudad ficticia transcurre 'GTA V'?",
+    "opts": ["Vice City", "Los Santos", "Liberty City"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué estudio desarrolló 'Bloodborne'?",
+    "opts": ["Naughty Dog", "FromSoftware", "CD Projekt Red"],
+    "answer": 1
+  },
+  {
+    "q": "En 'Halo', ¿cuál es la designación numérica del Master Chief?",
+    "opts": ["John-115", "John-117", "Mark-117"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué personaje de 'Mortal Kombat' grita '¡Get over here!' al lanzar su arpón?",
+    "opts": ["Sub-Zero", "Scorpion", "Noob Saibot"],
+    "answer": 1
+  },
+  {
+    "q": "En 'Metal Gear Solid', ¿cuál es el nombre real de Solid Snake?",
+    "opts": ["David", "Jack", "John"],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué juego popularizó el género Battle Royale con partidas de 100 jugadores en PC?",
+    "opts": ["Fortnite", "PUBG", "H1Z1"],
+    "answer": 1
+  },
+  {
+    "q": "En 'God of War' (2018), ¿cómo se llama el hijo de Kratos?",
+    "opts": ["Calliope", "Atreus", "Deimos"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué consola fue lanzado originalmente 'Super Mario 64'?",
+    "opts": ["SNES", "Nintendo 64", "GameCube"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el jefe final de 'Elden Ring'?",
+    "opts": ["Malenia", "Elden Beast", "Morgott"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué franquicia aparece el personaje conocido como 'Doomslayer'?",
+    "opts": ["Quake", "DOOM", "Half-Life"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos jugadores forman cada equipo en 'League of Legends'?",
+    "opts": ["3", "5", "6"],
+    "answer": 1
+  },
+  {
+    "q": "En 'Cyberpunk 2077', ¿en qué ciudad futurista transcurre la historia?",
+    "opts": ["Neo Tokyo", "Night City", "Nova York"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el nombre del protagonista de 'Red Dead Redemption 2'?",
+    "opts": ["John Marston", "Arthur Morgan", "Dutch van der Linde"],
+    "answer": 1
+  },
+  {
+    "q": "En 'Metal Gear Solid V', ¿cómo se llama la organización de mercenarios que lidera Big Boss?",
+    "opts": ["FOXHOUND", "Diamond Dogs", "Outer Heaven"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué power-up otorga invencibilidad temporal a Mario en la saga clásica?",
+    "opts": ["Super Mushroom", "Super Star", "Fire Flower"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el apellido del protagonista Eren en 'Attack on Titan'?",
+    "opts": ["Ackerman", "Yeager", "Braun"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántas bolas de dragón se necesitan para invocar a Shenron en 'Dragon Ball'?",
+    "opts": ["5", "7", "9"],
+    "answer": 1
+  },
+  {
+    "q": "En el universo Marvel, ¿cuál es el nombre real de Iron Man?",
+    "opts": ["Bruce Banner", "Tony Stark", "Steve Rogers"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué personaje de DC Comics es conocido como 'El Caballero Oscuro'?",
+    "opts": ["Superman", "Batman", "Green Lantern"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cómo se llama el Hokage Séptimo en el universo de 'Naruto'?",
+    "opts": ["Kakashi Hatake", "Naruto Uzumaki", "Minato Namikaze"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué año se estrenó la primera película del MCU, 'Iron Man'?",
+    "opts": ["2005", "2008", "2010"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué otorgan los frutos del diablo en 'One Piece' a cambio de poderes?",
+    "opts": ["La vista", "La capacidad de nadar", "La memoria"],
+    "answer": 1
+  },
+  {
+    "q": "En 'Demon Slayer', ¿cuál es el apellido del protagonista Tanjiro?",
+    "opts": ["Hashibira", "Kamado", "Agatsuma"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué supervillano de Marvel colecciona las Gemas del Infinito?",
+    "opts": ["Galactus", "Thanos", "Dormammu"],
+    "answer": 1
+  },
+  {
+    "q": "En 'Death Note', ¿cómo se llama el Dios de la Muerte que entrega la libreta a Light Yagami?",
+    "opts": ["Rem", "Ryuk", "Gelus"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el nombre real del superhéroe Daredevil en Marvel Comics?",
+    "opts": ["Frank Castle", "Matt Murdock", "Danny Rand"],
+    "answer": 1
+  },
+  {
+    "q": "En 'Fullmetal Alchemist: Brotherhood', ¿qué extremidades pierde Edward Elric durante la transmutación humana fallida?",
+    "opts": ["Brazo y pierna derechos", "Brazo derecho y pierna izquierda", "Ambas piernas"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos Anillos de Poder recibieron los Enanos en 'El Señor de los Anillos'?",
+    "opts": ["5", "7", "9"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el nombre del arma tipo hacha que Thor obtiene en 'Avengers: Infinity War'?",
+    "opts": ["Stormbreaker", "Gungnir", "Hofund"],
+    "answer": 0
+  },
+  {
+    "q": "¿En qué ciudad ficticia vive Spider-Man principalmente?",
+    "opts": ["Gotham City", "Nueva York", "Metrópolis"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el sistema operativo desarrollado por Apple para sus computadoras Mac?",
+    "opts": ["iOS", "macOS", "Linux"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué significa el acrónimo 'GPU'?",
+    "opts": ["Global Processing Unit", "Graphics Processing Unit", "General Purpose Unit"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué año fue fundada la empresa Tesla?",
+    "opts": ["2000", "2003", "2007"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos bits tiene un byte?",
+    "opts": ["4", "8", "16"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué empresa desarrolló el chip M1 para computadoras?",
+    "opts": ["Intel", "Apple", "AMD"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el lenguaje de programación más utilizado en el lado del cliente web?",
+    "opts": ["Python", "JavaScript", "Java"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué significa la 'S' en HTTPS?",
+    "opts": ["Server", "Secure", "Standard"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos GB equivale 1 Terabyte?",
+    "opts": ["512 GB", "1024 GB", "2048 GB"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué tecnología inalámbrica se usa principalmente para conectar auriculares y teclados a corta distancia?",
+    "opts": ["Wi-Fi", "Bluetooth", "NFC"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué empresa creó el sistema operativo Android?",
+    "opts": ["Apple", "Google", "Microsoft"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos rounds dura una pelea de campeonato en la UFC?",
+    "opts": ["3", "5", "7"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué luchador de MMA apodado 'The Eagle' terminó su carrera invicto?",
+    "opts": ["Jon Jones", "Khabib Nurmagomedov", "Georges St-Pierre"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos jugadores de campo (sin portero) tiene un equipo de fútbol en cancha?",
+    "opts": ["9", "10", "11"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué país nació Lionel Messi?",
+    "opts": ["Brasil", "Argentina", "Uruguay"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántas Copas del Mundo ha ganado Brasil en fútbol?",
+    "opts": ["4", "5", "6"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el evento anual más importante de la WWE?",
+    "opts": ["Royal Rumble", "WrestleMania", "SummerSlam"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué división de peso compite principalmente Canelo Álvarez?",
+    "opts": ["Peso medio", "Supermediano", "Crucero"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué país ganó la Copa del Mundo de fútbol Qatar 2022?",
+    "opts": ["Francia", "Argentina", "Brasil"],
+    "answer": 1
+  },
+  {
+    "q": "¿Con qué técnica de sumisión finalizó Khabib Nurmagomedov la mayoría de sus peleas?",
+    "opts": ["Rear Naked Choke", "Arm Triangle", "Guillotine"],
+    "answer": 0
+  },
+  {
+    "q": "¿Cuántos títulos necesita un jugador para completar el 'Golden Slam' en tenis?",
+    "opts": ["4", "5", "6"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué significa el acrónimo 'BMW'?",
+    "opts": ["British Motor Works", "Bayerische Motoren Werke", "Berlin Motor Works"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es la marca de motocicletas famosa por su motor V-Twin y su sonido característico?",
+    "opts": ["Ducati", "Harley-Davidson", "Honda"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué país nació la marca de autos deportivos Lamborghini?",
+    "opts": ["Alemania", "Italia", "España"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué marca produce el icónico modelo de auto deportivo '911'?",
+    "opts": ["Ferrari", "Porsche", "McLaren"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué marca japonesa fabrica la motocicleta 'Hayabusa'?",
+    "opts": ["Kawasaki", "Suzuki", "Yamaha"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué año fue lanzado el primer Tesla Roadster original?",
+    "opts": ["2006", "2008", "2010"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué significa 'GTI' en los automóviles Volkswagen?",
+    "opts": ["Gran Turbo Integral", "Gran Turismo Inyección", "Grand Touring International"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos cilindros tiene el motor del Ferrari 488?",
+    "opts": ["6", "8", "10"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es la potencia aproximada del motor del Bugatti Chiron en caballos de fuerza?",
+    "opts": ["1,000 hp", "1,500 hp", "2,000 hp"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué grupo automotriz es dueño de las marcas Rolls-Royce y Mini?",
+    "opts": ["Mercedes-Benz", "BMW", "Volkswagen"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cómo se llamaba la banda de Linkin Park antes de adoptar ese nombre?",
+    "opts": ["Hybrid Theory", "Xero", "Meteora"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos miembros tiene la banda Metallica en su formación actual?",
+    "opts": ["3", "4", "5"],
+    "answer": 1
+  },
+  {
+    "q": "¿Quién es el vocalista y guitarrista principal de Queens of the Stone Age?",
+    "opts": ["Dave Grohl", "Josh Homme", "Jack White"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál fue el álbum debut de Eminem lanzado en 1996?",
+    "opts": ["The Slim Shady LP", "Infinite", "Marshall Mathers LP"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué DJ de EDM lanzó el hit 'Levels' en 2011?",
+    "opts": ["Skrillex", "Avicii", "Deadmau5"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué año murió Kurt Cobain, vocalista de Nirvana?",
+    "opts": ["1992", "1994", "1996"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos integrantes tenía la formación clásica de Queen?",
+    "opts": ["3", "4", "5"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué instrumento toca Slash en Guns N' Roses?",
+    "opts": ["Bajo", "Guitarra", "Batería"],
+    "answer": 1
+  },
+  {
+    "q": "¿Quién es conocido como el 'God of Thunder' en la banda KISS?",
+    "opts": ["Paul Stanley", "Gene Simmons", "Ace Frehley"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué álbum (soundtrack) aparece la canción 'Lose Yourself' de Eminem?",
+    "opts": ["The Eminem Show", "8 Mile", "Encore"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el nombre de la luna boscosa donde viven los Ewoks en 'Star Wars'?",
+    "opts": ["Tatooine", "Endor", "Hoth"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cómo se llama la cuarta película de 'The Matrix' estrenada en 2021?",
+    "opts": ["The Matrix Reloaded", "The Matrix Resurrections", "The Matrix Revolutions"],
+    "answer": 1
+  },
+  {
+    "q": "¿Quién interpreta a Tony Stark / Iron Man en el MCU?",
+    "opts": ["Chris Evans", "Robert Downey Jr.", "Mark Ruffalo"],
+    "answer": 1
+  },
+  {
+    "q": "En 'Interstellar', ¿cuál es el nombre del robot IA principal que acompaña a los astronautas?",
+    "opts": ["HAL", "TARS", "CASE"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué año fue lanzada la primera película de 'Avatar' de James Cameron?",
+    "opts": ["2007", "2009", "2011"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cómo se llama el planeta natal de Superman?",
+    "opts": ["Apokolips", "Krypton", "New Genesis"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el nombre de la nave espacial en la película 'Alien' (1979)?",
+    "opts": ["Prometheus", "Nostromo", "Covenant"],
+    "answer": 1
+  },
+  {
+    "q": "En 'Blade Runner 2049', ¿quién interpreta al personaje K?",
+    "opts": ["Harrison Ford", "Ryan Gosling", "Jared Leto"],
+    "answer": 1
+  },
+  {
+    "q": "En 'Back to the Future', ¿a qué año viaja Marty McFly en la primera película?",
+    "opts": ["1945", "1955", "1885"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cómo se llama el arma planetaria de la Primera Orden en 'Star Wars: The Force Awakens'?",
+    "opts": ["Death Star", "Starkiller Base", "Star Destroyer"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos lados tiene un dado d20 usado en Dungeons & Dragons?",
+    "opts": ["12", "20", "24"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el nombre del creador original de 'Minecraft'?",
+    "opts": ["Notch", "Jeb", "Todd Howard"],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa 'RPG' en el contexto de los videojuegos?",
+    "opts": ["Rocket Propelled Game", "Role Playing Game", "Random Player Game"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué año fue fundada Nvidia?",
+    "opts": ["1990", "1993", "1998"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el nombre del lenguaje de programación creado por Guido van Rossum?",
+    "opts": ["Ruby", "Python", "Perl"],
+    "answer": 1
+  },
+  {
+    "q": "¿De qué país es originaria la bebida 'Sake'?",
+    "opts": ["China", "Japón", "Corea"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el ingrediente principal del guacamole?",
+    "opts": ["Jitomate", "Aguacate", "Chile"],
+    "answer": 1
+  },
+  {
+    "q": "¿De qué país es originaria la bebida 'Bourbon'?",
+    "opts": ["Escocia", "Irlanda", "Estados Unidos"],
+    "answer": 2
+  },
+  {
+    "q": "¿Qué tipo de queso se usa en una pizza Margherita tradicional?",
+    "opts": ["Cheddar", "Mozzarella", "Parmesano"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos años mínimo debe madurar un whisky escocés para llamarse legalmente 'Scotch'?",
+    "opts": ["1 año", "3 años", "5 años"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cómo se llama el estilo de ramen con caldo hecho de huesos de cerdo?",
+    "opts": ["Shoyu", "Tonkotsu", "Miso"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos tipos de licor base contiene un 'Long Island Iced Tea' tradicional?",
+    "opts": ["3", "5", "7"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué significa 'IPA' en el contexto de las cervezas artesanales?",
+    "opts": ["Indian Premium Ale", "India Pale Ale", "International Pale Ale"],
+    "answer": 1
+  },
+  {
+    "q": "¿De qué país es originaria la carne 'Wagyu'?",
+    "opts": ["Australia", "Japón", "Argentina"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué estado de México se produce principalmente el mezcal artesanal?",
+    "opts": ["Jalisco", "Oaxaca", "Veracruz"],
+    "answer": 1
+  },
   { "q": "¿Qué filósofo habló del ‘eterno retorno’?", "opts": ["Nietzsche", "Heidegger", "Kierkegaard"], "answer": 0 },
   { "q": "¿Qué banda popularizó la canción ‘Smells Like Teen Spirit’?", "opts": ["Nirvana", "Pearl Jam", "Soundgarden"], "answer": 0 },
   { "q": "¿Qué significa ‘memento mori’?", "opts": ["Recuerda que morirás", "Recuerda que amas", "Recuerda vivir"], "answer": 0 },
