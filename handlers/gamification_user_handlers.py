@@ -88,7 +88,10 @@ async def show_transaction_history(callback: CallbackQuery):
                 "daily_gift": "Regalo diario",
                 "mission": "Misión",
                 "purchase": "Compra",
-                "admin": "Admin"
+                "admin": "Admin",
+                "anonymous_message": "Mensaje anónimo",
+                "GAME": "Juego",
+                "TRIVIA": "Trivia"
             }.get(tx.source.value, tx.source.value)
             
             text += f"{emoji} <b>{'+' if tx.amount > 0 else ''}{tx.amount}</b> - {source_name}\n"

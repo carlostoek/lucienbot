@@ -145,22 +145,24 @@ class PackageService:
     
     def delete_package(self, package_id: int) -> bool:
         """
-        Elimina un paquete de la base de datos.
+        Elimina un paquete de la base de datos (soft delete).
 
         Args:
             package_id: ID del paquete
 
         Returns:
-            True si se eliminó correctamente
+            True si se desactivó correctamente
         """
         package = self.get_package(package_id)
         if not package:
             logger.warning(f"Paquete {package_id} no encontrado para eliminar")
             return False
 
-        self.db.delete(package)
+        # Soft delete: marcar como inactivo en lugar de eliminar fisicamente
+        # Esto evita-violaciones de FK con store_products
+        package.is_active = False
         self.db.commit()
-        logger.info(f"Paquete {package_id} eliminado permanentemente")
+        logger.info(f"Paquete {package_id} desactivado (soft delete)")
         return True
     
     def remove_file_from_package(self, file_id: int) -> bool:

@@ -374,6 +374,7 @@ async def product_preview(callback: CallbackQuery):
     is_available = product.is_available
 
     # Enviar preview si hay archivos
+    preview_errors = []
     if preview_files:
         for file_entry in preview_files:
             try:
@@ -390,7 +391,9 @@ async def product_preview(callback: CallbackQuery):
                         parse_mode="HTML"
                     )
             except Exception as e:
-                logger.error(f"Error enviando preview: {e}")
+                error_msg = f"Error enviando preview (file_id={file_entry.file_id[:20]}..., type={file_entry.file_type}): {e}"
+                logger.error(error_msg)
+                preview_errors.append(file_entry.file_type)
                 continue
 
     # Construir mensaje con la tarjeta del producto y botones

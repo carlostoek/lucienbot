@@ -172,8 +172,8 @@ class TransactionSource(str, enum.Enum):
     PURCHASE = "purchase"          # Compra en tienda
     ADMIN = "admin"                # Ajuste manual por admin
     ANONYMOUS_MESSAGE = "anonymous_message"  # Mensaje anónimo VIP
-    GAME = "game"               # Victoria en dados
-    TRIVIA = "trivia"           # Respuesta correcta en trivia
+    GAME = "GAME"               # Victoria en dados
+    TRIVIA = "TRIVIA"           # Respuesta correcta en trivia
 
 
 class BesitoBalance(Base):
@@ -263,8 +263,7 @@ class BroadcastReaction(Base):
     
     # Constraint único: un usuario solo puede reaccionar una vez por mensaje
     __table_args__ = (
-        # No se puede usar UniqueConstraint directamente con SQLAlchemy 1.4/2.0 de esta forma
-        # Se manejará a nivel de aplicación
+        UniqueConstraint('broadcast_id', 'user_id', name='uq_broadcast_user_reaction'),
     )
 
 
