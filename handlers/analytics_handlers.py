@@ -34,8 +34,8 @@ async def show_stats(message: Message):
         return
 
     db = SessionLocal()
+    svc = AnalyticsService(db)
     try:
-        svc = AnalyticsService(db)
         stats = svc.get_dashboard_stats()
         await message.answer(
             LucienVoice.analytics_dashboard(stats),
@@ -65,9 +65,8 @@ async def export_data(message: Message):
         export_type = args[1].lower()
 
     db = SessionLocal()
+    svc = AnalyticsService(db)
     try:
-        svc = AnalyticsService(db)
-
         if export_type == "users":
             csv_path = svc.export_users_csv()
             filename = "visitantes_export.csv"

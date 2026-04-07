@@ -89,7 +89,10 @@ async def admin_gamification_menu(callback: CallbackQuery):
 async def config_besitos_menu(callback: CallbackQuery):
     """Menu de configuracion de besitos y emojis"""
     broadcast_service = BroadcastService()
-    emojis = broadcast_service.get_all_emojis(active_only=False)
+    try:
+        emojis = broadcast_service.get_all_emojis(active_only=False)
+    finally:
+        broadcast_service.close()
     
     text = "🎩 Lucien:\n\n" \
            "Los fragmentos de atencion que Diana otorga...\n\n" \
@@ -297,7 +300,10 @@ async def toggle_emoji(callback: CallbackQuery):
 async def config_daily_gift(callback: CallbackQuery):
     """Configuracion del regalo diario"""
     gift_service = DailyGiftService()
-    config = gift_service.get_config()
+    try:
+        config = gift_service.get_config()
+    finally:
+        gift_service.close()
     
     status = "✅ Activo" if config.is_active else "❌ Inactivo"
     

@@ -73,16 +73,19 @@ async def admin_vip(callback: CallbackQuery):
 async def admin_users(callback: CallbackQuery):
     """Gestión de usuarios"""
     user_service = UserService()
-    users = user_service.get_all_users()
-    
-    text = f"""🎩 <b>Lucien:</b>
+    try:
+        users = user_service.get_all_users()
+
+        text = f"""🎩 <b>Lucien:</b>
 
 <i>Los visitantes bajo nuestra observación...</i>
 
 📊 <b>Total de almas registradas:</b> {len(users)}
 
 <i>Use el sistema de gestión de canales para ver detalles específicos.</i>"""
-    
+    finally:
+        user_service.close()
+
     await callback.message.edit_text(
         text,
         reply_markup=back_keyboard("back_to_admin"),
@@ -96,13 +99,13 @@ async def admin_analytics(callback: CallbackQuery):
     """Analytics"""
     channel_service = ChannelService()
     vip_service = VIPService()
-    
-    free_channels = len(channel_service.get_free_channels())
-    vip_channels = len(channel_service.get_vip_channels())
-    active_subs = len(vip_service.get_active_subscriptions())
-    pending = channel_service.count_pending_requests()
-    
-    text = f"""🎩 <b>Lucien:</b>
+    try:
+        free_channels = len(channel_service.get_free_channels())
+        vip_channels = len(channel_service.get_vip_channels())
+        active_subs = len(vip_service.get_active_subscriptions())
+        pending = channel_service.count_pending_requests()
+
+        text = f"""🎩 <b>Lucien:</b>
 
 <i>Los patrones que revelan los deseos ocultos...</i>
 
@@ -117,7 +120,10 @@ async def admin_analytics(callback: CallbackQuery):
    • En espera (Free): {pending}
 
 <i>Diana observa estos números con... interés.</i>"""
-    
+    finally:
+        channel_service.close()
+        vip_service.close()
+
     await callback.message.edit_text(
         text,
         reply_markup=back_keyboard("back_to_admin"),

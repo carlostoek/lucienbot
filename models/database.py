@@ -7,11 +7,23 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from config.settings import bot_config
 
-# Crear engine
+# Crear engine con pool configuration optimizada para producción
+# Railway PostgreSQL requiere pool más grande para manejar carga concurrente
+pool_kwargs = {}
+if "postgresql" in bot_config.DATABASE_URL:
+    pool_kwargs = {
+        "pool_size": 20,
+        "max_overflow": 30,
+        "pool_recycle": 3600,
+        "pool_pre_ping": True,
+        "pool_timeout": 30,
+    }
+
 engine = create_engine(
     bot_config.DATABASE_URL,
     connect_args={"check_same_thread": False} if "sqlite" in bot_config.DATABASE_URL else {},
-    echo=False
+    echo=False,
+    **pool_kwargs
 )
 
 # Session factory

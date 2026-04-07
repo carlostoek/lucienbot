@@ -41,8 +41,11 @@ class BroadcastStates(StatesGroup):
 async def send_broadcast_start(callback: CallbackQuery, state: FSMContext):
     """Inicia el flujo de broadcast - seleccionar canal"""
     channel_service = ChannelService()
-    channels = channel_service.get_all_channels()
-    
+    try:
+        channels = channel_service.get_all_channels()
+    finally:
+        channel_service.close()
+
     if not channels:
         await callback.message.edit_text(
             f"""🎩 <b>Lucien:</b>
@@ -89,10 +92,13 @@ async def send_broadcast_start(callback: CallbackQuery, state: FSMContext):
 async def select_channel_for_broadcast(callback: CallbackQuery, state: FSMContext):
     """Canal seleccionado, pedir texto"""
     channel_id = int(callback.data.replace("broadcast_channel_", ""))
-    
+
     channel_service = ChannelService()
-    channel = channel_service.get_channel_by_id(channel_id)
-    
+    try:
+        channel = channel_service.get_channel_by_id(channel_id)
+    finally:
+        channel_service.close()
+
     if not channel:
         await callback.answer("Canal no encontrado", show_alert=True)
         return
@@ -323,8 +329,11 @@ Puede agregar una foto, video o archivo al mensaje.""",
 async def want_reactions(callback: CallbackQuery, state: FSMContext):
     """Usuario quiere reacciones - mostrar emojis disponibles"""
     broadcast_service = BroadcastService()
-    emojis = broadcast_service.get_all_emojis(active_only=True)
-    
+    try:
+        emojis = broadcast_service.get_all_emojis(active_only=True)
+    finally:
+        broadcast_service.close()
+
     if not emojis:
         try:
             await callback.message.edit_text(
@@ -355,7 +364,10 @@ async def want_reactions(callback: CallbackQuery, state: FSMContext):
 async def show_reaction_selection(callback: CallbackQuery, state: FSMContext):
     """Muestra la selección de emojis"""
     broadcast_service = BroadcastService()
-    emojis = broadcast_service.get_all_emojis(active_only=True)
+    try:
+        emojis = broadcast_service.get_all_emojis(active_only=True)
+    finally:
+        broadcast_service.close()
     data = await state.get_data()
     selected = data.get('selected_emojis', [])
     
@@ -644,7 +656,7 @@ async def back_from_preview(callback: CallbackQuery, state: FSMContext):
 async def confirm_and_send_broadcast(callback: CallbackQuery, state: FSMContext, bot: Bot):
     """Envía el mensaje al canal"""
     data = await state.get_data()
-    
+
     channel_id = data.get('channel_id')
     text = data.get('text', '')
     has_attachment = data.get('has_attachment', False)
@@ -652,8 +664,9 @@ async def confirm_and_send_broadcast(callback: CallbackQuery, state: FSMContext,
     attachment_file_id = data.get('attachment_file_id')
     selected_emojis = data.get('selected_emojis', [])
     is_protected = data.get('is_protected', False)
-    
+
     broadcast_service = BroadcastService()
+    try:
     
     try:
         # Construir teclado de reacciones - todos los botones en una sola hilera
@@ -798,6 +811,8 @@ async def confirm_and_send_broadcast(callback: CallbackQuery, state: FSMContext,
                 pass
             else:
                 logger.error(f"Error mostrando mensaje de error: {e2}")
-    
+    finally:
+        broadcast_service.close()
+
     await state.clear()
     await callback.answer()

@@ -26,9 +26,12 @@ _reaction_callbacks_being_processed = set()
 async def show_balance(callback: CallbackQuery):
     """Muestra el saldo de besitos del usuario"""
     user_id = callback.from_user.id
-    
+
     besito_service = BesitoService()
-    stats = besito_service.get_balance_with_stats(user_id)
+    try:
+        stats = besito_service.get_balance_with_stats(user_id)
+    finally:
+        besito_service.close()
     
     text = f"""🎩 <b>Lucien:</b>
 
@@ -54,9 +57,12 @@ async def show_balance(callback: CallbackQuery):
 async def show_transaction_history(callback: CallbackQuery):
     """Muestra el historial de transacciones"""
     user_id = callback.from_user.id
-    
+
     besito_service = BesitoService()
-    transactions = besito_service.get_transaction_history(user_id, limit=10)
+    try:
+        transactions = besito_service.get_transaction_history(user_id, limit=10)
+    finally:
+        besito_service.close()
     
     if not transactions:
         text = f"""🎩 <b>Lucien:</b>
@@ -102,9 +108,12 @@ async def show_transaction_history(callback: CallbackQuery):
 async def daily_gift_menu(callback: CallbackQuery):
     """Menú del regalo diario"""
     user_id = callback.from_user.id
-    
+
     gift_service = DailyGiftService()
-    can_claim, time_remaining, message = gift_service.can_claim(user_id)
+    try:
+        can_claim, time_remaining, message = gift_service.can_claim(user_id)
+    finally:
+        gift_service.close()
     
     if can_claim:
         amount = gift_service.get_gift_amount()
@@ -143,9 +152,12 @@ async def daily_gift_menu(callback: CallbackQuery):
 async def claim_daily_gift(callback: CallbackQuery):
     """Procesa el reclamo del regalo diario"""
     user_id = callback.from_user.id
-    
+
     gift_service = DailyGiftService()
-    success, amount, message = gift_service.claim_gift(user_id)
+    try:
+        success, amount, message = gift_service.claim_gift(user_id)
+    finally:
+        gift_service.close()
     
     if success:
         text = f"""🎩 <b>Lucien:</b>
