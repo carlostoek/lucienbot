@@ -221,11 +221,6 @@ async def main():
     storage = create_storage()
     dp = Dispatcher(storage=storage)
 
-    # Rate limiting middleware - applied globally before routers
-    from handlers.rate_limit_middleware import ThrottlingMiddleware
-    dp.message.middleware(ThrottlingMiddleware())
-    dp.callback_query.middleware(ThrottlingMiddleware())
-
     # Registrar routers
     dp.include_router(common_router)
     dp.include_router(admin_router)
