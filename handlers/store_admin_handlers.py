@@ -8,7 +8,9 @@ from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKe
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from config.settings import bot_config
+from services import get_service
 from services.store_service import StoreService
+from services import get_service
 from services.package_service import PackageService
 import logging
 
@@ -40,90 +42,90 @@ def is_admin(user_id: int) -> bool:
 @router.callback_query(F.data == "admin_store", lambda cb: is_admin(cb.from_user.id))
 async def admin_store_menu(callback: CallbackQuery):
     """Menu de administracion de tienda"""
-    store_service = StoreService()
-    stats = store_service.get_store_stats()
-    low_stock = store_service.get_low_stock_products()
-    out_of_stock = store_service.get_out_of_stock_products()
+    with get_service(StoreService) as store_service:
+            stats = store_service.get_store_stats()
+            low_stock = store_service.get_low_stock_products()
+            out_of_stock = store_service.get_out_of_stock_products()
 
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="➕ Crear producto", callback_data="create_product")],
-        [InlineKeyboardButton(text="📋 Ver productos", callback_data="list_products")],
-        [InlineKeyboardButton(text="⚠️ Alertas de stock", callback_data="stock_alerts")],
-        [InlineKeyboardButton(text="📊 Estadisticas", callback_data="store_stats")],
-        [InlineKeyboardButton(text="📁 Gestionar categorías", callback_data="manage_categories")],
-        [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_gamification")]
-    ])
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="➕ Crear producto", callback_data="create_product")],
+                [InlineKeyboardButton(text="📋 Ver productos", callback_data="list_products")],
+                [InlineKeyboardButton(text="⚠️ Alertas de stock", callback_data="stock_alerts")],
+                [InlineKeyboardButton(text="📊 Estadisticas", callback_data="store_stats")],
+                [InlineKeyboardButton(text="📁 Gestionar categorías", callback_data="manage_categories")],
+                [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_gamification")]
+            ])
 
-    text = (
-        f"🎩 Lucien:\n\n"
-        f"Administracion de la tienda...\n\n"
-        f"📊 Resumen:\n"
-        f"   • Productos activos: {stats['available_products']}\n"
-        f"   • Total productos: {stats['total_products']}\n"
-        f"   • Ordenes completadas: {stats['completed_orders']}\n"
-        f"   • Besitos gastados: {stats['total_besitos_spent']}\n"
-    )
+            text = (
+                f"🎩 Lucien:\n\n"
+                f"Administracion de la tienda...\n\n"
+                f"📊 Resumen:\n"
+                f"   • Productos activos: {stats['available_products']}\n"
+                f"   • Total productos: {stats['total_products']}\n"
+                f"   • Ordenes completadas: {stats['completed_orders']}\n"
+                f"   • Besitos gastados: {stats['total_besitos_spent']}\n"
+            )
 
-    if low_stock:
-        text += f"   ⚠️ Stock bajo: {len(low_stock)} productos\n"
-    if out_of_stock:
-        text += f"   🚨 Agotados: {len(out_of_stock)} productos\n"
+            if low_stock:
+                text += f"   ⚠️ Stock bajo: {len(low_stock)} productos\n"
+            if out_of_stock:
+                text += f"   🚨 Agotados: {len(out_of_stock)} productos\n"
 
-    text += f"\nQue deseas hacer?"
+            text += f"\nQue deseas hacer?"
 
-    await callback.message.edit_text(text, reply_markup=keyboard)
-    await callback.answer()
+            await callback.message.edit_text(text, reply_markup=keyboard)
+            await callback.answer()
 
 
-# ==================== ALERTAS DE STOCK ====================
+        # ==================== ALERTAS DE STOCK ====================
 
 @router.callback_query(F.data == "stock_alerts", lambda cb: is_admin(cb.from_user.id))
 async def stock_alerts(callback: CallbackQuery):
     """Muestra alertas de stock"""
-    store_service = StoreService()
+    with get_service(StoreService) as store_service:
 
-    low_stock = store_service.get_low_stock_products()
-    out_of_stock = store_service.get_out_of_stock_products()
+            low_stock = store_service.get_low_stock_products()
+            out_of_stock = store_service.get_out_of_stock_products()
 
-    if not low_stock and not out_of_stock:
-        await callback.message.edit_text(
-            "🎩 <b>Lucien:</b>\n\n"
-            "<i>Todos los tesoros están bien abastecidos...</i>\n\n"
-            "No hay alertas de stock.",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")]
-            ])
-        )
-        await callback.answer()
-        return
+            if not low_stock and not out_of_stock:
+                await callback.message.edit_text(
+                    "🎩 <b>Lucien:</b>\n\n"
+                    "<i>Todos los tesoros están bien abastecidos...</i>\n\n"
+                    "No hay alertas de stock.",
+                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")]
+                    ])
+                )
+                await callback.answer()
+                return
 
-    text = "🎩 <b>Lucien:</b>\n\n<i>Alertas de inventario...</i>\n\n"
-    buttons = []
+            text = "🎩 <b>Lucien:</b>\n\n<i>Alertas de inventario...</i>\n\n"
+            buttons = []
 
-    if out_of_stock:
-        text += "🚨 <b>Productos agotados:</b>\n"
-        for product in out_of_stock:
-            text += f"   ❌ {product.name}\n"
-            buttons.append([InlineKeyboardButton(
-                text=f"📝 Reabastecer: {product.name[:25]}",
-                callback_data=f"restock_product_{product.id}"
-            )])
-        text += "\n"
+            if out_of_stock:
+                text += "🚨 <b>Productos agotados:</b>\n"
+                for product in out_of_stock:
+                    text += f"   ❌ {product.name}\n"
+                    buttons.append([InlineKeyboardButton(
+                        text=f"📝 Reabastecer: {product.name[:25]}",
+                        callback_data=f"restock_product_{product.id}"
+                    )])
+                text += "\n"
 
-    if low_stock:
-        text += "⚠️ <b>Stock bajo:</b>\n"
-        for product in low_stock:
-            stock_status = f"{product.stock}/{product.low_stock_threshold}"
-            text += f"   ⚠️ {product.name} ({stock_status})\n"
-            buttons.append([InlineKeyboardButton(
-                text=f"📝 Reabastecer: {product.name[:25]}",
-                callback_data=f"restock_product_{product.id}"
-            )])
+            if low_stock:
+                text += "⚠️ <b>Stock bajo:</b>\n"
+                for product in low_stock:
+                    stock_status = f"{product.stock}/{product.low_stock_threshold}"
+                    text += f"   ⚠️ {product.name} ({stock_status})\n"
+                    buttons.append([InlineKeyboardButton(
+                        text=f"📝 Reabastecer: {product.name[:25]}",
+                        callback_data=f"restock_product_{product.id}"
+                    )])
 
-    buttons.append([InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")])
+            buttons.append([InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")])
 
-    await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
-    await callback.answer()
+            await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+            await callback.answer()
 
 
 @router.callback_query(F.data.startswith("restock_product_"), lambda cb: is_admin(cb.from_user.id))
@@ -135,30 +137,30 @@ async def restock_product(callback: CallbackQuery, state: FSMContext):
         await callback.answer("ID invalido", show_alert=True)
         return
 
-    store_service = StoreService()
-    product = store_service.get_product(product_id)
+    with get_service(StoreService) as store_service:
+            product = store_service.get_product(product_id)
 
-    if not product:
-        await callback.answer("Producto no encontrado", show_alert=True)
-        return
+            if not product:
+                await callback.answer("Producto no encontrado", show_alert=True)
+                return
 
-    await state.update_data(product_id=product_id, product_name=product.name)
+            await state.update_data(product_id=product_id, product_name=product.name)
 
-    stock_text = "Ilimitado" if product.stock == -1 else str(product.stock)
+            stock_text = "Ilimitado" if product.stock == -1 else str(product.stock)
 
-    await callback.message.edit_text(
-        f"🎩 <b>Lucien:</b>\n\n"
-        f"<i>Reabastecer tesoro...</i>\n\n"
-        f"📦 <b>{product.name}</b>\n"
-        f"📊 Stock actual: {stock_text}\n\n"
-        f"Indica la cantidad a agregar:",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="♾️ Ilimitado", callback_data="restock_unlimited")],
-            [InlineKeyboardButton(text="❌ Cancelar", callback_data="stock_alerts")]
-        ])
-    )
-    await state.set_state(ProductRestockStates.waiting_amount)
-    await callback.answer()
+            await callback.message.edit_text(
+                f"🎩 <b>Lucien:</b>\n\n"
+                f"<i>Reabastecer tesoro...</i>\n\n"
+                f"📦 <b>{product.name}</b>\n"
+                f"📊 Stock actual: {stock_text}\n\n"
+                f"Indica la cantidad a agregar:",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="♾️ Ilimitado", callback_data="restock_unlimited")],
+                    [InlineKeyboardButton(text="❌ Cancelar", callback_data="stock_alerts")]
+                ])
+            )
+            await state.set_state(ProductRestockStates.waiting_amount)
+            await callback.answer()
 
 
 @router.callback_query(ProductRestockStates.waiting_amount, F.data == "restock_unlimited")
@@ -167,18 +169,18 @@ async def restock_unlimited(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     product_id = data.get('product_id')
 
-    store_service = StoreService()
-    store_service.update_product(product_id, stock=-1)
+    with get_service(StoreService) as store_service:
+            store_service.update_product(product_id, stock=-1)
 
-    await callback.message.edit_text(
-        f"🎩 <b>Lucien:</b>\n\n"
-        f"✅ Stock actualizado a ilimitado.",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🔙 Volver a alertas", callback_data="stock_alerts")]
-        ])
-    )
-    await state.clear()
-    await callback.answer()
+            await callback.message.edit_text(
+                f"🎩 <b>Lucien:</b>\n\n"
+                f"✅ Stock actualizado a ilimitado.",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="🔙 Volver a alertas", callback_data="stock_alerts")]
+                ])
+            )
+            await state.clear()
+            await callback.answer()
 
 
 @router.message(ProductRestockStates.waiting_amount)
@@ -196,34 +198,34 @@ async def process_restock_amount(message: Message, state: FSMContext):
     product_id = data.get('product_id')
     product_name = data.get('product_name')
 
-    store_service = StoreService()
-    product = store_service.get_product(product_id)
+    with get_service(StoreService) as store_service:
+            product = store_service.get_product(product_id)
 
-    if not product:
-        await message.answer("Producto no encontrado.")
-        await state.clear()
-        return
+            if not product:
+                await message.answer("Producto no encontrado.")
+                await state.clear()
+                return
 
-    # Calcular nuevo stock
-    current_stock = 0 if product.stock == -1 else product.stock
-    new_stock = current_stock + amount
+            # Calcular nuevo stock
+            current_stock = 0 if product.stock == -1 else product.stock
+            new_stock = current_stock + amount
 
-    store_service.update_product(product_id, stock=new_stock)
+            store_service.update_product(product_id, stock=new_stock)
 
-    await message.answer(
-        f"🎩 <b>Lucien:</b>\n\n"
-        f"✅ <b>{product_name}</b> reabastecido.\n\n"
-        f"📊 Stock anterior: {current_stock}\n"
-        f"📦 Cantidad agregada: {amount}\n"
-        f"📊 Nuevo stock: {new_stock}",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🔙 Volver a alertas", callback_data="stock_alerts")]
-        ])
-    )
-    await state.clear()
+            await message.answer(
+                f"🎩 <b>Lucien:</b>\n\n"
+                f"✅ <b>{product_name}</b> reabastecido.\n\n"
+                f"📊 Stock anterior: {current_stock}\n"
+                f"📦 Cantidad agregada: {amount}\n"
+                f"📊 Nuevo stock: {new_stock}",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="🔙 Volver a alertas", callback_data="stock_alerts")]
+                ])
+            )
+            await state.clear()
 
 
-# ==================== WIZARD CREAR PRODUCTO ====================
+        # ==================== WIZARD CREAR PRODUCTO ====================
 
 @router.callback_query(F.data == "create_product", lambda cb: is_admin(cb.from_user.id))
 async def create_product_start(callback: CallbackQuery, state: FSMContext):
@@ -429,93 +431,93 @@ async def show_product_confirmation(target, state: FSMContext):
 async def confirm_create_product(callback: CallbackQuery, state: FSMContext):
     """Crea el producto"""
     data = await state.get_data()
-    store_service = StoreService()
+    with get_service(StoreService) as store_service:
 
-    try:
-        product = store_service.create_product(
-            name=data.get('name'),
-            description=data.get('description'),
-            package_id=data.get('package_id'),
-            price=data.get('price'),
-            stock=data.get('stock', -1),
-            created_by=callback.from_user.id
-        )
+            try:
+                product = store_service.create_product(
+                    name=data.get('name'),
+                    description=data.get('description'),
+                    package_id=data.get('package_id'),
+                    price=data.get('price'),
+                    stock=data.get('stock', -1),
+                    created_by=callback.from_user.id
+                )
 
-        await callback.message.edit_text(
-            f"🎩 Lucien:\n\n"
-            f"✅ Producto creado exitosamente!\n\n"
-            f"📦 {product.name}\n"
-            f"💰 {product.price} besitos\n\n"
-            f"El producto ya esta disponible en la tienda.",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")]
-            ])
-        )
-        logger.info(f"Producto creado: {product.name} por admin {callback.from_user.id}")
+                await callback.message.edit_text(
+                    f"🎩 Lucien:\n\n"
+                    f"✅ Producto creado exitosamente!\n\n"
+                    f"📦 {product.name}\n"
+                    f"💰 {product.price} besitos\n\n"
+                    f"El producto ya esta disponible en la tienda.",
+                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")]
+                    ])
+                )
+                logger.info(f"Producto creado: {product.name} por admin {callback.from_user.id}")
 
-    except Exception as e:
-        logger.error(f"Error creando producto: {e}")
-        await callback.message.edit_text(
-            "Error al crear el producto.",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")]
-            ])
-        )
+            except Exception as e:
+                logger.error(f"Error creando producto: {e}")
+                await callback.message.edit_text(
+                    "Error al crear el producto.",
+                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")]
+                    ])
+                )
 
-    await state.clear()
-    await callback.answer()
+            await state.clear()
+            await callback.answer()
 
 
-# ==================== LISTAR PRODUCTOS ====================
+        # ==================== LISTAR PRODUCTOS ====================
 
 @router.callback_query(F.data == "list_products", lambda cb: is_admin(cb.from_user.id))
 async def list_products(callback: CallbackQuery):
     """Lista todos los productos"""
-    store_service = StoreService()
-    products = store_service.get_all_products(active_only=False)
+    with get_service(StoreService) as store_service:
+            products = store_service.get_all_products(active_only=False)
 
-    if not products:
-        await callback.message.edit_text(
-            "No hay productos registrados.",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")]
-            ])
-        )
-        await callback.answer()
-        return
+            if not products:
+                await callback.message.edit_text(
+                    "No hay productos registrados.",
+                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")]
+                    ])
+                )
+                await callback.answer()
+                return
 
-    text = "🎩 Lucien:\n\nProductos registrados:\n\n"
-    buttons = []
+            text = "🎩 Lucien:\n\nProductos registrados:\n\n"
+            buttons = []
 
-    for product in products:
-        status = "✅" if product.is_active else "❌"
+            for product in products:
+                status = "✅" if product.is_active else "❌"
 
-        # Stock indicator
-        if product.stock == -1:
-            stock_emoji = "♾️"
-            stock_text = "∞"
-        elif product.stock == 0:
-            stock_emoji = "🚨"
-            stock_text = "AGOTADO"
-        elif product.is_low_stock:
-            stock_emoji = "⚠️"
-            stock_text = f"{product.stock}"
-        else:
-            stock_emoji = "📦"
-            stock_text = str(product.stock)
+                # Stock indicator
+                if product.stock == -1:
+                    stock_emoji = "♾️"
+                    stock_text = "∞"
+                elif product.stock == 0:
+                    stock_emoji = "🚨"
+                    stock_text = "AGOTADO"
+                elif product.is_low_stock:
+                    stock_emoji = "⚠️"
+                    stock_text = f"{product.stock}"
+                else:
+                    stock_emoji = "📦"
+                    stock_text = str(product.stock)
 
-        text += f"{status} {product.name}\n"
-        text += f"   {stock_emoji} Stock: {stock_text} | 💰 {product.price} besitos\n\n"
+                text += f"{status} {product.name}\n"
+                text += f"   {stock_emoji} Stock: {stock_text} | 💰 {product.price} besitos\n\n"
 
-        buttons.append([InlineKeyboardButton(
-            text=f"{status} {product.name[:30]}",
-            callback_data=f"product_admin_detail_{product.id}"
-        )])
+                buttons.append([InlineKeyboardButton(
+                    text=f"{status} {product.name[:30]}",
+                    callback_data=f"product_admin_detail_{product.id}"
+                )])
 
-    buttons.append([InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")])
+            buttons.append([InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")])
 
-    await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
-    await callback.answer()
+            await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+            await callback.answer()
 
 
 @router.callback_query(F.data.startswith("product_admin_detail_"), lambda cb: is_admin(cb.from_user.id))
@@ -527,47 +529,47 @@ async def product_admin_detail(callback: CallbackQuery):
         await callback.answer("ID invalido", show_alert=True)
         return
 
-    store_service = StoreService()
-    product = store_service.get_product(product_id)
+    with get_service(StoreService) as store_service:
+            product = store_service.get_product(product_id)
 
-    if not product:
-        await callback.answer("Producto no encontrado", show_alert=True)
-        return
+            if not product:
+                await callback.answer("Producto no encontrado", show_alert=True)
+                return
 
-    status = "✅ Activo" if product.is_active else "❌ Inactivo"
-    stock_text = "Ilimitado" if product.stock == -1 else str(product.stock)
+            status = "✅ Activo" if product.is_active else "❌ Inactivo"
+            stock_text = "Ilimitado" if product.stock == -1 else str(product.stock)
 
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(
-            text=f"{'Desactivar' if product.is_active else 'Activar'}",
-            callback_data=f"toggle_product_{product_id}"
-        )],
-        [InlineKeyboardButton(
-            text="📝 Reabastecer",
-            callback_data=f"restock_product_{product_id}"
-        )],
-        [InlineKeyboardButton(
-            text="⚙️ Configurar alerta",
-            callback_data=f"config_stock_alert_{product_id}"
-        )],
-        [InlineKeyboardButton(
-            text="🗑️ Eliminar",
-            callback_data=f"delete_product_{product_id}"
-        )],
-        [InlineKeyboardButton(text="🔙 Volver", callback_data="list_products")]
-    ])
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(
+                    text=f"{'Desactivar' if product.is_active else 'Activar'}",
+                    callback_data=f"toggle_product_{product_id}"
+                )],
+                [InlineKeyboardButton(
+                    text="📝 Reabastecer",
+                    callback_data=f"restock_product_{product_id}"
+                )],
+                [InlineKeyboardButton(
+                    text="⚙️ Configurar alerta",
+                    callback_data=f"config_stock_alert_{product_id}"
+                )],
+                [InlineKeyboardButton(
+                    text="🗑️ Eliminar",
+                    callback_data=f"delete_product_{product_id}"
+                )],
+                [InlineKeyboardButton(text="🔙 Volver", callback_data="list_products")]
+            ])
 
-    await callback.message.edit_text(
-        f"🎩 Lucien:\n\n"
-        f"📦 {product.name}\n\n"
-        f"📝 {product.description or 'Sin descripcion'}\n\n"
-        f"💰 Precio: {product.price} besitos\n"
-        f"📊 Stock: {stock_text}\n"
-        f"Estado: {status}\n\n"
-        f"Que deseas hacer?",
-        reply_markup=keyboard
-    )
-    await callback.answer()
+            await callback.message.edit_text(
+                f"🎩 Lucien:\n\n"
+                f"📦 {product.name}\n\n"
+                f"📝 {product.description or 'Sin descripcion'}\n\n"
+                f"💰 Precio: {product.price} besitos\n"
+                f"📊 Stock: {stock_text}\n"
+                f"Estado: {status}\n\n"
+                f"Que deseas hacer?",
+                reply_markup=keyboard
+            )
+            await callback.answer()
 
 
 @router.callback_query(F.data.startswith("config_stock_alert_"), lambda cb: is_admin(cb.from_user.id))
@@ -579,27 +581,27 @@ async def config_stock_alert(callback: CallbackQuery, state: FSMContext):
         await callback.answer("ID invalido", show_alert=True)
         return
 
-    store_service = StoreService()
-    product = store_service.get_product(product_id)
+    with get_service(StoreService) as store_service:
+            product = store_service.get_product(product_id)
 
-    if not product:
-        await callback.answer("Producto no encontrado", show_alert=True)
-        return
+            if not product:
+                await callback.answer("Producto no encontrado", show_alert=True)
+                return
 
-    await state.update_data(product_id=product_id, product_name=product.name)
+            await state.update_data(product_id=product_id, product_name=product.name)
 
-    await callback.message.edit_text(
-        f"🎩 <b>Lucien:</b>\n\n"
-        f"<i>Configurar alerta de stock...</i>\n\n"
-        f"📦 <b>{product.name}</b>\n"
-        f"📊 Umbral actual: {product.low_stock_threshold}\n\n"
-        f"Indica el nuevo umbral de alerta (ej: 5):",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="❌ Cancelar", callback_data=f"product_admin_detail_{product_id}")]
-        ])
-    )
-    await state.set_state(ProductRestockStates.waiting_threshold)
-    await callback.answer()
+            await callback.message.edit_text(
+                f"🎩 <b>Lucien:</b>\n\n"
+                f"<i>Configurar alerta de stock...</i>\n\n"
+                f"📦 <b>{product.name}</b>\n"
+                f"📊 Umbral actual: {product.low_stock_threshold}\n\n"
+                f"Indica el nuevo umbral de alerta (ej: 5):",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="❌ Cancelar", callback_data=f"product_admin_detail_{product_id}")]
+                ])
+            )
+            await state.set_state(ProductRestockStates.waiting_threshold)
+            await callback.answer()
 
 
 @router.message(ProductRestockStates.waiting_threshold, F.text.regexp(r"^\d+$"))
@@ -618,26 +620,26 @@ async def process_stock_threshold(message: Message, state: FSMContext):
     data = await state.get_data()
     product_id = data.get('product_id')
 
-    store_service = StoreService()
-    success = store_service.update_low_stock_threshold(product_id, threshold)
+    with get_service(StoreService) as store_service:
+            success = store_service.update_low_stock_threshold(product_id, threshold)
 
-    if success:
-        await message.answer(
-            f"🎩 <b>Lucien:</b>\n\n"
-            f"✅ Umbral de alerta actualizado a {threshold}.",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🔙 Volver", callback_data=f"product_admin_detail_{product_id}")]
-            ])
-        )
-    else:
-        await message.answer(
-            "Error al actualizar el umbral.",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")]
-            ])
-        )
+            if success:
+                await message.answer(
+                    f"🎩 <b>Lucien:</b>\n\n"
+                    f"✅ Umbral de alerta actualizado a {threshold}.",
+                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(text="🔙 Volver", callback_data=f"product_admin_detail_{product_id}")]
+                    ])
+                )
+            else:
+                await message.answer(
+                    "Error al actualizar el umbral.",
+                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")]
+                    ])
+                )
 
-    await state.clear()
+            await state.clear()
 
 
 @router.callback_query(F.data.startswith("toggle_product_"), lambda cb: is_admin(cb.from_user.id))
@@ -649,18 +651,18 @@ async def toggle_product(callback: CallbackQuery):
         await callback.answer("ID invalido", show_alert=True)
         return
 
-    store_service = StoreService()
-    product = store_service.get_product(product_id)
+    with get_service(StoreService) as store_service:
+            product = store_service.get_product(product_id)
 
-    if not product:
-        await callback.answer("Producto no encontrado", show_alert=True)
-        return
+            if not product:
+                await callback.answer("Producto no encontrado", show_alert=True)
+                return
 
-    store_service.update_product(product_id, is_active=not product.is_active)
+            store_service.update_product(product_id, is_active=not product.is_active)
 
-    status = "activado" if not product.is_active else "desactivado"
-    await callback.answer(f"Producto {status}")
-    await product_admin_detail(callback)
+            status = "activado" if not product.is_active else "desactivado"
+            await callback.answer(f"Producto {status}")
+            await product_admin_detail(callback)
 
 
 @router.callback_query(F.data.startswith("delete_product_"), lambda cb: is_admin(cb.from_user.id))
@@ -695,47 +697,47 @@ async def confirm_delete_product(callback: CallbackQuery):
         await callback.answer("ID invalido", show_alert=True)
         return
 
-    store_service = StoreService()
-    success = store_service.delete_product(product_id)
+    with get_service(StoreService) as store_service:
+            success = store_service.delete_product(product_id)
 
-    if success:
-        await callback.message.edit_text(
-            "🎩 Lucien:\n\n"
-            "✅ Producto eliminado correctamente.",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")]
-            ])
-        )
-    else:
-        await callback.message.edit_text(
-            "Error al eliminar el producto.",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")]
-            ])
-        )
-    await callback.answer()
+            if success:
+                await callback.message.edit_text(
+                    "🎩 Lucien:\n\n"
+                    "✅ Producto eliminado correctamente.",
+                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")]
+                    ])
+                )
+            else:
+                await callback.message.edit_text(
+                    "Error al eliminar el producto.",
+                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")]
+                    ])
+                )
+            await callback.answer()
 
 
-# ==================== ESTADISTICAS ====================
+        # ==================== ESTADISTICAS ====================
 
 @router.callback_query(F.data == "store_stats", lambda cb: is_admin(cb.from_user.id))
 async def store_stats(callback: CallbackQuery):
     """Muestra estadisticas de la tienda"""
-    store_service = StoreService()
-    stats = store_service.get_store_stats()
+    with get_service(StoreService) as store_service:
+            stats = store_service.get_store_stats()
 
-    await callback.message.edit_text(
-        f"🎩 Lucien:\n\n"
-        f"📊 Estadisticas de la Tienda:\n\n"
-        f"📦 Productos:\n"
-        f"   • Activos: {stats['available_products']}\n"
-        f"   • Total: {stats['total_products']}\n\n"
-        f"🛒 Ordenes:\n"
-        f"   • Completadas: {stats['completed_orders']}\n"
-        f"   • Total: {stats['total_orders']}\n\n"
-        f"💰 Besitos gastados: {stats['total_besitos_spent']}",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")]
-        ])
-    )
-    await callback.answer()
+            await callback.message.edit_text(
+                f"🎩 Lucien:\n\n"
+                f"📊 Estadisticas de la Tienda:\n\n"
+                f"📦 Productos:\n"
+                f"   • Activos: {stats['available_products']}\n"
+                f"   • Total: {stats['total_products']}\n\n"
+                f"🛒 Ordenes:\n"
+                f"   • Completadas: {stats['completed_orders']}\n"
+                f"   • Total: {stats['total_orders']}\n\n"
+                f"💰 Besitos gastados: {stats['total_besitos_spent']}",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_store")]
+                ])
+            )
+            await callback.answer()

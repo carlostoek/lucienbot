@@ -7,6 +7,7 @@ Con la voz caracteristica de Lucien.
 from aiogram import Router, F, Bot
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.enums import ParseMode
+from services import get_service
 from services.promotion_service import PromotionService
 from config.settings import bot_config
 import logging
@@ -20,89 +21,89 @@ router = Router()
 @router.callback_query(F.data == "offers")
 async def offers_menu(callback: CallbackQuery):
     """Menu principal de ofertas/promociones - Voz de Lucien"""
-    promotion_service = PromotionService()
+    with get_service(PromotionService) as promotion_service:
 
-    # Contar promociones disponibles
-    available_promos = promotion_service.get_available_promotions()
-    user_interests = promotion_service.get_user_interest_history(callback.from_user.id)
+            # Contar promociones disponibles
+            available_promos = promotion_service.get_available_promotions()
+            user_interests = promotion_service.get_user_interest_history(callback.from_user.id)
 
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(
-            text=f"✨ Ver las ofertas exclusivas ({len(available_promos)})",
-            callback_data="offers_catalog"
-        )],
-        [InlineKeyboardButton(
-            text=f"📜 Sus expresiones de interes ({len(user_interests)})",
-            callback_data="my_offers_history"
-        )],
-        [InlineKeyboardButton(
-            text="🔙 Volver",
-            callback_data="back_to_main"
-        )]
-    ])
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(
+                    text=f"✨ Ver las ofertas exclusivas ({len(available_promos)})",
+                    callback_data="offers_catalog"
+                )],
+                [InlineKeyboardButton(
+                    text=f"📜 Sus expresiones de interes ({len(user_interests)})",
+                    callback_data="my_offers_history"
+                )],
+                [InlineKeyboardButton(
+                    text="🔙 Volver",
+                    callback_data="back_to_main"
+                )]
+            ])
 
-    text = ("🎩 <b>Lucien:</b>\n\n"
-            "<i>Ah... el Gabinete de Oportunidades.</i>\n\n"
-            "Diana ha seleccionado ciertas... experiencias exclusivas "
-            "que solo unos pocos podran apreciar en su totalidad.\n\n"
-            "Cada oferta tiene su precio en la moneda del mundo exterior, "
-            "pero el verdadero valor... bueno, eso depende de quien lo perciba.")
+            text = ("🎩 <b>Lucien:</b>\n\n"
+                    "<i>Ah... el Gabinete de Oportunidades.</i>\n\n"
+                    "Diana ha seleccionado ciertas... experiencias exclusivas "
+                    "que solo unos pocos podran apreciar en su totalidad.\n\n"
+                    "Cada oferta tiene su precio en la moneda del mundo exterior, "
+                    "pero el verdadero valor... bueno, eso depende de quien lo perciba.")
 
-    await callback.message.edit_text(text, reply_markup=keyboard)
-    await callback.answer()
+            await callback.message.edit_text(text, reply_markup=keyboard)
+            await callback.answer()
 
 
-# ==================== CATALOGO DE PROMOCIONES ====================
+        # ==================== CATALOGO DE PROMOCIONES ====================
 
 @router.callback_query(F.data == "offers_catalog")
 async def offers_catalog(callback: CallbackQuery):
     """Muestra el catalogo de promociones disponibles - Voz de Lucien"""
-    promotion_service = PromotionService()
-    promos = promotion_service.get_available_promotions()
+    with get_service(PromotionService) as promotion_service:
+            promos = promotion_service.get_available_promotions()
 
-    if not promos:
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🔙 Volver", callback_data="offers")]
-        ])
-        text = ("🎩 <b>Lucien:</b>\n\n"
-                "<i>El Gabinete esta... momentaneamente vacio.</i>\n\n"
-                "Diana esta preparando nuevas experiencias. "
-                "Las oportunidades mas exquisitas requieren su tiempo, ya sabe...")
-        await callback.message.edit_text(text, reply_markup=keyboard)
-        await callback.answer()
-        return
+            if not promos:
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="🔙 Volver", callback_data="offers")]
+                ])
+                text = ("🎩 <b>Lucien:</b>\n\n"
+                        "<i>El Gabinete esta... momentaneamente vacio.</i>\n\n"
+                        "Diana esta preparando nuevas experiencias. "
+                        "Las oportunidades mas exquisitas requieren su tiempo, ya sabe...")
+                await callback.message.edit_text(text, reply_markup=keyboard)
+                await callback.answer()
+                return
 
-    # Verificar si el usuario esta bloqueado
-    user_id = callback.from_user.id
-    is_blocked = promotion_service.is_user_blocked(user_id)
+            # Verificar si el usuario esta bloqueado
+            user_id = callback.from_user.id
+            is_blocked = promotion_service.is_user_blocked(user_id)
 
-    text = "🎩 <b>Lucien:</b>\n\n"
-    text += "<i>Las ofertas que Diana ha preparado para usted:</i>\n\n"
+            text = "🎩 <b>Lucien:</b>\n\n"
+            text += "<i>Las ofertas que Diana ha preparado para usted:</i>\n\n"
 
-    buttons = []
-    for promo in promos:
-        file_count = promo.file_count
-        text += f"✨ <b>{promo.name}</b>\n"
-        text += f"   💰 {promo.price_display}\n"
-        text += f"   📁 {file_count} archivo{'s' if file_count != 1 else ''}\n"
-        if promo.description:
-            desc = promo.description[:50] + '...' if len(promo.description) > 50 else promo.description
-            text += f"   <i>{desc}</i>\n"
-        text += "\n"
+            buttons = []
+            for promo in promos:
+                file_count = promo.file_count
+                text += f"✨ <b>{promo.name}</b>\n"
+                text += f"   💰 {promo.price_display}\n"
+                text += f"   📁 {file_count} archivo{'s' if file_count != 1 else ''}\n"
+                if promo.description:
+                    desc = promo.description[:50] + '...' if len(promo.description) > 50 else promo.description
+                    text += f"   <i>{desc}</i>\n"
+                text += "\n"
 
-        buttons.append([InlineKeyboardButton(
-            text=f"👁️ Examinar: {promo.name[:25]}",
-            callback_data=f"view_offer_{promo.id}"
-        )])
+                buttons.append([InlineKeyboardButton(
+                    text=f"👁️ Examinar: {promo.name[:25]}",
+                    callback_data=f"view_offer_{promo.id}"
+                )])
 
-    if is_blocked:
-        text += "\n<i>...hay ciertas restricciones en su cuenta que impiden nuevas expresiones de interes.</i>\n"
+            if is_blocked:
+                text += "\n<i>...hay ciertas restricciones en su cuenta que impiden nuevas expresiones de interes.</i>\n"
 
-    buttons.append([InlineKeyboardButton(text="🔙 Volver", callback_data="offers")])
-    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            buttons.append([InlineKeyboardButton(text="🔙 Volver", callback_data="offers")])
+            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
 
-    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
-    await callback.answer()
+            await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+            await callback.answer()
 
 
 @router.callback_query(F.data.startswith("view_offer_"))
@@ -114,59 +115,59 @@ async def view_offer_detail(callback: CallbackQuery):
         await callback.answer("Hmm... algo inesperado ha ocurrido.", show_alert=True)
         return
 
-    promotion_service = PromotionService()
-    promo = promotion_service.get_promotion(promo_id)
+    with get_service(PromotionService) as promotion_service:
+            promo = promotion_service.get_promotion(promo_id)
 
-    if not promo:
-        await callback.answer("Esa oferta parece haberse... desvanecido.", show_alert=True)
-        return
+            if not promo:
+                await callback.answer("Esa oferta parece haberse... desvanecido.", show_alert=True)
+                return
 
-    if not promo.is_available:
-        await callback.answer("Esa oportunidad ya no esta disponible.", show_alert=True)
-        return
+            if not promo.is_available:
+                await callback.answer("Esa oportunidad ya no esta disponible.", show_alert=True)
+                return
 
-    user_id = callback.from_user.id
-    has_interest = promotion_service.has_user_expressed_interest(user_id, promo_id)
-    is_blocked = promotion_service.is_user_blocked(user_id)
-    file_count = promo.file_count
+            user_id = callback.from_user.id
+            has_interest = promotion_service.has_user_expressed_interest(user_id, promo_id)
+            is_blocked = promotion_service.is_user_blocked(user_id)
+            file_count = promo.file_count
 
-    text = f"🎩 <b>Lucien:</b>\n\n"
-    text += f"✨ <b>{promo.name}</b>\n\n"
+            text = f"🎩 <b>Lucien:</b>\n\n"
+            text += f"✨ <b>{promo.name}</b>\n\n"
 
-    if promo.description:
-        text += f"<i>{promo.description}</i>\n\n"
+            if promo.description:
+                text += f"<i>{promo.description}</i>\n\n"
 
-    text += f"💰 <b>Inversion:</b> {promo.price_display}\n"
-    text += f"📁 <b>Contenido:</b> {file_count} archivo{'s' if file_count != 1 else ''}\n\n"
+            text += f"💰 <b>Inversion:</b> {promo.price_display}\n"
+            text += f"📁 <b>Contenido:</b> {file_count} archivo{'s' if file_count != 1 else ''}\n\n"
 
-    buttons = []
+            buttons = []
 
-    if has_interest:
-        text += ("<i>Ya ha expresado su interes en esta experiencia. "
-                 "Diana ha sido notificada y se pondra en contacto con usted...</i>\n")
-        buttons.append([InlineKeyboardButton(
-            text="📜 Ver sus expresiones de interes",
-            callback_data="my_offers_history"
-        )])
-    elif is_blocked:
-        text += ("<i>Su cuenta tiene ciertas... limitaciones que impiden expresar interes. "
-                 "Permitame consultar con Diana sobre este inconveniente.</i>\n")
-    else:
-        text += "<i>Si esta experiencia despierta su curiosidad, puede expresarlo...</i>\n"
-        buttons.append([InlineKeyboardButton(
-            text="💕 Me interesa",
-            callback_data=f"offer_interest_{promo.id}"
-        )])
+            if has_interest:
+                text += ("<i>Ya ha expresado su interes en esta experiencia. "
+                         "Diana ha sido notificada y se pondra en contacto con usted...</i>\n")
+                buttons.append([InlineKeyboardButton(
+                    text="📜 Ver sus expresiones de interes",
+                    callback_data="my_offers_history"
+                )])
+            elif is_blocked:
+                text += ("<i>Su cuenta tiene ciertas... limitaciones que impiden expresar interes. "
+                         "Permitame consultar con Diana sobre este inconveniente.</i>\n")
+            else:
+                text += "<i>Si esta experiencia despierta su curiosidad, puede expresarlo...</i>\n"
+                buttons.append([InlineKeyboardButton(
+                    text="💕 Me interesa",
+                    callback_data=f"offer_interest_{promo.id}"
+                )])
 
-    buttons.append([InlineKeyboardButton(text="🔙 Volver al Gabinete", callback_data="offers_catalog")])
-    buttons.append([InlineKeyboardButton(text="🏠 Menu principal", callback_data="back_to_main")])
+            buttons.append([InlineKeyboardButton(text="🔙 Volver al Gabinete", callback_data="offers_catalog")])
+            buttons.append([InlineKeyboardButton(text="🏠 Menu principal", callback_data="back_to_main")])
 
-    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
-    await callback.answer()
+            keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+            await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+            await callback.answer()
 
 
-# ==================== SISTEMA "ME INTERESA" ====================
+        # ==================== SISTEMA "ME INTERESA" ====================
 
 @router.callback_query(F.data.startswith("offer_interest_"))
 async def express_interest(callback: CallbackQuery, bot: Bot):
@@ -177,71 +178,71 @@ async def express_interest(callback: CallbackQuery, bot: Bot):
         await callback.answer("Hmm... algo inesperado ha ocurrido.", show_alert=True)
         return
 
-    promotion_service = PromotionService()
-    user = callback.from_user
+    with get_service(PromotionService) as promotion_service:
+            user = callback.from_user
 
-    # Verificar si el usuario esta bloqueado
-    if promotion_service.is_user_blocked(user.id):
-        await callback.answer(
-            "No puede expresar interes. Hay restricciones en su cuenta.",
-            show_alert=True
-        )
-        return
+            # Verificar si el usuario esta bloqueado
+            if promotion_service.is_user_blocked(user.id):
+                await callback.answer(
+                    "No puede expresar interes. Hay restricciones en su cuenta.",
+                    show_alert=True
+                )
+                return
 
-    # Verificar si ya expreso interes
-    if promotion_service.has_user_expressed_interest(user.id, promo_id):
-        await callback.answer(
-            "Ya ha expresado interes en esta experiencia.",
-            show_alert=True
-        )
-        return
+            # Verificar si ya expreso interes
+            if promotion_service.has_user_expressed_interest(user.id, promo_id):
+                await callback.answer(
+                    "Ya ha expresado interes en esta experiencia.",
+                    show_alert=True
+                )
+                return
 
-    # Registrar el interes
-    success, message, interest = promotion_service.express_interest(
-        user_id=user.id,
-        promotion_id=promo_id,
-        username=user.username,
-        first_name=user.first_name,
-        last_name=user.last_name
-    )
+            # Registrar el interes
+            success, message, interest = promotion_service.express_interest(
+                user_id=user.id,
+                promotion_id=promo_id,
+                username=user.username,
+                first_name=user.first_name,
+                last_name=user.last_name
+            )
 
-    if not success:
-        await callback.answer(message, show_alert=True)
-        return
+            if not success:
+                await callback.answer(message, show_alert=True)
+                return
 
-    promo = promotion_service.get_promotion(promo_id)
-    promo_name = promo.name if promo else "Oferta"
+            promo = promotion_service.get_promotion(promo_id)
+            promo_name = promo.name if promo else "Oferta"
 
-    # Notificar a todos los administradores
-    await notify_admins_about_interest(bot, interest, promo)
+            # Notificar a todos los administradores
+            await notify_admins_about_interest(bot, interest, promo)
 
-    # Mostrar confirmacion al usuario con link a Diana
-    creator_username = getattr(bot_config, 'CREATOR_USERNAME', None)
+            # Mostrar confirmacion al usuario con link a Diana
+            creator_username = getattr(bot_config, 'CREATOR_USERNAME', None)
 
-    keyboard_buttons = [
-        [InlineKeyboardButton(text="🔙 Volver al Gabinete", callback_data="offers_catalog")],
-        [InlineKeyboardButton(text="🏠 Menu principal", callback_data="back_to_main")]
-    ]
+            keyboard_buttons = [
+                [InlineKeyboardButton(text="🔙 Volver al Gabinete", callback_data="offers_catalog")],
+                [InlineKeyboardButton(text="🏠 Menu principal", callback_data="back_to_main")]
+            ]
 
-    # Agregar boton de contacto si hay username configurado
-    if creator_username:
-        keyboard_buttons.insert(0, [InlineKeyboardButton(
-            text="💬 Contactar a Diana",
-            url=f"https://t.me/{creator_username}"
-        )])
+            # Agregar boton de contacto si hay username configurado
+            if creator_username:
+                keyboard_buttons.insert(0, [InlineKeyboardButton(
+                    text="💬 Contactar a Diana",
+                    url=f"https://t.me/{creator_username}"
+                )])
 
-    keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+            keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
 
-    text = (f"🎩 <b>Lucien:</b>\n\n"
-            f"<i>Su interes ha sido... registrado.</i>\n\n"
-            f"✨ <b>{promo_name}</b>\n\n"
-            f"<i>Diana ha sido notificada de su curiosidad. "
-            f"En breve se pondra en contacto con usted...</i>\n\n"
-            f"<i>Si lo prefiere, tambien puede iniciar la conversacion. "
-            f"Diana aprecia la... iniciativa.</i> 🌸")
+            text = (f"🎩 <b>Lucien:</b>\n\n"
+                    f"<i>Su interes ha sido... registrado.</i>\n\n"
+                    f"✨ <b>{promo_name}</b>\n\n"
+                    f"<i>Diana ha sido notificada de su curiosidad. "
+                    f"En breve se pondra en contacto con usted...</i>\n\n"
+                    f"<i>Si lo prefiere, tambien puede iniciar la conversacion. "
+                    f"Diana aprecia la... iniciativa.</i> 🌸")
 
-    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
-    await callback.answer("Interes registrado")
+            await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+            await callback.answer("Interes registrado")
 
 
 async def notify_admins_about_interest(bot: Bot, interest, promo):
@@ -306,47 +307,47 @@ async def notify_admins_about_interest(bot: Bot, interest, promo):
 @router.callback_query(F.data == "my_offers_history")
 async def my_offers_history(callback: CallbackQuery):
     """Muestra el historial de intereses del usuario - Voz de Lucien"""
-    promotion_service = PromotionService()
-    user_id = callback.from_user.id
+    with get_service(PromotionService) as promotion_service:
+            user_id = callback.from_user.id
 
-    interests = promotion_service.get_user_interest_history(user_id)
+            interests = promotion_service.get_user_interest_history(user_id)
 
-    if not interests:
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="✨ Ver el Gabinete", callback_data="offers_catalog")],
-            [InlineKeyboardButton(text="🔙 Volver", callback_data="offers")]
-        ])
-        text = ("🎩 <b>Lucien:</b>\n\n"
-                "<i>Aun no ha expresado interes en ninguna experiencia...</i>\n\n"
-                "El Gabinete de Oportunidades espera su visita. "
-                "Diana tiene selecciones que podrian... despertar su curiosidad.")
-        await callback.message.edit_text(text, reply_markup=keyboard)
-        await callback.answer()
-        return
+            if not interests:
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="✨ Ver el Gabinete", callback_data="offers_catalog")],
+                    [InlineKeyboardButton(text="🔙 Volver", callback_data="offers")]
+                ])
+                text = ("🎩 <b>Lucien:</b>\n\n"
+                        "<i>Aun no ha expresado interes en ninguna experiencia...</i>\n\n"
+                        "El Gabinete de Oportunidades espera su visita. "
+                        "Diana tiene selecciones que podrian... despertar su curiosidad.")
+                await callback.message.edit_text(text, reply_markup=keyboard)
+                await callback.answer()
+                return
 
-    text = "🎩 <b>Lucien:</b>\n\n"
-    text += "<i>Su historial de expresiones de interes:</i>\n\n"
+            text = "🎩 <b>Lucien:</b>\n\n"
+            text += "<i>Su historial de expresiones de interes:</i>\n\n"
 
-    for interest in interests:
-        promo = interest.promotion
-        promo_name = promo.name if promo else "Desconocida"
+            for interest in interests:
+                promo = interest.promotion
+                promo_name = promo.name if promo else "Desconocida"
 
-        status_emoji = {
-            "pending": "⏳",
-            "attended": "✅",
-            "blocked": "🚫"
-        }.get(interest.status.value, "❓")
+                status_emoji = {
+                    "pending": "⏳",
+                    "attended": "✅",
+                    "blocked": "🚫"
+                }.get(interest.status.value, "❓")
 
-        date_str = interest.created_at.strftime("%d/%m/%Y") if interest.created_at else "?"
+                date_str = interest.created_at.strftime("%d/%m/%Y") if interest.created_at else "?"
 
-        text += f"{status_emoji} <b>{promo_name}</b>\n"
-        text += f"   <i>Fecha: {date_str}</i>\n"
-        text += f"   <i>Estado: {interest.status.value.title()}</i>\n\n"
+                text += f"{status_emoji} <b>{promo_name}</b>\n"
+                text += f"   <i>Fecha: {date_str}</i>\n"
+                text += f"   <i>Estado: {interest.status.value.title()}</i>\n\n"
 
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✨ Ver el Gabinete", callback_data="offers_catalog")],
-        [InlineKeyboardButton(text="🔙 Volver", callback_data="offers")]
-    ])
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="✨ Ver el Gabinete", callback_data="offers_catalog")],
+                [InlineKeyboardButton(text="🔙 Volver", callback_data="offers")]
+            ])
 
-    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
-    await callback.answer()
+            await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+            await callback.answer()
