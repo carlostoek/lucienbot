@@ -19,6 +19,17 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # Primero eliminar reacciones duplicadas, manteniendo solo la más reciente
+    # para cada combinación de broadcast_id + user_id
+    op.execute("""
+        DELETE FROM broadcast_reactions
+        WHERE id NOT IN (
+            SELECT MAX(id)
+            FROM broadcast_reactions
+            GROUP BY broadcast_id, user_id
+        )
+    """)
+
     # Agregar constraint único para prevenir reacciones duplicadas
     # Un usuario solo puede reaccionar una vez por mensaje de broadcast
     with op.batch_alter_table('broadcast_reactions', schema=None) as batch_op:
