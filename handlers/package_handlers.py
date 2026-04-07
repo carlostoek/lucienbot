@@ -253,7 +253,7 @@ async def toggle_package(callback: CallbackQuery):
     await package_detail(callback)
 
 
-@router.callback_query(F.data.startswith("delete_package_"), lambda cb: is_admin(cb.from_user.id))
+@router.callback_query(F.data.startswith("delete_package_"), lambda cb: is_admin(cb.from_user.id) and not cb.data.startswith("delete_package_files_"))
 async def delete_package_confirm(callback: CallbackQuery):
     """Confirma eliminación de paquete"""
     package_id = int(callback.data.replace("delete_package_", ""))

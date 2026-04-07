@@ -380,16 +380,16 @@ async def delete_channel_confirm(callback: CallbackQuery):
         f"🎩 <b>Lucien:</b>\n\n"
         f"<i>¿Está seguro de que desea remover este dominio de los archivos de Diana?</i>\n\n"
         f"⚠️ <b>Esta acción no se puede deshacer.</b>",
-        reply_markup=confirmation_keyboard(f"confirm_delete_{channel_id}", f"channel_detail_{channel_id}"),
+        reply_markup=confirmation_keyboard(f"confirm_delete_channel_{channel_id}", f"channel_detail_{channel_id}"),
         parse_mode="HTML"
     )
     await callback.answer()
 
 
-@router.callback_query(F.data.startswith("confirm_delete_"))
+@router.callback_query(F.data.startswith("confirm_delete_channel_"))
 async def delete_channel(callback: CallbackQuery):
     """Elimina el canal"""
-    channel_id = int(callback.data.replace("confirm_delete_", ""))
+    channel_id = int(callback.data.replace("confirm_delete_channel_", ""))
     
     channel_service = ChannelService()
     channel = channel_service.get_channel_by_db_id(channel_id)

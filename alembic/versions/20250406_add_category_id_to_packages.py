@@ -22,18 +22,29 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Crear tabla categories si no existe
-    op.create_table('categories',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('name', sa.String(100), nullable=False),
-        sa.Column('description', sa.Text(), nullable=True),
-        sa.Column('order_index', sa.Integer(), nullable=True),
-        sa.Column('is_active', sa.Boolean(), nullable=True),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()')),
-        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('name')
-    )
+    # Verificar si la tabla categories ya existe (idempotente)
+    conn = op.get_bind()
+    result = conn.execute(sa.text("""
+        SELECT EXISTS (
+            SELECT FROM information_schema.tables
+            WHERE table_name = 'categories'
+        )
+    """))
+    table_exists = result.scalar()
+
+    if not table_exists:
+        op.create_table(
+            'categories',
+            sa.Column('id', sa.Integer(), nullable=False),
+            sa.Column('name', sa.String(100), nullable=False),
+            sa.Column('description', sa.Text(), nullable=True),
+            sa.Column('order_index', sa.Integer(), nullable=True),
+            sa.Column('is_active', sa.Boolean(), nullable=True),
+            sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()')),
+            sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
+            sa.PrimaryKeyConstraint('id'),
+            sa.UniqueConstraint('name')
+        )
 
     # Agregar columna category_id a packages
     op.add_column('packages', sa.Column('category_id', sa.Integer(), nullable=True))

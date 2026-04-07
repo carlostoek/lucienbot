@@ -165,8 +165,17 @@ class StoreService:
         return True
 
     def delete_product(self, product_id: int) -> bool:
-        """Elimina (desactiva) un producto"""
-        return self.update_product(product_id, is_active=False)
+        """Elimina un producto de la base de datos"""
+        db = self._get_db()
+        product = db.query(StoreProduct).filter(StoreProduct.id == product_id).first()
+        if not product:
+            logger.warning(f"Producto {product_id} no encontrado para eliminar")
+            return False
+
+        db.delete(product)
+        db.commit()
+        logger.info(f"Producto {product_id} eliminado permanentemente")
+        return True
 
     # ==================== CARRITO ====================
 
@@ -488,6 +497,36 @@ class StoreService:
         return db.query(Order).filter(
             Order.user_id == user_id
         ).order_by(desc(Order.created_at)).limit(limit).all()
+
+    # ==================== ESTADISTICAS ====================
+
+    def get_store_stats(self) -> dict:
+        """Obtiene estadisticas generales de la tienda"""
+        db = self._get_db()
+
+        total_products = db.query(StoreProduct).count()
+        available_products = db.query(StoreProduct).filter(
+            StoreProduct.is_active == True,
+            (StoreProduct.stock == -1) | (StoreProduct.stock > 0)
+        ).count()
+
+        total_orders = db.query(Order).count()
+        completed_orders = db.query(Order).filter(
+            Order.status == OrderStatus.COMPLETED
+        ).count()
+
+        from sqlalchemy import func
+        total_besitos_spent = db.query(func.sum(Order.total_price)).filter(
+            Order.status == OrderStatus.COMPLETED
+        ).scalar() or 0
+
+        return {
+            'total_products': total_products,
+            'available_products': available_products,
+            'total_orders': total_orders,
+            'completed_orders': completed_orders,
+            'total_besitos_spent': int(total_besitos_spent)
+        }
 
     # ==================== ALERTAS DE STOCK ====================
 
