@@ -12,9 +12,9 @@ from config.settings import bot_config
 pool_kwargs = {}
 if "postgresql" in bot_config.DATABASE_URL:
     pool_kwargs = {
-        "pool_size": 20,
-        "max_overflow": 30,
-        "pool_recycle": 3600,
+        "pool_size": 30,
+        "max_overflow": 50,
+        "pool_recycle": 1800,
         "pool_pre_ping": True,
         "pool_timeout": 30,
     }
