@@ -667,8 +667,6 @@ async def confirm_and_send_broadcast(callback: CallbackQuery, state: FSMContext,
 
     broadcast_service = BroadcastService()
     try:
-    
-    try:
         # Construir teclado de reacciones - todos los botones en una sola hilera
         reply_markup = None
         if selected_emojis:
