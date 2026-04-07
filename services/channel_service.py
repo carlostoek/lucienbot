@@ -80,14 +80,17 @@ class ChannelService:
         ).all()
 
     def delete_channel(self, channel_id: int) -> bool:
-        """Elimina (desactiva) un canal"""
+        """Elimina un canal de la base de datos"""
         db = self._get_db()
         channel = self.get_channel_by_db_id(channel_id)
-        if channel:
-            channel.is_active = False
-            db.commit()
-            return True
-        return False
+        if not channel:
+            logger.warning(f"Canal {channel_id} no encontrado para eliminar")
+            return False
+
+        db.delete(channel)
+        db.commit()
+        logger.info(f"Canal {channel_id} eliminado permanentemente")
+        return True
 
     def update_wait_time(self, channel_id: int, minutes: int) -> bool:
         """Actualiza el tiempo de espera de un canal Free"""

@@ -138,8 +138,17 @@ class PromotionService:
         return True
 
     def delete_promotion(self, promotion_id: int) -> bool:
-        """Elimina (desactiva) una promocion"""
-        return self.update_promotion(promotion_id, is_active=False)
+        """Elimina una promoción de la base de datos"""
+        promotion = self.get_promotion(promotion_id)
+        if not promotion:
+            logger.warning(f"Promoción {promotion_id} no encontrada para eliminar")
+            return False
+
+        db = self._get_db()
+        db.delete(promotion)
+        db.commit()
+        logger.info(f"Promoción {promotion_id} eliminada permanentemente")
+        return True
 
     def pause_promotion(self, promotion_id: int) -> bool:
         """Pausa una promocion temporalmente"""

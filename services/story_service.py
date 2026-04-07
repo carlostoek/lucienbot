@@ -107,8 +107,16 @@ class StoryService:
         return True
 
     def delete_node(self, node_id: int) -> bool:
-        """Elimina (desactiva) un nodo"""
-        return self.update_node(node_id, is_active=False)
+        """Elimina un nodo de la base de datos"""
+        node = self.get_node(node_id)
+        if not node:
+            logger.warning(f"Nodo {node_id} no encontrado para eliminar")
+            return False
+
+        self.db.delete(node)
+        self.db.commit()
+        logger.info(f"Nodo {node_id} eliminado permanentemente")
+        return True
 
     # ==================== OPCIONES/DECISIONES ====================
 

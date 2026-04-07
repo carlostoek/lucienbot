@@ -301,8 +301,17 @@ class MissionService:
         return True
 
     def delete_mission(self, mission_id: int) -> bool:
-        """Elimina (desactiva) una mision"""
-        return self.update_mission(mission_id, is_active=False)
+        """Elimina una misión de la base de datos"""
+        mission = self.get_mission(mission_id)
+        if not mission:
+            logger.warning(f"Misión {mission_id} no encontrada para eliminar")
+            return False
+
+        db = self._get_db()
+        db.delete(mission)
+        db.commit()
+        logger.info(f"Misión {mission_id} eliminada permanentemente")
+        return True
 
     # ==================== ESTADISTICAS ====================
 

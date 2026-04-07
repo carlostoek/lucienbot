@@ -123,8 +123,16 @@ class RewardService:
         return True
     
     def delete_reward(self, reward_id: int) -> bool:
-        """Elimina (desactiva) una recompensa"""
-        return self.update_reward(reward_id, is_active=False)
+        """Elimina una recompensa de la base de datos"""
+        reward = self.get_reward(reward_id)
+        if not reward:
+            logger.warning(f"Recompensa {reward_id} no encontrada para eliminar")
+            return False
+
+        self.db.delete(reward)
+        self.db.commit()
+        logger.info(f"Recompensa {reward_id} eliminada permanentemente")
+        return True
     
     # ==================== ENTREGA DE RECOMPENSAS ====================
     

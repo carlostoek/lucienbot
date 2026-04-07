@@ -145,15 +145,23 @@ class PackageService:
     
     def delete_package(self, package_id: int) -> bool:
         """
-        Elimina (desactiva) un paquete.
-        
+        Elimina un paquete de la base de datos.
+
         Args:
             package_id: ID del paquete
-        
+
         Returns:
             True si se eliminó correctamente
         """
-        return self.update_package(package_id, is_active=False)
+        package = self.get_package(package_id)
+        if not package:
+            logger.warning(f"Paquete {package_id} no encontrado para eliminar")
+            return False
+
+        self.db.delete(package)
+        self.db.commit()
+        logger.info(f"Paquete {package_id} eliminado permanentemente")
+        return True
     
     def remove_file_from_package(self, file_id: int) -> bool:
         """
@@ -440,7 +448,7 @@ Enviando {len(files)} archivo(s)...""",
 
     def delete_category(self, category_id: int) -> bool:
         """
-        Elimina (desactiva) una categoría.
+        Elimina una categoría de la base de datos.
 
         Args:
             category_id: ID de la categoría
@@ -448,7 +456,15 @@ Enviando {len(files)} archivo(s)...""",
         Returns:
             True si se eliminó correctamente
         """
-        return self.update_category(category_id, is_active=False)
+        category = self.get_category(category_id)
+        if not category:
+            logger.warning(f"Categoría {category_id} no encontrada para eliminar")
+            return False
+
+        self.db.delete(category)
+        self.db.commit()
+        logger.info(f"Categoría {category_id} eliminada permanentemente")
+        return True
 
     def assign_package_to_category(self, package_id: int, category_id: int) -> bool:
         """
