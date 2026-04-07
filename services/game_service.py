@@ -460,7 +460,7 @@ class GameService:
             header = f"🎲 {dice1}  |  {dice2} 🎲"
 
         # Sin display de suma (eliminado)
-        dice_display = None
+        dice_display = ""
 
         # Texto de resultado según tipo (sin mostrar suma)
         if won:
