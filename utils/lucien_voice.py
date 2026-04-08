@@ -810,6 +810,209 @@ Haz clic para activar tu membresia VIP."""
     def story_payment_failed() -> str:
         return "No se pudo procesar el pago"
 
+    # ==================== MOCHILA / BACKPACK ====================
+
+    @staticmethod
+    def backpack_summary(summary: dict) -> str:
+        """Mensaje principal del menú de mochila"""
+        return f"""🎩 <b>Lucien:</b>
+
+<i>Permítame mostrarle los tesoros que Diana ha acumulado
+en su mochila a lo largo de su viaje...</i>
+
+📦 <b>Su Inventario</b>
+
+<i>Seleccione una categoría para explorar:</i>
+
+🎁 <b>Mis Recompensas:</b> {summary['rewards_count']}
+🛒 <b>Mis Compras:</b> {summary['purchases_count']}
+👑 <b>Membresías VIP:</b> {summary['vip_count']}
+💋 <b>Besitos:</b> {summary['besitos_balance']}"""
+
+    @staticmethod
+    def backpack_rewards_list(rewards: list) -> str:
+        """Mensaje para lista de recompensas"""
+        if not rewards:
+            return """🎩 <b>Lucien:</b>
+
+<i>Aún no hay tesoros en su colección...
+pero el camino apenas comienza.</i>
+
+🏆 <b>No hay recompensas</b>
+
+<i>Complete misiones para ganar tesoros del reino.</i>"""
+
+        text = """🎩 <b>Lucien:</b>
+
+<i>Las recompensas que ha conquistado en su camino...</i>
+
+📋 <b>Recompensas Obtenidas</b>
+
+"""
+        for r in rewards:
+            reward_type_emoji = {
+                'BESITOS': '💋',
+                'PACKAGE': '📦',
+                'VIP_ACCESS': '👑'
+            }.get(r['reward_type'], '🎁')
+
+            date_str = r['delivered_at'].strftime("%d/%m") if r.get('delivered_at') else "??/??"
+            name = r['reward_name'][:30] + "..." if len(r['reward_name']) > 30 else r['reward_name']
+
+            text += f"{reward_type_emoji} <b>{name}</b>\n"
+            text += f"   📅 {date_str}"
+            if r.get('besito_amount') and r['besito_amount'] > 0:
+                text += f" | +{r['besito_amount']} 💋"
+            text += "\n\n"
+
+        return text
+
+    @staticmethod
+    def backpack_reward_detail(reward: dict) -> str:
+        """Mensaje para detalle de recompensa"""
+        reward_type = reward.get('reward_type', 'BESITOS')
+
+        if reward_type == 'BESITOS':
+            return f"""🎩 <b>Lucien:</b>
+
+<i>Diana ha errado en su dirección besitos...</i>
+
+💋 <b>Recompensa de Besitos</b>
+
+🏷️ Nombre: {reward.get('reward_name', 'Recompensa')}
+📅 Obtenida: {reward.get('delivered_at', 'N/A').strftime("%d/%m/%Y") if reward.get('delivered_at') else 'N/A'}
+💰 Besitos: +{reward.get('besito_amount', 0)}
+
+<i>Los besitos han sido acreditados a su cuenta.</i>"""
+
+        elif reward_type == 'PACKAGE':
+            has_files = reward.get('package_id') is not None
+            btn_text = "📂 Ver Contenido" if has_files else ""
+            return f"""🎩 <b>Lucien:</b>
+
+<i>El paquete espera ser descubierto...</i>
+
+📦 <b>Recompensa de Paquete</b>
+
+🏷️ Nombre: {reward.get('reward_name', 'Paquete')}
+📅 Obtenida: {reward.get('delivered_at', 'N/A').strftime("%d/%m/%Y") if reward.get('delivered_at') else 'N/A'}
+💋 Besitos incluidos: {reward.get('besito_amount', 0)}
+
+<i>¿Desea ver el contenido?</i>"""
+
+        else:  # VIP_ACCESS
+            return f"""🎩 <b>Lucien:</b>
+
+<i>Diana le ha abierto las puertas del círculo exclusivo...</i>
+
+👑 <b>Recompensa VIP</b>
+
+🏷️ Nombre: {reward.get('reward_name', 'Acceso VIP')}
+📅 Obtenida: {reward.get('delivered_at', 'N/A').strftime("%d/%m/%Y") if reward.get('delivered_at') else 'N/A'}
+⏱️ Tarifa: {reward.get('tariff_name', 'VIP')}
+📅 Vence: {reward.get('end_date', 'N/A').strftime("%d/%m/%Y") if reward.get('end_date') else 'N/A'}
+
+<i>El círculo exclusivo lo espera.</i>"""
+
+    @staticmethod
+    def backpack_purchases_list(purchases: list) -> str:
+        """Mensaje para lista de compras"""
+        if not purchases:
+            return """🎩 <b>Lucien:</b>
+
+<i>No hay tesoros adquiridos en su inventario...
+la tienda de Diana le espera.</i>
+
+🛒 <b>No hay compras</b>
+
+<i>Explore la tienda para obtener tesoros exclusivos.</i>"""
+
+        text = """🎩 <b>Lucien:</b>
+
+<i>Los tesoros que ha adquirido en la tienda de Diana...</i>
+
+🛒 <b>Compras Realizadas</b>
+
+"""
+        for p in purchases:
+            date_str = p['purchased_at'].strftime("%d/%m/%Y") if p.get('purchased_at') else "??/??"
+            price = p.get('total_price', 0)
+            name = p['product_name'][:25] + "..." if len(p['product_name']) > 25 else p['product_name']
+
+            text += f"📦 <b>{name}</b>\n"
+            text += f"   💰 {price} 💋 | 📅 {date_str}\n\n"
+
+        return text
+
+    @staticmethod
+    def backpack_vip_list(subscriptions: list) -> str:
+        """Mensaje para lista de membresías VIP"""
+        if not subscriptions:
+            return """🎩 <b>Lucien:</b>
+
+<i>El círculo exclusivo aún no lo ha recibido...
+pero las puertas siempre están abiertas para quienes buscan.</i>
+
+👑 <b>No hay membresías VIP</b>
+
+<i>Contacte a Diana para obtener acceso a El Diván.</i>"""
+
+        text = """🎩 <b>Lucien:</b>
+
+<i>Los privilegios que Diana le ha conferido...</i>
+
+👑 <b>Membresías VIP Activas</b>
+
+"""
+        for sub in subscriptions:
+            end_str = sub['end_date'].strftime("%d/%m/%Y") if sub.get('end_date') else "??/??"
+            text += f"👑 <b>{sub.get('tariff_name', 'VIP')}</b>\n"
+            text += f"   📅 Vence: {end_str}\n\n"
+
+        return text
+
+    @staticmethod
+    def backpack_package_delivering(package_name: str, file_count: int) -> str:
+        """Mensaje al entregar contenido de paquete"""
+        return f"""🎩 <b>Lucien:</b>
+
+<i>Diana ha preparado el contenido...</i>
+
+📦 <b>{package_name}</b>
+
+<i>Entregando {file_count} archivo(s)...</i>"""
+
+    @staticmethod
+    def backpack_empty(reward_type: str) -> str:
+        """Mensaje cuando no hay elementos"""
+        messages = {
+            'rewards': """🎩 <b>Lucien:</b>
+
+<i>Aún no hay tesoros en su colección...
+pero el camino apenas comienza.</i>
+
+🏆 <b>No hay recompensas</b>
+
+<i>Complete misiones para ganar tesoros del reino.</i>""",
+            'purchases': """🎩 <b>Lucien:</b>
+
+<i>No hay tesoros adquiridos en su inventario...
+la tienda de Diana le espera.</i>
+
+🛒 <b>No hay compras</b>
+
+<i>Explore la tienda para obtener tesoros exclusivos.</i>""",
+            'vip': """🎩 <b>Lucien:</b>
+
+<i>El círculo exclusivo aún no lo ha recibido...
+pero las puertas siempre están abiertas para quienes buscan.</i>
+
+👑 <b>No hay membresías VIP</b>
+
+<i>Contacte a Diana para obtener acceso a El Diván.</i>"""
+        }
+        return messages.get(reward_type, messages['rewards'])
+
 
 # Import para evitar dependencia circular
 from models.models import ChannelType

@@ -53,6 +53,8 @@ from handlers import (
     category_admin_handlers,
     # Phase 14 - Minijuegos
     game_user_router,
+    # Phase 15 - Mochila
+    backpack_router,
 )
 
 # Configurar logging
@@ -256,6 +258,8 @@ async def main():
     dp.include_router(category_admin_handlers.router)
     # Phase 14 - Minijuegos
     dp.include_router(game_user_router)
+    # Phase 15 - Mochila
+    dp.include_router(backpack_router)
 
     # Configurar eventos de startup/shutdown
     dp.startup.register(on_startup)

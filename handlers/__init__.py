@@ -30,6 +30,8 @@ from .vip_user_handlers import router as vip_user_router
 from .anonymous_message_admin_handlers import router as anonymous_message_admin_router
 # Phase 14 - Minijuegos
 from .game_user_handlers import router as game_user_router
+# Phase 15 - Mochila
+from .backpack_handler import router as backpack_router
 
 __all__ = [
     'common_router',
@@ -63,5 +65,7 @@ __all__ = [
     'vip_user_router',
     'anonymous_message_admin_router',
     # Phase 14 - Minijuegos
-    'game_user_router'
+    'game_user_router',
+    # Phase 15 - Mochila
+    'backpack_router'
 ]
