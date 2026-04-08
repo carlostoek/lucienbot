@@ -52,6 +52,7 @@ Cada dominio tiene su propio CLAUDE.md con contexto específico.
 | [@rules.md] | Límite 50 líneas, naming (verbo+contexto+resultado), logging, anti-patterns |
 | [@decisions.md] | Decisiones técnicas, estado de consolidate handlers |
 | [@AGENTS.md] | Documentación técnica completa, diagramas, flujos |
+| [models/CLAUDE.md] | Modelos SQLAlchemy, enum TransactionSource, **reglas de migraciones Alembic** |
 | `services/{dominio}/CLAUDE.md` | Contexto específico de cada dominio |
 
 ---
