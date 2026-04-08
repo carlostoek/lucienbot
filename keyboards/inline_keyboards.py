@@ -477,3 +477,12 @@ def trivia_vip_result_keyboard(back_callback: str = "vip_area") -> InlineKeyboar
         [InlineKeyboardButton(text="🔙 Volver a El Diván", callback_data=back_callback)]
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def discount_claim_keyboard(code: str) -> InlineKeyboardMarkup:
+    """Teclado para que el usuario vea y copie su código de descuento"""
+    buttons = [
+        [InlineKeyboardButton(text="📋 Copiar código", callback_data=f"copy_discount_{code}")],
+        [InlineKeyboardButton(text="🔙 Volver al menú", callback_data="game_menu")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
