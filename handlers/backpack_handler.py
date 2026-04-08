@@ -187,6 +187,28 @@ async def cmd_mochila(message: Message, bot: Bot):
 
 # ==================== CALLBACKS ====================
 
+@router.callback_query(F.data == "backpack_menu")
+async def callback_backpack_menu(callback: CallbackQuery, bot: Bot):
+    """Accede al menú de la mochila desde el menú principal"""
+    user_id = callback.from_user.id
+
+    try:
+        backpack_service = BackpackService()
+        summary = backpack_service.get_backpack_summary(user_id)
+        backpack_service.close()
+
+        text = LucienVoice.backpack_summary(summary)
+        keyboard = build_backpack_summary_keyboard(summary)
+
+        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
+        await callback.answer()
+        logger.info(f"backpack_handler | callback_backpack_menu | user_id={user_id} | result=shown")
+
+    except Exception as e:
+        logger.error(f"backpack_handler | callback_backpack_menu | user_id={user_id} | error={e}")
+        await callback.answer("Error al cargar la mochila", show_alert=True)
+
+
 @router.callback_query(F.data == "backpack_main")
 async def callback_backpack_main(callback: CallbackQuery, bot: Bot):
     """Vuelve al menú principal de la mochila"""

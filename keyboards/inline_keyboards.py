@@ -19,45 +19,59 @@ def main_menu_keyboard(is_vip: bool = False) -> InlineKeyboardMarkup:
             callback_data="vip_area"
         )])
 
-    # Menú principal reorganizado
+    # Ofertas especiales - arriba de todo
+    buttons.append([InlineKeyboardButton(
+        text="✨ Ofertas especiales",
+        callback_data="offers"
+    )])
+
+    # Minijuegos - Mochila
     buttons.extend([
         [InlineKeyboardButton(
             text="🎮 Minijuegos",
             callback_data="game_menu"
-        )],
-        [
-            InlineKeyboardButton(
-                text="💋 Mi saldo de besitos",
-                callback_data="my_balance"
-            ),
-            InlineKeyboardButton(
-                text="🎁 Regalo diario",
-                callback_data="daily_gift"
-            )
-        ],
+        ),
         [InlineKeyboardButton(
-            text="🛍️ Tienda de Diana",
+            text="📦 Mochila",
+            callback_data="backpack_menu"
+        )]
+    ])
+
+    # Mi saldo - Regalo diario
+    buttons.extend([
+        [InlineKeyboardButton(
+            text="💋 Mi saldo de besitos",
+            callback_data="my_balance"
+        ),
+        InlineKeyboardButton(
+            text="🎁 Regalo diario",
+            callback_data="daily_gift"
+        )]
+    ])
+
+    # Tienda - Misiones - Recompensas
+    buttons.extend([
+        [InlineKeyboardButton(
+            text="🛍️ Tienda",
             callback_data="shop"
         )],
         [
             InlineKeyboardButton(
-                text="🎯 Mis misiones",
+                text="🎯 Misiones",
                 callback_data="my_missions"
             ),
             InlineKeyboardButton(
                 text="🎁 Recompensas",
                 callback_data="rewards_list"
             )
-        ],
-        [InlineKeyboardButton(
-            text="✨ Ofertas especiales",
-            callback_data="offers"
-        )],
-        [InlineKeyboardButton(
-            text="📖 Fragmentos de la historia",
-            callback_data="narrative"
-        )]
+        ]
     ])
+
+    # Fragmentos de la historia
+    buttons.append([InlineKeyboardButton(
+        text="📖 Fragmentos de la historia",
+        callback_data="narrative"
+    )])
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
