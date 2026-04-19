@@ -171,12 +171,13 @@ class TriviaDiscountService:
                     # Si no se ha iniciado, devolver la duración completa
                     return config.duration_minutes
 
-                # Usar datetime.utcnow() para comparar con started_at naive de la DB
+                # Normalizar: convertir started_at a naive datetime para comparar
                 now = datetime.utcnow()
                 started = config.started_at
+
+                # Si started tiene timezone (PostgreSQL), convertir a naive UTC
                 if started.tzinfo:
-                    # Si started_at tiene timezone, convertir now a UTC
-                    now = datetime.now(timezone.utc).replace(tzinfo=None)
+                    started = started.replace(tzinfo=None)
 
                 elapsed_minutes = (now - started).total_seconds() / 60
                 remaining = max(0, int(config.duration_minutes - elapsed_minutes))
