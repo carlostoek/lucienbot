@@ -27,8 +27,8 @@ class GameService:
     # Constantes de límites diarios
     DAILY_DICE_LIMIT_FREE = 10
     DAILY_DICE_LIMIT_VIP = 20
-    DAILY_TRIVIA_LIMIT_FREE = 10
-    DAILY_TRIVIA_LIMIT_VIP = 20
+    DAILY_TRIVIA_LIMIT_FREE = 7
+    DAILY_TRIVIA_LIMIT_VIP = 15
 
     # Recompensas por victoria
     DICE_WIN_BESITOS = 1
