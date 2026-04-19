@@ -49,7 +49,9 @@ class TriviaDiscountService:
         end_date: Optional[datetime] = None,
         created_by: Optional[int] = None,
         custom_description: Optional[str] = None,
-        duration_minutes: Optional[int] = None
+        duration_minutes: Optional[int] = None,
+        auto_reset_enabled: bool = False,
+        max_reset_cycles: Optional[int] = None
     ) -> Optional[TriviaPromotionConfig]:
         """Crea configuración de promoción por racha"""
         with SessionLocal() as session:
@@ -64,6 +66,8 @@ class TriviaDiscountService:
                     start_date=start_date,
                     end_date=end_date,
                     duration_minutes=duration_minutes,
+                    auto_reset_enabled=auto_reset_enabled,
+                    max_reset_cycles=max_reset_cycles,
                     created_by=created_by
                 )
                 session.add(config)
@@ -161,7 +165,8 @@ class TriviaDiscountService:
                 return False
 
     def get_time_remaining(self, config_id: int) -> int:
-        """Obtiene minutos restantes de la promoción (0 si expiró o no es por duración)"""
+        """Obtiene minutos restantes de la promoción (0 si expiró o no es por duración).
+        Si está habilitado el reinicio automático, lo ejecuta cuando expire."""
         with SessionLocal() as session:
             try:
                 config = session.get(TriviaPromotionConfig, config_id)
@@ -181,6 +186,27 @@ class TriviaDiscountService:
 
                 elapsed_minutes = (now - started).total_seconds() / 60
                 remaining = max(0, int(config.duration_minutes - elapsed_minutes))
+
+                # Verificar si necesita reinicio automático
+                if remaining <= 0 and config.auto_reset_enabled and config.is_active:
+                    # Verificar si hay ciclos disponibles
+                    can_reset = config.max_reset_cycles is None or config.reset_count < config.max_reset_cycles
+                    if can_reset:
+                        # Ejecutar reinicio
+                        reset_duration = int(config.duration_minutes * 0.25)  # 25% del tiempo original
+                        config.started_at = datetime.utcnow()
+                        config.duration_minutes = reset_duration
+                        config.reset_count += 1
+                        session.commit()
+                        logger.info(f"trivia_discount_service - get_time_remaining - {config_id} - auto reset to {reset_duration} min, cycle {config.reset_count}")
+                        return reset_duration
+                    else:
+                        # Ya no hay ciclos disponibles - marcar como inactiva
+                        config.is_active = False
+                        session.commit()
+                        logger.info(f"trivia_discount_service - get_time_remaining - {config_id} - no cycles left, deactivated")
+                        return 0
+
                 return remaining
             except Exception as e:
                 logger.error(f"trivia_discount_service - get_time_remaining - {config_id} - error: {e}")
@@ -280,14 +306,10 @@ class TriviaDiscountService:
                     return None
 
                 # Verificar vigencia por duración relativa
+                # Usar get_time_remaining para aprovechar el reinicio automático si está habilitado
                 if config.duration_minutes and config.started_at:
-                    # Usar datetime sin timezone para consistencia con la DB
-                    now_naive = datetime.utcnow()
-                    started = config.started_at
-                    if started.tzinfo:
-                        started = started.replace(tzinfo=None)
-                    elapsed_minutes = (now_naive - started).total_seconds() / 60
-                    if elapsed_minutes > config.duration_minutes:
+                    remaining = self.get_time_remaining(config_id)
+                    if remaining <= 0:
                         logger.warning(f"trivia_discount_service - generate_discount_code - {user_id} - expired by duration")
                         return None
 

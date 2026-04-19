@@ -31,6 +31,8 @@ class TriviaDiscountStates(StatesGroup):
     waiting_start_date = State()
     waiting_end_date = State()
     waiting_duration = State()
+    waiting_auto_reset = State()
+    waiting_reset_cycles = State()
     waiting_confirmation = State()
     waiting_extend_duration = State()
 
@@ -327,10 +329,30 @@ async def create_trivia_discount_dates(message: Message, state: FSMContext):
             )
             return
 
-    # Mostrar confirmación
+    # Verificar si es duración relativa para preguntar por reinicio automático
     data = await state.get_data()
+    if data.get('duration_type') == 'relative' and data.get('duration_minutes'):
+        # Preguntar por reinicio automático
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Sí", callback_data="auto_reset_yes")],
+            [InlineKeyboardButton(text="❌ No", callback_data="auto_reset_no")],
+            [InlineKeyboardButton(text="🔙 Cancelar", callback_data="admin_trivia_discount")]
+        ])
 
-    # Determinar tipo de promoción
+        await message.answer(
+            "🎩 <b>Lucien:</b>\n\n"
+            "<i>Pregunta adicional:</i> ¿Desea habilitar el <b>reinicio automático</b>?\n\n"
+            "Cuando el tiempo expire, el contador se reiniciará al <b>25%</b> del tiempo original.\n"
+            "Por ejemplo: 1 hora → 15 minutos.\n\n"
+            "Esto permite múltiples ciclos de juego.",
+            reply_markup=keyboard,
+            parse_mode="HTML"
+        )
+        await state.set_state(TriviaDiscountStates.waiting_auto_reset)
+        return
+
+    # Si no es duración relativa, ir directo a confirmación
+    await state.update_data(auto_reset_enabled=False, max_reset_cycles=None)
     if data.get('promotion_id'):
         promo_service = PromotionService()
         try:
@@ -378,6 +400,121 @@ async def create_trivia_discount_dates(message: Message, state: FSMContext):
         f"🔥 <b>Racha requerida:</b> {data['required_streak']} respuestas correctas\n"
         f"🎫 <b>Códigos máximo:</b> {data['max_codes']}\n"
         f"⏱️ <b>Vigencia:</b> {vigencia}",
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+    await state.set_state(TriviaDiscountStates.waiting_confirmation)
+
+
+# ==================== REINICIO AUTOMÁTICO ====================
+
+@router.callback_query(F.data == "auto_reset_yes", lambda cb: is_admin(cb.from_user.id))
+async def auto_reset_yes(callback: CallbackQuery, state: FSMContext):
+    """Usuario eligió habilitar reinicio automático"""
+    await state.update_data(auto_reset_enabled=True)
+
+    await callback.message.edit_text(
+        "🎩 <b>Lucien:</b>\n\n"
+        "Ingrese el <b>número máximo de ciclos de reinicio</b> permitidos.\n\n"
+        "Cada vez que el tiempo expire, se reiniciará al 25% del tiempo original.\n"
+        "Cuando se completen todos los ciclos, la promoción finalizará.\n\n"
+        "Ejemplo: <code>3</code> ciclos",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔙 Cancelar", callback_data="admin_trivia_discount")]
+        ]),
+        parse_mode="HTML"
+    )
+    await state.set_state(TriviaDiscountStates.waiting_reset_cycles)
+    await callback.answer()
+
+
+@router.callback_query(F.data == "auto_reset_no", lambda cb: is_admin(cb.from_user.id))
+async def auto_reset_no(callback: CallbackQuery, state: FSMContext):
+    """Usuario eligió NO habilitar reinicio automático"""
+    await state.update_data(auto_reset_enabled=False, max_reset_cycles=None)
+
+    # Ir directo a confirmación
+    await show_confirmation(callback.message, state)
+    await callback.answer()
+
+
+@router.message(TriviaDiscountStates.waiting_reset_cycles, lambda msg: is_admin(msg.from_user.id))
+async def process_reset_cycles(message: Message, state: FSMContext):
+    """Procesar número de ciclos de reinicio"""
+    try:
+        cycles = int(message.text.strip())
+        if cycles < 1:
+            await message.answer("El número de ciclos debe ser al menos 1. Intente de nuevo:")
+            return
+        await state.update_data(max_reset_cycles=cycles)
+
+        # Ir a confirmación
+        await show_confirmation(message, state)
+    except ValueError:
+        await message.answer("Por favor ingrese un número válido:")
+
+
+async def show_confirmation(message: Message, state: FSMContext):
+    """Muestra la pantalla de confirmación"""
+    data = await state.get_data()
+
+    # Determinar tipo de promoción
+    if data.get('promotion_id'):
+        promo_service = PromotionService()
+        try:
+            promo = promo_service.get_promotion(data['promotion_id'])
+            promo_name = promo.name if promo else "Desconocida"
+        finally:
+            promo_service.close()
+        promo_info = f"🏪 {promo_name}"
+    else:
+        promo_info = f"✨ {data.get('custom_description', 'N/A')}"
+
+    # Construir info de vigencia
+    duration_type = data.get('duration_type')
+    if duration_type == 'relative':
+        duration_val = data.get('duration_minutes', 0)
+        if duration_val >= 1440:
+            days = duration_val // 1440
+            vigencia = f"⏰ {days} día(s)"
+        elif duration_val >= 60:
+            hours = duration_val // 60
+            mins = duration_val % 60
+            vigencia = f"⏰ {hours}h {mins}min" if mins > 0 else f"⏰ {hours} horas"
+        else:
+            vigencia = f"⏰ {duration_val} minutos"
+    else:
+        start = data.get('start_date')
+        end = data.get('end_date')
+        if start and end:
+            vigencia = f"📅 {start.strftime('%Y-%m-%d')} - {end.strftime('%Y-%m-%d')}"
+        elif start:
+            vigencia = f"📅 Desde {start.strftime('%Y-%m-%d')}"
+        else:
+            vigencia = "📅 Sin límite"
+
+    # Info de reinicio automático
+    if data.get('auto_reset_enabled') and data.get('max_reset_cycles'):
+        reset_info = f"🔄 Activado ({data['max_reset_cycles']} ciclos máx.)"
+    elif data.get('auto_reset_enabled'):
+        reset_info = "🔄 Activado (ilimitado)"
+    else:
+        reset_info = "❌ Desactivado"
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✓ Confirmar", callback_data="confirm_trivia_discount")],
+        [InlineKeyboardButton(text="✗ Cancelar", callback_data="admin_trivia_discount")]
+    ])
+
+    await message.answer(
+        f"🎩 <b>Lucien:</b>\n\n"
+        "<i>Paso 6 de 6:</i> Confirmar configuración\n\n"
+        f"📋 <b>Promoción:</b> {promo_info}\n"
+        f"💰 <b>Descuento:</b> {data['discount_percentage']}%\n"
+        f"🔥 <b>Racha requerida:</b> {data['required_streak']} respuestas correctas\n"
+        f"🎫 <b>Códigos máximo:</b> {data['max_codes']}\n"
+        f"⏱️ <b>Vigencia:</b> {vigencia}\n"
+        f"🔁 <b>Reinicio auto:</b> {reset_info}",
         reply_markup=keyboard,
         parse_mode="HTML"
     )
@@ -484,7 +621,9 @@ async def create_trivia_discount_confirm(callback: CallbackQuery, state: FSMCont
         end_date=data.get('end_date'),
         created_by=user_id,
         custom_description=data.get('custom_description'),
-        duration_minutes=data.get('duration_minutes')
+        duration_minutes=data.get('duration_minutes'),
+        auto_reset_enabled=data.get('auto_reset_enabled', False),
+        max_reset_cycles=data.get('max_reset_cycles')
     )
 
     if config:
@@ -563,7 +702,14 @@ async def view_trivia_discounts(callback: CallbackQuery):
             # Si es duración relativa, mostrar tiempo restante y botón de extender
             if service.is_duration_based(config):
                 remaining = service.get_time_remaining_formatted(config.id)
-                time_info = f"\n⏱️ Tiempo: {remaining}"
+                # Info de ciclos de reinicio automático
+                if config.auto_reset_enabled and config.max_reset_cycles:
+                    cycles_info = f" | 🔄 Ciclo {config.reset_count}/{config.max_reset_cycles}"
+                elif config.auto_reset_enabled:
+                    cycles_info = f" | 🔄 Ciclo {config.reset_count}/∞"
+                else:
+                    cycles_info = ""
+                time_info = f"\n⏱️ Tiempo: {remaining}{cycles_info}"
                 keyboard_buttons.append([
                     InlineKeyboardButton(
                         text="⏰ Extender",

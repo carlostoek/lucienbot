@@ -1139,6 +1139,10 @@ class TriviaPromotionConfig(Base):
     duration_minutes = Column(Integer, nullable=True)
     # Timestamp de inicio de la promoción (para duraciones relativas)
     started_at = Column(DateTime(timezone=True), nullable=True)
+    # Reinicio automático del contador
+    auto_reset_enabled = Column(Boolean, default=False)
+    reset_count = Column(Integer, default=0)
+    max_reset_cycles = Column(Integer, nullable=True)
     created_by = Column(BigInteger, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
