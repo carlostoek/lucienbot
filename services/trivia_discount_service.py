@@ -260,8 +260,8 @@ class TriviaDiscountService:
         config_id: int,
         username: Optional[str] = None,
         first_name: Optional[str] = None
-    ) -> Optional[DiscountCode]:
-        """Genera código de descuento para usuario"""
+    ) -> Optional[dict]:
+        """Genera código de descuento para usuario (devuelve dict para evitar detached instance)"""
         with SessionLocal() as session:
             try:
                 # Verificar que la configuración existe y está activa
@@ -322,8 +322,15 @@ class TriviaDiscountService:
                 session.add(discount_code)
                 session.commit()
                 session.refresh(discount_code)
+
+                # Devolver diccionario en lugar del objeto para evitar detached instance
+                result = {
+                    'code': discount_code.code,
+                    'promotion_name': config.promotion.name if config.promotion else config.custom_description,
+                    'discount_percentage': config.discount_percentage
+                }
                 logger.info(f"trivia_discount_service - generate_discount_code - {user_id} - success: {code}")
-                return discount_code
+                return result
             except Exception as e:
                 session.rollback()
                 logger.error(f"trivia_discount_service - generate_discount_code - {user_id} - error: {e}")

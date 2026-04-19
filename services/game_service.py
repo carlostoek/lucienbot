@@ -717,11 +717,7 @@ class GameService:
             'message_parts': message_parts,
             'remaining_after': remaining_after,
             'limit_reached': False,
-            'discount_code': {
-                'code': discount_code.code if discount_code else None,
-                'promotion_name': discount_code.promotion.name if discount_code else None,
-                'discount_percentage': discount_code.config.discount_percentage if discount_code else None
-            } if discount_code else None
+            'discount_code': discount_code  # Ahora es un dict directamente
         }
 
     def _build_trivia_message_parts(self, is_correct: bool, question: dict,
@@ -1045,11 +1041,7 @@ class GameService:
             'message_parts': message_parts,
             'remaining_after': remaining_after,
             'limit_reached': False,
-            'discount_code': {
-                'code': discount_code.code if discount_code else None,
-                'promotion_name': discount_code.promotion.name if discount_code else None,
-                'discount_percentage': discount_code.config.discount_percentage if discount_code else None
-            } if discount_code else None
+            'discount_code': discount_code  # Ahora es un dict directamente
         }
 
     def _build_trivia_vip_message_parts(self, is_correct: bool, question: dict,
