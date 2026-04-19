@@ -1,676 +1,4034 @@
 [
-  { "q": "¿Cuál es la capital de Francia?", "opts": ["Madrid", "París", "Roma"], "answer": 1 },
-  { "q": "¿Qué consola lanzó Sony en 1994?", "opts": ["Nintendo 64", "PlayStation", "Sega Saturn"], "answer": 1 },
-  { "q": "¿Qué color resulta de mezclar azul y amarillo?", "opts": ["Verde", "Morado", "Rojo"], "answer": 0 },
-  { "q": "¿Cuál es el metal principal en el acero?", "opts": ["Hierro", "Cobre", "Aluminio"], "answer": 0 },
-  { "q": "¿Qué superhéroe pertenece a DC Comics?", "opts": ["Iron Man", "Batman", "Spider-Man"], "answer": 1 },
-  { "q": "¿Cuál es el lenguaje de programación más usado para desarrollo web?", "opts": ["Python", "JavaScript", "C++"], "answer": 1 },
-  { "q": "¿Qué significa 'FPS' en videojuegos?", "opts": ["Frames Per Second", "First Person Shooter", "Fighting Power System"], "answer": 1 },
-  { "q": "¿Quién fue el creador de Tesla Motors?", "opts": ["Elon Musk", "Jeff Bezos", "Bill Gates"], "answer": 0 },
-  { "q": "¿Cuál de estas es una red social enfocada en imágenes?", "opts": ["LinkedIn", "Instagram", "Twitter"], "answer": 1 },
-  { "q": "¿Qué saga cinematográfica tiene como protagonista a Luke Skywalker?", "opts": ["Star Trek", "Star Wars", "Dune"], "answer": 1 },
-
-  { "q": "¿Qué bebida se elabora a partir de granos de cebada fermentados?", "opts": ["Vino", "Cerveza", "Whisky"], "answer": 1 },
-  { "q": "¿Qué planeta es conocido como el ‘planeta rojo’?", "opts": ["Venus", "Marte", "Júpiter"], "answer": 1 },
-  { "q": "¿En qué año se lanzó el primer iPhone?", "opts": ["2005", "2007", "2009"], "answer": 1 },
-  { "q": "¿Qué significa ‘anime’ en japonés?", "opts": ["Dibujo animado", "Cómic", "Serie de acción"], "answer": 0 },
-  { "q": "¿Cuál es el nombre del villano principal en ‘Avengers: Infinity War’?", "opts": ["Thanos", "Loki", "Ultron"], "answer": 0 },
-  { "q": "¿Qué videojuego popular usa el eslogan ‘Victory Royale’?", "opts": ["Call of Duty", "Fortnite", "PUBG"], "answer": 1 },
-  { "q": "¿Qué país es famoso por el sushi?", "opts": ["Corea del Sur", "Japón", "China"], "answer": 1 },
-  { "q": "¿Qué artista lanzó el álbum ‘Nevermind’?", "opts": ["Nirvana", "Metallica", "Pearl Jam"], "answer": 0 },
-  { "q": "¿En qué deporte se utiliza una raqueta y una pelota amarilla?", "opts": ["Tenis", "Golf", "Squash"], "answer": 0 },
-  { "q": "¿Cuál es el nombre real de Deadpool?", "opts": ["Wade Wilson", "Logan Howlett", "Peter Parker"], "answer": 0 },
-
-  { "q": "¿Qué significa ‘VPN’?", "opts": ["Virtual Private Network", "Visual Proxy Node", "Virtual Program Network"], "answer": 0 },
-  { "q": "¿Qué serie popular tiene dragones y reinos?", "opts": ["The Witcher", "Game of Thrones", "Vikings"], "answer": 1 },
-  { "q": "¿Qué símbolo químico representa al oro?", "opts": ["Ag", "Au", "Fe"], "answer": 1 },
-  { "q": "¿Qué país inventó la pizza?", "opts": ["Francia", "Italia", "Grecia"], "answer": 1 },
-  { "q": "¿Cuál es el nombre del protagonista en ‘The Matrix’?", "opts": ["Neo", "Morpheus", "Trinity"], "answer": 0 },
-  { "q": "¿Qué gas respiramos para vivir?", "opts": ["Dióxido de carbono", "Oxígeno", "Hidrógeno"], "answer": 1 },
-  { "q": "¿Qué artista es conocido como ‘El Rey del Pop’?", "opts": ["Prince", "Michael Jackson", "Elvis Presley"], "answer": 1 },
-  { "q": "¿Cuál es la capital de Canadá?", "opts": ["Toronto", "Ottawa", "Vancouver"], "answer": 1 },
-  { "q": "¿Qué animal es símbolo de la sabiduría?", "opts": ["Búho", "León", "Zorro"], "answer": 0 },
-  { "q": "¿Qué videojuego introdujo el personaje ‘Link’?", "opts": ["Final Fantasy", "The Legend of Zelda", "Metroid"], "answer": 1 },
-
-  { "q": "¿Qué significa ‘Wi-Fi’?", "opts": ["Wireless Fidelity", "Wide Frequency", "Wave Finder"], "answer": 0 },
-  { "q": "¿Qué saga pertenece el personaje Geralt de Rivia?", "opts": ["Skyrim", "The Witcher", "Dark Souls"], "answer": 1 },
-  { "q": "¿Qué instrumento usa un DJ?", "opts": ["Guitarra", "Controladora", "Micrófono"], "answer": 1 },
-  { "q": "¿Qué significa ‘MMORPG’?", "opts": ["Massive Multiplayer Online Role Playing Game", "Mega Online RPG", "Mixed Roleplay Game"], "answer": 0 },
-  { "q": "¿Qué coche fabrica la marca Tesla?", "opts": ["Model S", "Civic", "Corolla"], "answer": 0 },
-  { "q": "¿Qué serie se desarrolla en Hawkins, Indiana?", "opts": ["Supernatural", "Stranger Things", "The X-Files"], "answer": 1 },
-  { "q": "¿Qué bebida es típica de México?", "opts": ["Tequila", "Vodka", "Ron"], "answer": 0 },
-  { "q": "¿Qué cantante popularizó ‘Blinding Lights’?", "opts": ["The Weeknd", "Drake", "Post Malone"], "answer": 0 },
-  { "q": "¿Qué compañía desarrolló Windows?", "opts": ["Apple", "Microsoft", "IBM"], "answer": 1 },
-  { "q": "¿Qué famoso festival ocurre en Coachella Valley?", "opts": ["Tomorrowland", "Coachella", "Burning Man"], "answer": 1 },
-
-  { "q": "¿Qué serie animada incluye a Morty y su abuelo científico?", "opts": ["Rick and Morty", "Futurama", "Adventure Time"], "answer": 0 },
-  { "q": "¿Qué artista compuso la canción ‘Bohemian Rhapsody’?", "opts": ["Queen", "The Beatles", "Pink Floyd"], "answer": 0 },
-  { "q": "¿Qué marca produce el modelo de moto ‘Ninja’?", "opts": ["Suzuki", "Kawasaki", "Yamaha"], "answer": 1 },
-  { "q": "¿Qué saga incluye al personaje Kratos?", "opts": ["God of War", "Dark Souls", "Elden Ring"], "answer": 0 },
-  { "q": "¿Qué tipo de arte se asocia con el graffiti?", "opts": ["Arte urbano", "Arte clásico", "Arte digital"], "answer": 0 },
-  { "q": "¿Qué deporte practica Conor McGregor?", "opts": ["Boxeo", "MMA", "Kickboxing"], "answer": 1 },
-  { "q": "¿Qué símbolo representa al hidrógeno?", "opts": ["H", "O", "He"], "answer": 0 },
-  { "q": "¿Cuál de estos no es un lenguaje de programación?", "opts": ["Python", "HTML", "Linux"], "answer": 2 },
-  { "q": "¿Qué videojuego presenta el modo ‘Battle Royale’?", "opts": ["Minecraft", "Fortnite", "Overwatch"], "answer": 1 },
-  { "q": "¿Qué país ganó la Copa del Mundo 2018?", "opts": ["Brasil", "Francia", "Alemania"], "answer": 1 },
-
-  { "q": "¿Qué famoso anime incluye esferas mágicas?", "opts": ["Naruto", "Dragon Ball", "One Piece"], "answer": 1 },
-  { "q": "¿Qué red social se caracteriza por mensajes cortos?", "opts": ["Twitter", "Instagram", "Facebook"], "answer": 0 },
-  { "q": "¿Qué famoso superhéroe es millonario y filántropo?", "opts": ["Superman", "Iron Man", "Hulk"], "answer": 1 },
-  { "q": "¿Cuál es la bebida energética más famosa del mundo?", "opts": ["Monster", "Red Bull", "Rockstar"], "answer": 1 },
-  { "q": "¿Qué película presenta la nave Millennium Falcon?", "opts": ["Star Trek", "Star Wars", "Guardians of the Galaxy"], "answer": 1 },
-  { "q": "¿Qué país es origen del heavy metal?", "opts": ["Estados Unidos", "Reino Unido", "Alemania"], "answer": 1 },
-  { "q": "¿Cuál es el sistema operativo de Apple?", "opts": ["Windows", "iOS", "Android"], "answer": 1 },
-  { "q": "¿Qué serie tiene zombies como tema principal?", "opts": ["Breaking Bad", "The Walking Dead", "The Last of Us"], "answer": 1 },
-  { "q": "¿Qué famoso personaje dice ‘I am Groot’?", "opts": ["Rocket", "Groot", "Drax"], "answer": 1 },
-  { "q": "¿Qué es un NFT?", "opts": ["Archivo físico", "Token no fungible", "Video encriptado"], "answer": 1 },
-
-  { "q": "¿Qué significa ‘CPU’?", "opts": ["Central Processing Unit", "Computer Power Unit", "Core Processing Utility"], "answer": 0 },
-  { "q": "¿Qué compañía fabrica el PlayStation 5?", "opts": ["Microsoft", "Sony", "Nintendo"], "answer": 1 },
-  { "q": "¿Qué famoso juego incluye el personaje ‘Creeper’?", "opts": ["Minecraft", "Fortnite", "Roblox"], "answer": 0 },
-  { "q": "¿Qué ciudad nunca duerme según la frase popular?", "opts": ["Londres", "Nueva York", "Tokio"], "answer": 1 },
-  { "q": "¿Qué significa ‘USB’?", "opts": ["Universal Serial Bus", "Unified System Board", "Universal Software Base"], "answer": 0 },
-  { "q": "¿Qué saga de videojuegos incluye el término ‘Assassin’?", "opts": ["Assassin’s Creed", "Far Cry", "Watch Dogs"], "answer": 0 },
-  { "q": "¿Qué estilo musical mezcla electrónica y pop?", "opts": ["EDM", "Reggae", "Trap"], "answer": 0 },
-  { "q": "¿Qué empresa creó Android?", "opts": ["Google", "Apple", "Samsung"], "answer": 0 },
-  { "q": "¿Qué actor interpreta a Deadpool?", "opts": ["Ryan Reynolds", "Chris Evans", "Hugh Jackman"], "answer": 0 },
-  { "q": "¿Qué videojuego popular tiene ‘Poké Balls’?", "opts": ["Digimon", "Pokémon", "Zelda"], "answer": 1 },
-
-  { "q": "¿Qué serie muestra un laboratorio en Albuquerque?", "opts": ["Breaking Bad", "Dexter", "Better Call Saul"], "answer": 0 },
-  { "q": "¿Qué deporte se practica con tabla en el mar?", "opts": ["Surf", "Skate", "Snowboard"], "answer": 0 },
-  { "q": "¿Qué videojuego popularizó el término ‘Headshot’?", "opts": ["Counter-Strike", "Minecraft", "Halo"], "answer": 0 },
-  { "q": "¿Qué cantante lanzó el disco ‘After Hours’?", "opts": ["Drake", "The Weeknd", "Post Malone"], "answer": 1 },
-  { "q": "¿Qué saga cinematográfica incluye a los Autobots?", "opts": ["Transformers", "Pacific Rim", "Iron Giant"], "answer": 0 },
-  { "q": "¿Qué significa ‘AI’ en tecnología?", "opts": ["Artificial Intelligence", "Automated Input", "Advanced Internet"], "answer": 0 },
-  { "q": "¿Qué banda lanzó ‘Enter Sandman’?", "opts": ["Metallica", "Slipknot", "Megadeth"], "answer": 0 },
-  { "q": "¿Qué famoso creador diseñó ‘Cyberpunk 2077’?", "opts": ["CD Projekt Red", "Ubisoft", "Rockstar"], "answer": 0 },
-  { "q": "¿Qué color tiene el logo de Twitch?", "opts": ["Verde", "Morado", "Rojo"], "answer": 1 },
-  { "q": "¿Qué país creó la marca Ferrari?", "opts": ["Alemania", "Italia", "Francia"], "answer": 1 },
-  { "q": "¿Qué filósofo afirmó 'Dios ha muerto'?", "opts": ["Nietzsche", "Sartre", "Camus"], "answer": 0 },
-  { "q": "¿Cuál es el órgano más grande del cuerpo humano?", "opts": ["El hígado", "La piel", "El cerebro"], "answer": 1 },
-  { "q": "¿Qué película introdujo el concepto de 'la píldora roja'?", "opts": ["Matrix", "Inception", "Tron"], "answer": 0 },
-  { "q": "¿Qué neurotransmisor está relacionado con el placer?", "opts": ["Serotonina", "Dopamina", "Cortisol"], "answer": 1 },
-  { "q": "¿Qué significa la palabra 'avatar'?", "opts": ["Proyección virtual", "Dios encarnado", "Imagen digital"], "answer": 1 },
-  { "q": "¿Qué pintor se cortó una oreja?", "opts": ["Van Gogh", "Monet", "Dalí"], "answer": 0 },
-  { "q": "¿Qué animal simboliza la muerte en muchas culturas?", "opts": ["Cuervo", "Serpiente", "Gato"], "answer": 0 },
-  { "q": "¿Qué serie explora el dilema entre placer y control?", "opts": ["Westworld", "Black Mirror", "Euphoria"], "answer": 0 },
-  { "q": "¿Qué es el efecto placebo?", "opts": ["Medicamento falso con efecto real", "Reacción alérgica mental", "Sugestión negativa"], "answer": 0 },
-  { "q": "¿Qué planeta tiene un día más largo que su año?", "opts": ["Venus", "Marte", "Mercurio"], "answer": 0 },
-
-  { "q": "¿Qué droga legal es más adictiva según estudios?", "opts": ["Alcohol", "Cafeína", "Nicotina"], "answer": 2 },
-  { "q": "¿Qué mito griego habla de volar demasiado cerca del sol?", "opts": ["Ícaro", "Perseo", "Teseo"], "answer": 0 },
-  { "q": "¿Qué creador es conocido por el concepto de 'realidad simulada'?", "opts": ["Nick Bostrom", "Elon Musk", "Ray Kurzweil"], "answer": 0 },
-  { "q": "¿Qué videojuego plantea una guerra entre humanos y máquinas llamadas ‘Reapers’?", "opts": ["Mass Effect", "Halo", "Destiny"], "answer": 0 },
-  { "q": "¿Qué significa el término ‘gaslighting’?", "opts": ["Manipulación psicológica", "Sobreestimulación", "Autoengaño"], "answer": 0 },
-  { "q": "¿Qué color representa la pasión y el peligro?", "opts": ["Rojo", "Negro", "Amarillo"], "answer": 0 },
-  { "q": "¿Qué cantante es conocido como ‘La Reina del Pop’?", "opts": ["Madonna", "Beyoncé", "Lady Gaga"], "answer": 0 },
-  { "q": "¿Qué función cumple el lóbulo frontal?", "opts": ["Control de impulsos", "Memoria visual", "Ritmo cardíaco"], "answer": 0 },
-  { "q": "¿Qué serie retrata la corrupción política en Estados Unidos?", "opts": ["House of Cards", "The West Wing", "Suits"], "answer": 0 },
-  { "q": "¿Qué obra literaria popularizó el concepto del ‘doble oscuro’?", "opts": ["Dr. Jekyll y Mr. Hyde", "Frankenstein", "El retrato de Dorian Gray"], "answer": 0 },
-
-  { "q": "¿Qué instrumento se asocia con el jazz?", "opts": ["Saxofón", "Violín", "Flauta"], "answer": 0 },
-  { "q": "¿Qué significa ‘deep web’?", "opts": ["Internet no indexada", "Web oscura criminal", "Zona de servidores privados"], "answer": 0 },
-  { "q": "¿Qué símbolo representa el renacimiento?", "opts": ["Fénix", "Dragón", "Serpiente"], "answer": 0 },
-  { "q": "¿Qué es la sinestesia?", "opts": ["Percibir un sentido a través de otro", "Fobia al sonido", "Sueño lúcido"], "answer": 0 },
-  { "q": "¿Qué tipo de onda es el sonido?", "opts": ["Longitudinal", "Transversal", "Electromagnética"], "answer": 0 },
-  { "q": "¿Qué famoso hacker creó el virus ‘ILOVEYOU’?", "opts": ["Onel de Guzman", "Kevin Mitnick", "Julian Assange"], "answer": 0 },
-  { "q": "¿Qué videojuego introdujo el personaje de Pyramid Head?", "opts": ["Silent Hill", "Resident Evil", "Fatal Frame"], "answer": 0 },
-  { "q": "¿Qué neurotransmisor ayuda a regular el sueño?", "opts": ["Melatonina", "Adrenalina", "Gaba"], "answer": 0 },
-  { "q": "¿Qué director filmó ‘El Club de la Pelea’?", "opts": ["David Fincher", "Christopher Nolan", "Quentin Tarantino"], "answer": 0 },
-  { "q": "¿Qué metal es líquido a temperatura ambiente?", "opts": ["Mercurio", "Plomo", "Estaño"], "answer": 0 },
-
-  { "q": "¿Qué videojuego se desarrolla en Rapture, una ciudad submarina?", "opts": ["Bioshock", "Subnautica", "Fallout"], "answer": 0 },
-  { "q": "¿Qué cantante murió a los 27 años en 1970?", "opts": ["Jimi Hendrix", "Jim Morrison", "Kurt Cobain"], "answer": 0 },
-  { "q": "¿Qué significa la palabra ‘karma’?", "opts": ["Consecuencia moral", "Destino divino", "Ciclo del alma"], "answer": 0 },
-  { "q": "¿Qué emoción suele activar la amígdala cerebral?", "opts": ["Miedo", "Alegría", "Tristeza"], "answer": 0 },
-  { "q": "¿Qué creador dirigió ‘Blade Runner’?", "opts": ["Ridley Scott", "Stanley Kubrick", "Steven Spielberg"], "answer": 0 },
-  { "q": "¿Qué gas se usa para inflar globos?", "opts": ["Helio", "Hidrógeno", "Nitrógeno"], "answer": 0 },
-  { "q": "¿Qué cantante fue conocido como ‘El Duque Blanco’?", "opts": ["David Bowie", "Prince", "Freddie Mercury"], "answer": 0 },
-  { "q": "¿Qué país desarrolló la filosofía del ‘Bushido’?", "opts": ["Japón", "China", "Corea"], "answer": 0 },
-  { "q": "¿Qué término describe la pérdida de sentido por exceso de estímulo?", "opts": ["Entropía", "Anhedonia", "Alienación"], "answer": 1 },
-  { "q": "¿Qué famoso filósofo escribió ‘El mito de la caverna’?", "opts": ["Platón", "Aristóteles", "Sócrates"], "answer": 0 },
-
-  { "q": "¿Qué videojuego popularizó la frase ‘Would you kindly?’", "opts": ["Bioshock", "Half-Life", "Dishonored"], "answer": 0 },
-  { "q": "¿Qué director filmó ‘Memento’?", "opts": ["Christopher Nolan", "David Lynch", "Fincher"], "answer": 0 },
-  { "q": "¿Qué hormona regula el estrés?", "opts": ["Cortisol", "Insulina", "Serotonina"], "answer": 0 },
-  { "q": "¿Qué movimiento artístico representaba sueños y lo irracional?", "opts": ["Surrealismo", "Cubismo", "Expresionismo"], "answer": 0 },
-  { "q": "¿Qué término describe el miedo a los espacios abiertos?", "opts": ["Agorafobia", "Claustrofobia", "Acrofobia"], "answer": 0 },
-  { "q": "¿Qué escritor es autor de ‘1984’?", "opts": ["George Orwell", "Aldous Huxley", "Bradbury"], "answer": 0 },
-  { "q": "¿Qué videojuego se ambienta en Night City?", "opts": ["Cyberpunk 2077", "Deus Ex", "Watch Dogs"], "answer": 0 },
-  { "q": "¿Qué pintura famosa representa un sueño con relojes derretidos?", "opts": ["La persistencia de la memoria", "Guernica", "El grito"], "answer": 0 },
-  { "q": "¿Qué personaje representa la dualidad entre ciencia y monstruo?", "opts": ["Dr. Jekyll y Mr. Hyde", "Frankenstein", "Nosferatu"], "answer": 0 },
-  { "q": "¿Qué banda lanzó el álbum ‘The Wall’?", "opts": ["Pink Floyd", "Led Zeppelin", "The Who"], "answer": 0 },
-
-  { "q": "¿Qué creador teórico acuñó el término ‘Simulacro’?", "opts": ["Baudrillard", "Foucault", "Lyotard"], "answer": 0 },
-  { "q": "¿Qué videojuego introdujo el concepto de karma y moralidad en las decisiones?", "opts": ["Fable", "Skyrim", "Mass Effect"], "answer": 0 },
-  { "q": "¿Qué sustancia produce euforia y sensación de poder?", "opts": ["Adrenalina", "Dopamina", "Endorfina"], "answer": 0 },
-  { "q": "¿Qué animal simboliza la transformación en muchas culturas?", "opts": ["Mariposa", "Búho", "Lobo"], "answer": 0 },
-  { "q": "¿Qué creador desarrolló el psicoanálisis?", "opts": ["Freud", "Jung", "Lacan"], "answer": 0 },
-  { "q": "¿Qué serie mezcla violencia, sátira y superhéroes corruptos?", "opts": ["The Boys", "Doom Patrol", "Watchmen"], "answer": 0 },
-  { "q": "¿Qué escritor fue conocido por su concepto del ‘superhombre’?", "opts": ["Nietzsche", "Schopenhauer", "Heidegger"], "answer": 0 },
-  { "q": "¿Qué fenómeno ocurre cuando sueñas que caes?", "opts": ["Sacudida hipnagógica", "Parálisis del sueño", "Déjà vu"], "answer": 0 },
-  { "q": "¿Qué videojuego usa ‘Rapture’ como metáfora de utopía fallida?", "opts": ["Bioshock", "Fallout", "Prey"], "answer": 0 },
-  { "q": "¿Qué serie explora la cultura hacker?", "opts": ["Mr. Robot", "Black Mirror", "Silicon Valley"], "answer": 0 },
-
+  {
+    "q": "¿Cuál es la capital de Francia?",
+    "opts": [
+      "Madrid",
+      "París",
+      "Roma"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué consola lanzó Sony en 1994?",
+    "opts": [
+      "Nintendo 64",
+      "PlayStation",
+      "Sega Saturn"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué color resulta de mezclar azul y amarillo?",
+    "opts": [
+      "Verde",
+      "Morado",
+      "Rojo"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Cuál es el metal principal en el acero?",
+    "opts": [
+      "Hierro",
+      "Cobre",
+      "Aluminio"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué superhéroe pertenece a DC Comics?",
+    "opts": [
+      "Iron Man",
+      "Batman",
+      "Spider-Man"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el lenguaje de programación más usado para desarrollo web?",
+    "opts": [
+      "Python",
+      "JavaScript",
+      "C++"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué significa 'FPS' en videojuegos?",
+    "opts": [
+      "Frames Per Second",
+      "First Person Shooter",
+      "Fighting Power System"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Quién fue el creador de Tesla Motors?",
+    "opts": [
+      "Elon Musk",
+      "Jeff Bezos",
+      "Bill Gates"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Cuál de estas es una red social enfocada en imágenes?",
+    "opts": [
+      "LinkedIn",
+      "Instagram",
+      "Twitter"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué saga cinematográfica tiene como protagonista a Luke Skywalker?",
+    "opts": [
+      "Star Trek",
+      "Star Wars",
+      "Dune"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué bebida se elabora a partir de granos de cebada fermentados?",
+    "opts": [
+      "Vino",
+      "Cerveza",
+      "Whisky"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué planeta es conocido como el ‘planeta rojo’?",
+    "opts": [
+      "Venus",
+      "Marte",
+      "Júpiter"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué año se lanzó el primer iPhone?",
+    "opts": [
+      "2005",
+      "2007",
+      "2009"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué significa ‘anime’ en japonés?",
+    "opts": [
+      "Dibujo animado",
+      "Cómic",
+      "Serie de acción"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Cuál es el nombre del villano principal en ‘Avengers: Infinity War’?",
+    "opts": [
+      "Thanos",
+      "Loki",
+      "Ultron"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego popular usa el eslogan ‘Victory Royale’?",
+    "opts": [
+      "Call of Duty",
+      "Fortnite",
+      "PUBG"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué país es famoso por el sushi?",
+    "opts": [
+      "Corea del Sur",
+      "Japón",
+      "China"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué artista lanzó el álbum ‘Nevermind’?",
+    "opts": [
+      "Nirvana",
+      "Metallica",
+      "Pearl Jam"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿En qué deporte se utiliza una raqueta y una pelota amarilla?",
+    "opts": [
+      "Tenis",
+      "Golf",
+      "Squash"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Cuál es el nombre real de Deadpool?",
+    "opts": [
+      "Wade Wilson",
+      "Logan Howlett",
+      "Peter Parker"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa ‘VPN’?",
+    "opts": [
+      "Virtual Private Network",
+      "Visual Proxy Node",
+      "Virtual Program Network"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué serie popular tiene dragones y reinos?",
+    "opts": [
+      "The Witcher",
+      "Game of Thrones",
+      "Vikings"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué símbolo químico representa al oro?",
+    "opts": [
+      "Ag",
+      "Au",
+      "Fe"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué país inventó la pizza?",
+    "opts": [
+      "Francia",
+      "Italia",
+      "Grecia"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el nombre del protagonista en ‘The Matrix’?",
+    "opts": [
+      "Neo",
+      "Morpheus",
+      "Trinity"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué gas respiramos para vivir?",
+    "opts": [
+      "Dióxido de carbono",
+      "Oxígeno",
+      "Hidrógeno"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué artista es conocido como ‘El Rey del Pop’?",
+    "opts": [
+      "Prince",
+      "Michael Jackson",
+      "Elvis Presley"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es la capital de Canadá?",
+    "opts": [
+      "Toronto",
+      "Ottawa",
+      "Vancouver"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué animal es símbolo de la sabiduría?",
+    "opts": [
+      "Búho",
+      "León",
+      "Zorro"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego introdujo el personaje ‘Link’?",
+    "opts": [
+      "Final Fantasy",
+      "The Legend of Zelda",
+      "Metroid"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué significa ‘Wi-Fi’?",
+    "opts": [
+      "Wireless Fidelity",
+      "Wide Frequency",
+      "Wave Finder"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué saga pertenece el personaje Geralt de Rivia?",
+    "opts": [
+      "Skyrim",
+      "The Witcher",
+      "Dark Souls"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué instrumento usa un DJ?",
+    "opts": [
+      "Guitarra",
+      "Controladora",
+      "Micrófono"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué significa ‘MMORPG’?",
+    "opts": [
+      "Massive Multiplayer Online Role Playing Game",
+      "Mega Online RPG",
+      "Mixed Roleplay Game"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué coche fabrica la marca Tesla?",
+    "opts": [
+      "Model S",
+      "Civic",
+      "Corolla"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué serie se desarrolla en Hawkins, Indiana?",
+    "opts": [
+      "Supernatural",
+      "Stranger Things",
+      "The X-Files"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué bebida es típica de México?",
+    "opts": [
+      "Tequila",
+      "Vodka",
+      "Ron"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué cantante popularizó ‘Blinding Lights’?",
+    "opts": [
+      "The Weeknd",
+      "Drake",
+      "Post Malone"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué compañía desarrolló Windows?",
+    "opts": [
+      "Apple",
+      "Microsoft",
+      "IBM"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué famoso festival ocurre en Coachella Valley?",
+    "opts": [
+      "Tomorrowland",
+      "Coachella",
+      "Burning Man"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué serie animada incluye a Morty y su abuelo científico?",
+    "opts": [
+      "Rick and Morty",
+      "Futurama",
+      "Adventure Time"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué artista compuso la canción ‘Bohemian Rhapsody’?",
+    "opts": [
+      "Queen",
+      "The Beatles",
+      "Pink Floyd"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué marca produce el modelo de moto ‘Ninja’?",
+    "opts": [
+      "Suzuki",
+      "Kawasaki",
+      "Yamaha"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué saga incluye al personaje Kratos?",
+    "opts": [
+      "God of War",
+      "Dark Souls",
+      "Elden Ring"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué tipo de arte se asocia con el graffiti?",
+    "opts": [
+      "Arte urbano",
+      "Arte clásico",
+      "Arte digital"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué deporte practica Conor McGregor?",
+    "opts": [
+      "Boxeo",
+      "MMA",
+      "Kickboxing"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué símbolo representa al hidrógeno?",
+    "opts": [
+      "H",
+      "O",
+      "He"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Cuál de estos no es un lenguaje de programación?",
+    "opts": [
+      "Python",
+      "HTML",
+      "Linux"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "¿Qué videojuego presenta el modo ‘Battle Royale’?",
+    "opts": [
+      "Minecraft",
+      "Fortnite",
+      "Overwatch"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué país ganó la Copa del Mundo 2018?",
+    "opts": [
+      "Brasil",
+      "Francia",
+      "Alemania"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué famoso anime incluye esferas mágicas?",
+    "opts": [
+      "Naruto",
+      "Dragon Ball",
+      "One Piece"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué red social se caracteriza por mensajes cortos?",
+    "opts": [
+      "Twitter",
+      "Instagram",
+      "Facebook"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué famoso superhéroe es millonario y filántropo?",
+    "opts": [
+      "Superman",
+      "Iron Man",
+      "Hulk"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es la bebida energética más famosa del mundo?",
+    "opts": [
+      "Monster",
+      "Red Bull",
+      "Rockstar"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué película presenta la nave Millennium Falcon?",
+    "opts": [
+      "Star Trek",
+      "Star Wars",
+      "Guardians of the Galaxy"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué país es origen del heavy metal?",
+    "opts": [
+      "Estados Unidos",
+      "Reino Unido",
+      "Alemania"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el sistema operativo de Apple?",
+    "opts": [
+      "Windows",
+      "iOS",
+      "Android"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué serie tiene zombies como tema principal?",
+    "opts": [
+      "Breaking Bad",
+      "The Walking Dead",
+      "The Last of Us"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué famoso personaje dice ‘I am Groot’?",
+    "opts": [
+      "Rocket",
+      "Groot",
+      "Drax"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué es un NFT?",
+    "opts": [
+      "Archivo físico",
+      "Token no fungible",
+      "Video encriptado"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué significa ‘CPU’?",
+    "opts": [
+      "Central Processing Unit",
+      "Computer Power Unit",
+      "Core Processing Utility"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué compañía fabrica el PlayStation 5?",
+    "opts": [
+      "Microsoft",
+      "Sony",
+      "Nintendo"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué famoso juego incluye el personaje ‘Creeper’?",
+    "opts": [
+      "Minecraft",
+      "Fortnite",
+      "Roblox"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué ciudad nunca duerme según la frase popular?",
+    "opts": [
+      "Londres",
+      "Nueva York",
+      "Tokio"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué significa ‘USB’?",
+    "opts": [
+      "Universal Serial Bus",
+      "Unified System Board",
+      "Universal Software Base"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué saga de videojuegos incluye el término ‘Assassin’?",
+    "opts": [
+      "Assassin’s Creed",
+      "Far Cry",
+      "Watch Dogs"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué estilo musical mezcla electrónica y pop?",
+    "opts": [
+      "EDM",
+      "Reggae",
+      "Trap"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué empresa creó Android?",
+    "opts": [
+      "Google",
+      "Apple",
+      "Samsung"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué actor interpreta a Deadpool?",
+    "opts": [
+      "Ryan Reynolds",
+      "Chris Evans",
+      "Hugh Jackman"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego popular tiene ‘Poké Balls’?",
+    "opts": [
+      "Digimon",
+      "Pokémon",
+      "Zelda"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué serie muestra un laboratorio en Albuquerque?",
+    "opts": [
+      "Breaking Bad",
+      "Dexter",
+      "Better Call Saul"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué deporte se practica con tabla en el mar?",
+    "opts": [
+      "Surf",
+      "Skate",
+      "Snowboard"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego popularizó el término ‘Headshot’?",
+    "opts": [
+      "Counter-Strike",
+      "Minecraft",
+      "Halo"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué cantante lanzó el disco ‘After Hours’?",
+    "opts": [
+      "Drake",
+      "The Weeknd",
+      "Post Malone"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué saga cinematográfica incluye a los Autobots?",
+    "opts": [
+      "Transformers",
+      "Pacific Rim",
+      "Iron Giant"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa ‘AI’ en tecnología?",
+    "opts": [
+      "Artificial Intelligence",
+      "Automated Input",
+      "Advanced Internet"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué banda lanzó ‘Enter Sandman’?",
+    "opts": [
+      "Metallica",
+      "Slipknot",
+      "Megadeth"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué famoso creador diseñó ‘Cyberpunk 2077’?",
+    "opts": [
+      "CD Projekt Red",
+      "Ubisoft",
+      "Rockstar"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué color tiene el logo de Twitch?",
+    "opts": [
+      "Verde",
+      "Morado",
+      "Rojo"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué país creó la marca Ferrari?",
+    "opts": [
+      "Alemania",
+      "Italia",
+      "Francia"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué filósofo afirmó 'Dios ha muerto'?",
+    "opts": [
+      "Nietzsche",
+      "Sartre",
+      "Camus"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Cuál es el órgano más grande del cuerpo humano?",
+    "opts": [
+      "El hígado",
+      "La piel",
+      "El cerebro"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué película introdujo el concepto de 'la píldora roja'?",
+    "opts": [
+      "Matrix",
+      "Inception",
+      "Tron"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué neurotransmisor está relacionado con el placer?",
+    "opts": [
+      "Serotonina",
+      "Dopamina",
+      "Cortisol"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué significa la palabra 'avatar'?",
+    "opts": [
+      "Proyección virtual",
+      "Dios encarnado",
+      "Imagen digital"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué pintor se cortó una oreja?",
+    "opts": [
+      "Van Gogh",
+      "Monet",
+      "Dalí"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué animal simboliza la muerte en muchas culturas?",
+    "opts": [
+      "Cuervo",
+      "Serpiente",
+      "Gato"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué serie explora el dilema entre placer y control?",
+    "opts": [
+      "Westworld",
+      "Black Mirror",
+      "Euphoria"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es el efecto placebo?",
+    "opts": [
+      "Medicamento falso con efecto real",
+      "Reacción alérgica mental",
+      "Sugestión negativa"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué planeta tiene un día más largo que su año?",
+    "opts": [
+      "Venus",
+      "Marte",
+      "Mercurio"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué droga legal es más adictiva según estudios?",
+    "opts": [
+      "Alcohol",
+      "Cafeína",
+      "Nicotina"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "¿Qué mito griego habla de volar demasiado cerca del sol?",
+    "opts": [
+      "Ícaro",
+      "Perseo",
+      "Teseo"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué creador es conocido por el concepto de 'realidad simulada'?",
+    "opts": [
+      "Nick Bostrom",
+      "Elon Musk",
+      "Ray Kurzweil"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego plantea una guerra entre humanos y máquinas llamadas ‘Reapers’?",
+    "opts": [
+      "Mass Effect",
+      "Halo",
+      "Destiny"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa el término ‘gaslighting’?",
+    "opts": [
+      "Manipulación psicológica",
+      "Sobreestimulación",
+      "Autoengaño"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué color representa la pasión y el peligro?",
+    "opts": [
+      "Rojo",
+      "Negro",
+      "Amarillo"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué cantante es conocido como ‘La Reina del Pop’?",
+    "opts": [
+      "Madonna",
+      "Beyoncé",
+      "Lady Gaga"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué función cumple el lóbulo frontal?",
+    "opts": [
+      "Control de impulsos",
+      "Memoria visual",
+      "Ritmo cardíaco"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué serie retrata la corrupción política en Estados Unidos?",
+    "opts": [
+      "House of Cards",
+      "The West Wing",
+      "Suits"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué obra literaria popularizó el concepto del ‘doble oscuro’?",
+    "opts": [
+      "Dr. Jekyll y Mr. Hyde",
+      "Frankenstein",
+      "El retrato de Dorian Gray"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué instrumento se asocia con el jazz?",
+    "opts": [
+      "Saxofón",
+      "Violín",
+      "Flauta"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa ‘deep web’?",
+    "opts": [
+      "Internet no indexada",
+      "Web oscura criminal",
+      "Zona de servidores privados"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué símbolo representa el renacimiento?",
+    "opts": [
+      "Fénix",
+      "Dragón",
+      "Serpiente"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es la sinestesia?",
+    "opts": [
+      "Percibir un sentido a través de otro",
+      "Fobia al sonido",
+      "Sueño lúcido"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué tipo de onda es el sonido?",
+    "opts": [
+      "Longitudinal",
+      "Transversal",
+      "Electromagnética"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué famoso hacker creó el virus ‘ILOVEYOU’?",
+    "opts": [
+      "Onel de Guzman",
+      "Kevin Mitnick",
+      "Julian Assange"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego introdujo el personaje de Pyramid Head?",
+    "opts": [
+      "Silent Hill",
+      "Resident Evil",
+      "Fatal Frame"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué neurotransmisor ayuda a regular el sueño?",
+    "opts": [
+      "Melatonina",
+      "Adrenalina",
+      "Gaba"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué director filmó ‘El Club de la Pelea’?",
+    "opts": [
+      "David Fincher",
+      "Christopher Nolan",
+      "Quentin Tarantino"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué metal es líquido a temperatura ambiente?",
+    "opts": [
+      "Mercurio",
+      "Plomo",
+      "Estaño"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego se desarrolla en Rapture, una ciudad submarina?",
+    "opts": [
+      "Bioshock",
+      "Subnautica",
+      "Fallout"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué cantante murió a los 27 años en 1970?",
+    "opts": [
+      "Jimi Hendrix",
+      "Jim Morrison",
+      "Kurt Cobain"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa la palabra ‘karma’?",
+    "opts": [
+      "Consecuencia moral",
+      "Destino divino",
+      "Ciclo del alma"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué emoción suele activar la amígdala cerebral?",
+    "opts": [
+      "Miedo",
+      "Alegría",
+      "Tristeza"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué creador dirigió ‘Blade Runner’?",
+    "opts": [
+      "Ridley Scott",
+      "Stanley Kubrick",
+      "Steven Spielberg"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué gas se usa para inflar globos?",
+    "opts": [
+      "Helio",
+      "Hidrógeno",
+      "Nitrógeno"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué cantante fue conocido como ‘El Duque Blanco’?",
+    "opts": [
+      "David Bowie",
+      "Prince",
+      "Freddie Mercury"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué país desarrolló la filosofía del ‘Bushido’?",
+    "opts": [
+      "Japón",
+      "China",
+      "Corea"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué término describe la pérdida de sentido por exceso de estímulo?",
+    "opts": [
+      "Entropía",
+      "Anhedonia",
+      "Alienación"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué famoso filósofo escribió ‘El mito de la caverna’?",
+    "opts": [
+      "Platón",
+      "Aristóteles",
+      "Sócrates"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego popularizó la frase ‘Would you kindly?’",
+    "opts": [
+      "Bioshock",
+      "Half-Life",
+      "Dishonored"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué director filmó ‘Memento’?",
+    "opts": [
+      "Christopher Nolan",
+      "David Lynch",
+      "Fincher"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué hormona regula el estrés?",
+    "opts": [
+      "Cortisol",
+      "Insulina",
+      "Serotonina"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué movimiento artístico representaba sueños y lo irracional?",
+    "opts": [
+      "Surrealismo",
+      "Cubismo",
+      "Expresionismo"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué término describe el miedo a los espacios abiertos?",
+    "opts": [
+      "Agorafobia",
+      "Claustrofobia",
+      "Acrofobia"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué escritor es autor de ‘1984’?",
+    "opts": [
+      "George Orwell",
+      "Aldous Huxley",
+      "Bradbury"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego se ambienta en Night City?",
+    "opts": [
+      "Cyberpunk 2077",
+      "Deus Ex",
+      "Watch Dogs"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué pintura famosa representa un sueño con relojes derretidos?",
+    "opts": [
+      "La persistencia de la memoria",
+      "Guernica",
+      "El grito"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué personaje representa la dualidad entre ciencia y monstruo?",
+    "opts": [
+      "Dr. Jekyll y Mr. Hyde",
+      "Frankenstein",
+      "Nosferatu"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué banda lanzó el álbum ‘The Wall’?",
+    "opts": [
+      "Pink Floyd",
+      "Led Zeppelin",
+      "The Who"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué creador teórico acuñó el término ‘Simulacro’?",
+    "opts": [
+      "Baudrillard",
+      "Foucault",
+      "Lyotard"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego introdujo el concepto de karma y moralidad en las decisiones?",
+    "opts": [
+      "Fable",
+      "Skyrim",
+      "Mass Effect"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué sustancia produce euforia y sensación de poder?",
+    "opts": [
+      "Adrenalina",
+      "Dopamina",
+      "Endorfina"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué animal simboliza la transformación en muchas culturas?",
+    "opts": [
+      "Mariposa",
+      "Búho",
+      "Lobo"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué creador desarrolló el psicoanálisis?",
+    "opts": [
+      "Freud",
+      "Jung",
+      "Lacan"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué serie mezcla violencia, sátira y superhéroes corruptos?",
+    "opts": [
+      "The Boys",
+      "Doom Patrol",
+      "Watchmen"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué escritor fue conocido por su concepto del ‘superhombre’?",
+    "opts": [
+      "Nietzsche",
+      "Schopenhauer",
+      "Heidegger"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué fenómeno ocurre cuando sueñas que caes?",
+    "opts": [
+      "Sacudida hipnagógica",
+      "Parálisis del sueño",
+      "Déjà vu"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego usa ‘Rapture’ como metáfora de utopía fallida?",
+    "opts": [
+      "Bioshock",
+      "Fallout",
+      "Prey"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué serie explora la cultura hacker?",
+    "opts": [
+      "Mr. Robot",
+      "Black Mirror",
+      "Silicon Valley"
+    ],
+    "answer": 0
+  },
   {
     "q": "¿En qué año fue lanzado 'The Legend of Zelda: Ocarina of Time'?",
-    "opts": ["1996", "1998", "2000"],
+    "opts": [
+      "1996",
+      "1998",
+      "2000"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cómo se llama el protagonista de la saga 'Devil May Cry'?",
-    "opts": ["Kratos", "Dante", "Vergil"],
+    "opts": [
+      "Kratos",
+      "Dante",
+      "Vergil"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál es el nombre del villano principal en 'Final Fantasy VII'?",
-    "opts": ["Kefka", "Sephiroth", "Ultimecia"],
+    "opts": [
+      "Kefka",
+      "Sephiroth",
+      "Ultimecia"
+    ],
     "answer": 1
   },
   {
     "q": "En 'The Witcher 3', ¿a quién busca Geralt durante gran parte del juego?",
-    "opts": ["Yennefer", "Ciri", "Triss"],
+    "opts": [
+      "Yennefer",
+      "Ciri",
+      "Triss"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuántos Chaos Emeralds existen en el universo de Sonic?",
-    "opts": ["6", "7", "8"],
+    "opts": [
+      "6",
+      "7",
+      "8"
+    ],
     "answer": 1
   },
   {
     "q": "¿En qué ciudad ficticia transcurre 'GTA V'?",
-    "opts": ["Vice City", "Los Santos", "Liberty City"],
+    "opts": [
+      "Vice City",
+      "Los Santos",
+      "Liberty City"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué estudio desarrolló 'Bloodborne'?",
-    "opts": ["Naughty Dog", "FromSoftware", "CD Projekt Red"],
+    "opts": [
+      "Naughty Dog",
+      "FromSoftware",
+      "CD Projekt Red"
+    ],
     "answer": 1
   },
   {
     "q": "En 'Halo', ¿cuál es la designación numérica del Master Chief?",
-    "opts": ["John-115", "John-117", "Mark-117"],
+    "opts": [
+      "John-115",
+      "John-117",
+      "Mark-117"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué personaje de 'Mortal Kombat' grita '¡Get over here!' al lanzar su arpón?",
-    "opts": ["Sub-Zero", "Scorpion", "Noob Saibot"],
+    "opts": [
+      "Sub-Zero",
+      "Scorpion",
+      "Noob Saibot"
+    ],
     "answer": 1
   },
   {
     "q": "En 'Metal Gear Solid', ¿cuál es el nombre real de Solid Snake?",
-    "opts": ["David", "Jack", "John"],
+    "opts": [
+      "David",
+      "Jack",
+      "John"
+    ],
     "answer": 0
   },
   {
     "q": "¿Qué juego popularizó el género Battle Royale con partidas de 100 jugadores en PC?",
-    "opts": ["Fortnite", "PUBG", "H1Z1"],
+    "opts": [
+      "Fortnite",
+      "PUBG",
+      "H1Z1"
+    ],
     "answer": 1
   },
   {
     "q": "En 'God of War' (2018), ¿cómo se llama el hijo de Kratos?",
-    "opts": ["Calliope", "Atreus", "Deimos"],
+    "opts": [
+      "Calliope",
+      "Atreus",
+      "Deimos"
+    ],
     "answer": 1
   },
   {
     "q": "¿En qué consola fue lanzado originalmente 'Super Mario 64'?",
-    "opts": ["SNES", "Nintendo 64", "GameCube"],
+    "opts": [
+      "SNES",
+      "Nintendo 64",
+      "GameCube"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál es el jefe final de 'Elden Ring'?",
-    "opts": ["Malenia", "Elden Beast", "Morgott"],
+    "opts": [
+      "Malenia",
+      "Elden Beast",
+      "Morgott"
+    ],
     "answer": 1
   },
   {
     "q": "¿En qué franquicia aparece el personaje conocido como 'Doomslayer'?",
-    "opts": ["Quake", "DOOM", "Half-Life"],
+    "opts": [
+      "Quake",
+      "DOOM",
+      "Half-Life"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuántos jugadores forman cada equipo en 'League of Legends'?",
-    "opts": ["3", "5", "6"],
+    "opts": [
+      "3",
+      "5",
+      "6"
+    ],
     "answer": 1
   },
   {
     "q": "En 'Cyberpunk 2077', ¿en qué ciudad futurista transcurre la historia?",
-    "opts": ["Neo Tokyo", "Night City", "Nova York"],
+    "opts": [
+      "Neo Tokyo",
+      "Night City",
+      "Nova York"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál es el nombre del protagonista de 'Red Dead Redemption 2'?",
-    "opts": ["John Marston", "Arthur Morgan", "Dutch van der Linde"],
+    "opts": [
+      "John Marston",
+      "Arthur Morgan",
+      "Dutch van der Linde"
+    ],
     "answer": 1
   },
   {
     "q": "En 'Metal Gear Solid V', ¿cómo se llama la organización de mercenarios que lidera Big Boss?",
-    "opts": ["FOXHOUND", "Diamond Dogs", "Outer Heaven"],
+    "opts": [
+      "FOXHOUND",
+      "Diamond Dogs",
+      "Outer Heaven"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué power-up otorga invencibilidad temporal a Mario en la saga clásica?",
-    "opts": ["Super Mushroom", "Super Star", "Fire Flower"],
+    "opts": [
+      "Super Mushroom",
+      "Super Star",
+      "Fire Flower"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál es el apellido del protagonista Eren en 'Attack on Titan'?",
-    "opts": ["Ackerman", "Yeager", "Braun"],
+    "opts": [
+      "Ackerman",
+      "Yeager",
+      "Braun"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuántas bolas de dragón se necesitan para invocar a Shenron en 'Dragon Ball'?",
-    "opts": ["5", "7", "9"],
+    "opts": [
+      "5",
+      "7",
+      "9"
+    ],
     "answer": 1
   },
   {
     "q": "En el universo Marvel, ¿cuál es el nombre real de Iron Man?",
-    "opts": ["Bruce Banner", "Tony Stark", "Steve Rogers"],
+    "opts": [
+      "Bruce Banner",
+      "Tony Stark",
+      "Steve Rogers"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué personaje de DC Comics es conocido como 'El Caballero Oscuro'?",
-    "opts": ["Superman", "Batman", "Green Lantern"],
+    "opts": [
+      "Superman",
+      "Batman",
+      "Green Lantern"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cómo se llama el Hokage Séptimo en el universo de 'Naruto'?",
-    "opts": ["Kakashi Hatake", "Naruto Uzumaki", "Minato Namikaze"],
+    "opts": [
+      "Kakashi Hatake",
+      "Naruto Uzumaki",
+      "Minato Namikaze"
+    ],
     "answer": 1
   },
   {
     "q": "¿En qué año se estrenó la primera película del MCU, 'Iron Man'?",
-    "opts": ["2005", "2008", "2010"],
+    "opts": [
+      "2005",
+      "2008",
+      "2010"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué otorgan los frutos del diablo en 'One Piece' a cambio de poderes?",
-    "opts": ["La vista", "La capacidad de nadar", "La memoria"],
+    "opts": [
+      "La vista",
+      "La capacidad de nadar",
+      "La memoria"
+    ],
     "answer": 1
   },
   {
     "q": "En 'Demon Slayer', ¿cuál es el apellido del protagonista Tanjiro?",
-    "opts": ["Hashibira", "Kamado", "Agatsuma"],
+    "opts": [
+      "Hashibira",
+      "Kamado",
+      "Agatsuma"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué supervillano de Marvel colecciona las Gemas del Infinito?",
-    "opts": ["Galactus", "Thanos", "Dormammu"],
+    "opts": [
+      "Galactus",
+      "Thanos",
+      "Dormammu"
+    ],
     "answer": 1
   },
   {
     "q": "En 'Death Note', ¿cómo se llama el Dios de la Muerte que entrega la libreta a Light Yagami?",
-    "opts": ["Rem", "Ryuk", "Gelus"],
+    "opts": [
+      "Rem",
+      "Ryuk",
+      "Gelus"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál es el nombre real del superhéroe Daredevil en Marvel Comics?",
-    "opts": ["Frank Castle", "Matt Murdock", "Danny Rand"],
+    "opts": [
+      "Frank Castle",
+      "Matt Murdock",
+      "Danny Rand"
+    ],
     "answer": 1
   },
   {
     "q": "En 'Fullmetal Alchemist: Brotherhood', ¿qué extremidades pierde Edward Elric durante la transmutación humana fallida?",
-    "opts": ["Brazo y pierna derechos", "Brazo derecho y pierna izquierda", "Ambas piernas"],
+    "opts": [
+      "Brazo y pierna derechos",
+      "Brazo derecho y pierna izquierda",
+      "Ambas piernas"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuántos Anillos de Poder recibieron los Enanos en 'El Señor de los Anillos'?",
-    "opts": ["5", "7", "9"],
+    "opts": [
+      "5",
+      "7",
+      "9"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál es el nombre del arma tipo hacha que Thor obtiene en 'Avengers: Infinity War'?",
-    "opts": ["Stormbreaker", "Gungnir", "Hofund"],
+    "opts": [
+      "Stormbreaker",
+      "Gungnir",
+      "Hofund"
+    ],
     "answer": 0
   },
   {
     "q": "¿En qué ciudad ficticia vive Spider-Man principalmente?",
-    "opts": ["Gotham City", "Nueva York", "Metrópolis"],
+    "opts": [
+      "Gotham City",
+      "Nueva York",
+      "Metrópolis"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál es el sistema operativo desarrollado por Apple para sus computadoras Mac?",
-    "opts": ["iOS", "macOS", "Linux"],
+    "opts": [
+      "iOS",
+      "macOS",
+      "Linux"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué significa el acrónimo 'GPU'?",
-    "opts": ["Global Processing Unit", "Graphics Processing Unit", "General Purpose Unit"],
+    "opts": [
+      "Global Processing Unit",
+      "Graphics Processing Unit",
+      "General Purpose Unit"
+    ],
     "answer": 1
   },
   {
     "q": "¿En qué año fue fundada la empresa Tesla?",
-    "opts": ["2000", "2003", "2007"],
+    "opts": [
+      "2000",
+      "2003",
+      "2007"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuántos bits tiene un byte?",
-    "opts": ["4", "8", "16"],
+    "opts": [
+      "4",
+      "8",
+      "16"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué empresa desarrolló el chip M1 para computadoras?",
-    "opts": ["Intel", "Apple", "AMD"],
+    "opts": [
+      "Intel",
+      "Apple",
+      "AMD"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál es el lenguaje de programación más utilizado en el lado del cliente web?",
-    "opts": ["Python", "JavaScript", "Java"],
+    "opts": [
+      "Python",
+      "JavaScript",
+      "Java"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué significa la 'S' en HTTPS?",
-    "opts": ["Server", "Secure", "Standard"],
+    "opts": [
+      "Server",
+      "Secure",
+      "Standard"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuántos GB equivale 1 Terabyte?",
-    "opts": ["512 GB", "1024 GB", "2048 GB"],
+    "opts": [
+      "512 GB",
+      "1024 GB",
+      "2048 GB"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué tecnología inalámbrica se usa principalmente para conectar auriculares y teclados a corta distancia?",
-    "opts": ["Wi-Fi", "Bluetooth", "NFC"],
+    "opts": [
+      "Wi-Fi",
+      "Bluetooth",
+      "NFC"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué empresa creó el sistema operativo Android?",
-    "opts": ["Apple", "Google", "Microsoft"],
+    "opts": [
+      "Apple",
+      "Google",
+      "Microsoft"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuántos rounds dura una pelea de campeonato en la UFC?",
-    "opts": ["3", "5", "7"],
+    "opts": [
+      "3",
+      "5",
+      "7"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué luchador de MMA apodado 'The Eagle' terminó su carrera invicto?",
-    "opts": ["Jon Jones", "Khabib Nurmagomedov", "Georges St-Pierre"],
+    "opts": [
+      "Jon Jones",
+      "Khabib Nurmagomedov",
+      "Georges St-Pierre"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuántos jugadores de campo (sin portero) tiene un equipo de fútbol en cancha?",
-    "opts": ["9", "10", "11"],
+    "opts": [
+      "9",
+      "10",
+      "11"
+    ],
     "answer": 1
   },
   {
     "q": "¿En qué país nació Lionel Messi?",
-    "opts": ["Brasil", "Argentina", "Uruguay"],
+    "opts": [
+      "Brasil",
+      "Argentina",
+      "Uruguay"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuántas Copas del Mundo ha ganado Brasil en fútbol?",
-    "opts": ["4", "5", "6"],
+    "opts": [
+      "4",
+      "5",
+      "6"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál es el evento anual más importante de la WWE?",
-    "opts": ["Royal Rumble", "WrestleMania", "SummerSlam"],
+    "opts": [
+      "Royal Rumble",
+      "WrestleMania",
+      "SummerSlam"
+    ],
     "answer": 1
   },
   {
     "q": "¿En qué división de peso compite principalmente Canelo Álvarez?",
-    "opts": ["Peso medio", "Supermediano", "Crucero"],
+    "opts": [
+      "Peso medio",
+      "Supermediano",
+      "Crucero"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué país ganó la Copa del Mundo de fútbol Qatar 2022?",
-    "opts": ["Francia", "Argentina", "Brasil"],
+    "opts": [
+      "Francia",
+      "Argentina",
+      "Brasil"
+    ],
     "answer": 1
   },
   {
     "q": "¿Con qué técnica de sumisión finalizó Khabib Nurmagomedov la mayoría de sus peleas?",
-    "opts": ["Rear Naked Choke", "Arm Triangle", "Guillotine"],
+    "opts": [
+      "Rear Naked Choke",
+      "Arm Triangle",
+      "Guillotine"
+    ],
     "answer": 0
   },
   {
     "q": "¿Cuántos títulos necesita un jugador para completar el 'Golden Slam' en tenis?",
-    "opts": ["4", "5", "6"],
+    "opts": [
+      "4",
+      "5",
+      "6"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué significa el acrónimo 'BMW'?",
-    "opts": ["British Motor Works", "Bayerische Motoren Werke", "Berlin Motor Works"],
+    "opts": [
+      "British Motor Works",
+      "Bayerische Motoren Werke",
+      "Berlin Motor Works"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál es la marca de motocicletas famosa por su motor V-Twin y su sonido característico?",
-    "opts": ["Ducati", "Harley-Davidson", "Honda"],
+    "opts": [
+      "Ducati",
+      "Harley-Davidson",
+      "Honda"
+    ],
     "answer": 1
   },
   {
     "q": "¿En qué país nació la marca de autos deportivos Lamborghini?",
-    "opts": ["Alemania", "Italia", "España"],
+    "opts": [
+      "Alemania",
+      "Italia",
+      "España"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué marca produce el icónico modelo de auto deportivo '911'?",
-    "opts": ["Ferrari", "Porsche", "McLaren"],
+    "opts": [
+      "Ferrari",
+      "Porsche",
+      "McLaren"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué marca japonesa fabrica la motocicleta 'Hayabusa'?",
-    "opts": ["Kawasaki", "Suzuki", "Yamaha"],
+    "opts": [
+      "Kawasaki",
+      "Suzuki",
+      "Yamaha"
+    ],
     "answer": 1
   },
   {
     "q": "¿En qué año fue lanzado el primer Tesla Roadster original?",
-    "opts": ["2006", "2008", "2010"],
+    "opts": [
+      "2006",
+      "2008",
+      "2010"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué significa 'GTI' en los automóviles Volkswagen?",
-    "opts": ["Gran Turbo Integral", "Gran Turismo Inyección", "Grand Touring International"],
+    "opts": [
+      "Gran Turbo Integral",
+      "Gran Turismo Inyección",
+      "Grand Touring International"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuántos cilindros tiene el motor del Ferrari 488?",
-    "opts": ["6", "8", "10"],
+    "opts": [
+      "6",
+      "8",
+      "10"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál es la potencia aproximada del motor del Bugatti Chiron en caballos de fuerza?",
-    "opts": ["1,000 hp", "1,500 hp", "2,000 hp"],
+    "opts": [
+      "1,000 hp",
+      "1,500 hp",
+      "2,000 hp"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué grupo automotriz es dueño de las marcas Rolls-Royce y Mini?",
-    "opts": ["Mercedes-Benz", "BMW", "Volkswagen"],
+    "opts": [
+      "Mercedes-Benz",
+      "BMW",
+      "Volkswagen"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cómo se llamaba la banda de Linkin Park antes de adoptar ese nombre?",
-    "opts": ["Hybrid Theory", "Xero", "Meteora"],
+    "opts": [
+      "Hybrid Theory",
+      "Xero",
+      "Meteora"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuántos miembros tiene la banda Metallica en su formación actual?",
-    "opts": ["3", "4", "5"],
+    "opts": [
+      "3",
+      "4",
+      "5"
+    ],
     "answer": 1
   },
   {
     "q": "¿Quién es el vocalista y guitarrista principal de Queens of the Stone Age?",
-    "opts": ["Dave Grohl", "Josh Homme", "Jack White"],
+    "opts": [
+      "Dave Grohl",
+      "Josh Homme",
+      "Jack White"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál fue el álbum debut de Eminem lanzado en 1996?",
-    "opts": ["The Slim Shady LP", "Infinite", "Marshall Mathers LP"],
+    "opts": [
+      "The Slim Shady LP",
+      "Infinite",
+      "Marshall Mathers LP"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué DJ de EDM lanzó el hit 'Levels' en 2011?",
-    "opts": ["Skrillex", "Avicii", "Deadmau5"],
+    "opts": [
+      "Skrillex",
+      "Avicii",
+      "Deadmau5"
+    ],
     "answer": 1
   },
   {
     "q": "¿En qué año murió Kurt Cobain, vocalista de Nirvana?",
-    "opts": ["1992", "1994", "1996"],
+    "opts": [
+      "1992",
+      "1994",
+      "1996"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuántos integrantes tenía la formación clásica de Queen?",
-    "opts": ["3", "4", "5"],
+    "opts": [
+      "3",
+      "4",
+      "5"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué instrumento toca Slash en Guns N' Roses?",
-    "opts": ["Bajo", "Guitarra", "Batería"],
+    "opts": [
+      "Bajo",
+      "Guitarra",
+      "Batería"
+    ],
     "answer": 1
   },
   {
     "q": "¿Quién es conocido como el 'God of Thunder' en la banda KISS?",
-    "opts": ["Paul Stanley", "Gene Simmons", "Ace Frehley"],
+    "opts": [
+      "Paul Stanley",
+      "Gene Simmons",
+      "Ace Frehley"
+    ],
     "answer": 1
   },
   {
     "q": "¿En qué álbum (soundtrack) aparece la canción 'Lose Yourself' de Eminem?",
-    "opts": ["The Eminem Show", "8 Mile", "Encore"],
+    "opts": [
+      "The Eminem Show",
+      "8 Mile",
+      "Encore"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál es el nombre de la luna boscosa donde viven los Ewoks en 'Star Wars'?",
-    "opts": ["Tatooine", "Endor", "Hoth"],
+    "opts": [
+      "Tatooine",
+      "Endor",
+      "Hoth"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cómo se llama la cuarta película de 'The Matrix' estrenada en 2021?",
-    "opts": ["The Matrix Reloaded", "The Matrix Resurrections", "The Matrix Revolutions"],
+    "opts": [
+      "The Matrix Reloaded",
+      "The Matrix Resurrections",
+      "The Matrix Revolutions"
+    ],
     "answer": 1
   },
   {
     "q": "¿Quién interpreta a Tony Stark / Iron Man en el MCU?",
-    "opts": ["Chris Evans", "Robert Downey Jr.", "Mark Ruffalo"],
+    "opts": [
+      "Chris Evans",
+      "Robert Downey Jr.",
+      "Mark Ruffalo"
+    ],
     "answer": 1
   },
   {
     "q": "En 'Interstellar', ¿cuál es el nombre del robot IA principal que acompaña a los astronautas?",
-    "opts": ["HAL", "TARS", "CASE"],
+    "opts": [
+      "HAL",
+      "TARS",
+      "CASE"
+    ],
     "answer": 1
   },
   {
     "q": "¿En qué año fue lanzada la primera película de 'Avatar' de James Cameron?",
-    "opts": ["2007", "2009", "2011"],
+    "opts": [
+      "2007",
+      "2009",
+      "2011"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cómo se llama el planeta natal de Superman?",
-    "opts": ["Apokolips", "Krypton", "New Genesis"],
+    "opts": [
+      "Apokolips",
+      "Krypton",
+      "New Genesis"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál es el nombre de la nave espacial en la película 'Alien' (1979)?",
-    "opts": ["Prometheus", "Nostromo", "Covenant"],
+    "opts": [
+      "Prometheus",
+      "Nostromo",
+      "Covenant"
+    ],
     "answer": 1
   },
   {
     "q": "En 'Blade Runner 2049', ¿quién interpreta al personaje K?",
-    "opts": ["Harrison Ford", "Ryan Gosling", "Jared Leto"],
+    "opts": [
+      "Harrison Ford",
+      "Ryan Gosling",
+      "Jared Leto"
+    ],
     "answer": 1
   },
   {
     "q": "En 'Back to the Future', ¿a qué año viaja Marty McFly en la primera película?",
-    "opts": ["1945", "1955", "1885"],
+    "opts": [
+      "1945",
+      "1955",
+      "1885"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cómo se llama el arma planetaria de la Primera Orden en 'Star Wars: The Force Awakens'?",
-    "opts": ["Death Star", "Starkiller Base", "Star Destroyer"],
+    "opts": [
+      "Death Star",
+      "Starkiller Base",
+      "Star Destroyer"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuántos lados tiene un dado d20 usado en Dungeons & Dragons?",
-    "opts": ["12", "20", "24"],
+    "opts": [
+      "12",
+      "20",
+      "24"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál es el nombre del creador original de 'Minecraft'?",
-    "opts": ["Notch", "Jeb", "Todd Howard"],
+    "opts": [
+      "Notch",
+      "Jeb",
+      "Todd Howard"
+    ],
     "answer": 0
   },
   {
     "q": "¿Qué significa 'RPG' en el contexto de los videojuegos?",
-    "opts": ["Rocket Propelled Game", "Role Playing Game", "Random Player Game"],
+    "opts": [
+      "Rocket Propelled Game",
+      "Role Playing Game",
+      "Random Player Game"
+    ],
     "answer": 1
   },
   {
     "q": "¿En qué año fue fundada Nvidia?",
-    "opts": ["1990", "1993", "1998"],
+    "opts": [
+      "1990",
+      "1993",
+      "1998"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál es el nombre del lenguaje de programación creado por Guido van Rossum?",
-    "opts": ["Ruby", "Python", "Perl"],
+    "opts": [
+      "Ruby",
+      "Python",
+      "Perl"
+    ],
     "answer": 1
   },
   {
     "q": "¿De qué país es originaria la bebida 'Sake'?",
-    "opts": ["China", "Japón", "Corea"],
+    "opts": [
+      "China",
+      "Japón",
+      "Corea"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuál es el ingrediente principal del guacamole?",
-    "opts": ["Jitomate", "Aguacate", "Chile"],
+    "opts": [
+      "Jitomate",
+      "Aguacate",
+      "Chile"
+    ],
     "answer": 1
   },
   {
     "q": "¿De qué país es originaria la bebida 'Bourbon'?",
-    "opts": ["Escocia", "Irlanda", "Estados Unidos"],
+    "opts": [
+      "Escocia",
+      "Irlanda",
+      "Estados Unidos"
+    ],
     "answer": 2
   },
   {
     "q": "¿Qué tipo de queso se usa en una pizza Margherita tradicional?",
-    "opts": ["Cheddar", "Mozzarella", "Parmesano"],
+    "opts": [
+      "Cheddar",
+      "Mozzarella",
+      "Parmesano"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuántos años mínimo debe madurar un whisky escocés para llamarse legalmente 'Scotch'?",
-    "opts": ["1 año", "3 años", "5 años"],
+    "opts": [
+      "1 año",
+      "3 años",
+      "5 años"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cómo se llama el estilo de ramen con caldo hecho de huesos de cerdo?",
-    "opts": ["Shoyu", "Tonkotsu", "Miso"],
+    "opts": [
+      "Shoyu",
+      "Tonkotsu",
+      "Miso"
+    ],
     "answer": 1
   },
   {
     "q": "¿Cuántos tipos de licor base contiene un 'Long Island Iced Tea' tradicional?",
-    "opts": ["3", "5", "7"],
+    "opts": [
+      "3",
+      "5",
+      "7"
+    ],
     "answer": 1
   },
   {
     "q": "¿Qué significa 'IPA' en el contexto de las cervezas artesanales?",
-    "opts": ["Indian Premium Ale", "India Pale Ale", "International Pale Ale"],
+    "opts": [
+      "Indian Premium Ale",
+      "India Pale Ale",
+      "International Pale Ale"
+    ],
     "answer": 1
   },
   {
     "q": "¿De qué país es originaria la carne 'Wagyu'?",
-    "opts": ["Australia", "Japón", "Argentina"],
+    "opts": [
+      "Australia",
+      "Japón",
+      "Argentina"
+    ],
     "answer": 1
   },
   {
     "q": "¿En qué estado de México se produce principalmente el mezcal artesanal?",
-    "opts": ["Jalisco", "Oaxaca", "Veracruz"],
+    "opts": [
+      "Jalisco",
+      "Oaxaca",
+      "Veracruz"
+    ],
     "answer": 1
   },
-  { "q": "¿Qué filósofo habló del ‘eterno retorno’?", "opts": ["Nietzsche", "Heidegger", "Kierkegaard"], "answer": 0 },
-  { "q": "¿Qué banda popularizó la canción ‘Smells Like Teen Spirit’?", "opts": ["Nirvana", "Pearl Jam", "Soundgarden"], "answer": 0 },
-  { "q": "¿Qué significa ‘memento mori’?", "opts": ["Recuerda que morirás", "Recuerda que amas", "Recuerda vivir"], "answer": 0 },
-  { "q": "¿Qué fenómeno es soñar dentro de un sueño?", "opts": ["Sueño lúcido", "Meta-sueño", "Fantasía REM"], "answer": 1 },
-  { "q": "¿Qué serie usa espejos como metáfora de identidad?", "opts": ["Black Mirror", "Dark", "Westworld"], "answer": 0 },
-  { "q": "¿Qué neurotransmisor se activa con el amor romántico?", "opts": ["Dopamina", "Adrenalina", "Serotonina"], "answer": 0 },
-  { "q": "¿Qué disciplina estudia la conducta del inconsciente?", "opts": ["Psicoanálisis", "Neuropsicología", "Sociología"], "answer": 0 },
-  { "q": "¿Qué videojuego hace referencia a la manipulación del tiempo?", "opts": ["Braid", "Control", "Quantum Break"], "answer": 0 },
-  { "q": "¿Qué animal simboliza la dualidad en el yin y yang?", "opts": ["Dragón y tigre", "Serpiente y águila", "Zorro y cuervo"], "answer": 0 },
-  { "q": "¿Qué filósofo habló del 'hombre alienado'?", "opts": ["Marx", "Nietzsche", "Camus"], "answer": 0 },
-
-  { "q": "¿Qué libro inicia con ‘El hombre es un ser condenado a ser libre’?", "opts": ["El ser y la nada", "El extranjero", "El mito de Sísifo"], "answer": 0 },
-  { "q": "¿Qué videojuego usa una máscara de calavera como símbolo?", "opts": ["Majora’s Mask", "Dark Souls", "Hollow Knight"], "answer": 0 },
-  { "q": "¿Qué serie explora el multiverso y la autodestrucción?", "opts": ["Rick and Morty", "Loki", "Dark"], "answer": 0 },
-  { "q": "¿Qué movimiento musical surgió del post-punk y la melancolía?", "opts": ["Goth", "Grunge", "New Wave"], "answer": 0 },
-  { "q": "¿Qué término describe la sensación de haber vivido algo antes?", "opts": ["Déjà vu", "Jamais vu", "Paramnesia"], "answer": 0 },
-  { "q": "¿Qué artista dijo ‘el arte es la mentira que nos hace ver la verdad’?", "opts": ["Picasso", "Dalí", "Warhol"], "answer": 0 },
-  { "q": "¿Qué videojuego plantea dilemas sobre moralidad y biotecnología?", "opts": ["Deus Ex", "Bioshock", "Cyberpunk 2077"], "answer": 1 },
-  { "q": "¿Qué personaje mitológico representa el deseo incontrolable?", "opts": ["Eros", "Pan", "Hades"], "answer": 0 },
-  { "q": "¿Qué tipo de sueño ocurre cuando eres consciente de estar soñando?", "opts": ["Sueño lúcido", "Parálisis", "Hipnosis"], "answer": 0 },
-  { "q": "¿Qué teoría sostiene que vivimos en una simulación?", "opts": ["Hipótesis de Bostrom", "Teoría del holograma", "Principio antrópico"], "answer": 0 }
+  {
+    "q": "¿Qué filósofo habló del ‘eterno retorno’?",
+    "opts": [
+      "Nietzsche",
+      "Heidegger",
+      "Kierkegaard"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué banda popularizó la canción ‘Smells Like Teen Spirit’?",
+    "opts": [
+      "Nirvana",
+      "Pearl Jam",
+      "Soundgarden"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa ‘memento mori’?",
+    "opts": [
+      "Recuerda que morirás",
+      "Recuerda que amas",
+      "Recuerda vivir"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué fenómeno es soñar dentro de un sueño?",
+    "opts": [
+      "Sueño lúcido",
+      "Meta-sueño",
+      "Fantasía REM"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué serie usa espejos como metáfora de identidad?",
+    "opts": [
+      "Black Mirror",
+      "Dark",
+      "Westworld"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué neurotransmisor se activa con el amor romántico?",
+    "opts": [
+      "Dopamina",
+      "Adrenalina",
+      "Serotonina"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué disciplina estudia la conducta del inconsciente?",
+    "opts": [
+      "Psicoanálisis",
+      "Neuropsicología",
+      "Sociología"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego hace referencia a la manipulación del tiempo?",
+    "opts": [
+      "Braid",
+      "Control",
+      "Quantum Break"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué animal simboliza la dualidad en el yin y yang?",
+    "opts": [
+      "Dragón y tigre",
+      "Serpiente y águila",
+      "Zorro y cuervo"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué filósofo habló del 'hombre alienado'?",
+    "opts": [
+      "Marx",
+      "Nietzsche",
+      "Camus"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué libro inicia con ‘El hombre es un ser condenado a ser libre’?",
+    "opts": [
+      "El ser y la nada",
+      "El extranjero",
+      "El mito de Sísifo"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego usa una máscara de calavera como símbolo?",
+    "opts": [
+      "Majora’s Mask",
+      "Dark Souls",
+      "Hollow Knight"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué serie explora el multiverso y la autodestrucción?",
+    "opts": [
+      "Rick and Morty",
+      "Loki",
+      "Dark"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué movimiento musical surgió del post-punk y la melancolía?",
+    "opts": [
+      "Goth",
+      "Grunge",
+      "New Wave"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué término describe la sensación de haber vivido algo antes?",
+    "opts": [
+      "Déjà vu",
+      "Jamais vu",
+      "Paramnesia"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué artista dijo ‘el arte es la mentira que nos hace ver la verdad’?",
+    "opts": [
+      "Picasso",
+      "Dalí",
+      "Warhol"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego plantea dilemas sobre moralidad y biotecnología?",
+    "opts": [
+      "Deus Ex",
+      "Bioshock",
+      "Cyberpunk 2077"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué personaje mitológico representa el deseo incontrolable?",
+    "opts": [
+      "Eros",
+      "Pan",
+      "Hades"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué tipo de sueño ocurre cuando eres consciente de estar soñando?",
+    "opts": [
+      "Sueño lúcido",
+      "Parálisis",
+      "Hipnosis"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué teoría sostiene que vivimos en una simulación?",
+    "opts": [
+      "Hipótesis de Bostrom",
+      "Teoría del holograma",
+      "Principio antrópico"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿En qué año se lanzó originalmente 'The Legend of Zelda: Breath of the Wild'?",
+    "opts": [
+      "2015",
+      "2017",
+      "2019"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué motor gráfico desarrolló Epic Games y es ampliamente usado en la industria actual?",
+    "opts": [
+      "Unity",
+      "CryEngine",
+      "Unreal Engine"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "¿Cuál es el nombre del protagonista principal de la saga 'Metal Gear'?",
+    "opts": [
+      "Solid Snake",
+      "Revolver Ocelot",
+      "Big Boss"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué estudio japonés desarrolló la saga 'Dark Souls'?",
+    "opts": [
+      "Capcom",
+      "FromSoftware",
+      "Square Enix"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el lenguaje de programación principal utilizado en el desarrollo de juegos con Unity?",
+    "opts": [
+      "C++",
+      "C#",
+      "Java"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "En 'Cyberpunk 2077', ¿en qué ciudad ficticia transcurre la historia?",
+    "opts": [
+      "Los Santos",
+      "Night City",
+      "Raccoon City"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué videojuego de 1998 popularizó el sigilo moderno y la narrativa cinematográfica?",
+    "opts": [
+      "Thief: The Dark Project",
+      "Metal Gear Solid",
+      "Splinter Cell"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué empresa tecnológica adquirió Activision Blizzard en 2023?",
+    "opts": [
+      "Sony",
+      "Microsoft",
+      "Tencent"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué consola de Nintendo introdujo el mando con vibración (Rumble Pak) como estándar masivo?",
+    "opts": [
+      "NES",
+      "Nintendo 64",
+      "GameCube"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué entrega de 'Assassin's Creed' se introdujo el combate naval como mecánica central?",
+    "opts": [
+      "Assassin's Creed III",
+      "Assassin's Creed IV: Black Flag",
+      "Assassin's Creed Odyssey"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué personaje de 'Street Fighter' es conocido por ejecutar el 'Shoryuken'?",
+    "opts": [
+      "Ken",
+      "Ryu",
+      "Guile"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué juego de lucha de 2001 revolucionó el género con el sistema 'Parry' y 'Super Arts'?",
+    "opts": [
+      "Street Fighter III: 3rd Strike",
+      "Tekken 3",
+      "Mortal Kombat: Deadly Alliance"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué desarrolladora independiente creó 'Hades' y 'Bastion'?",
+    "opts": [
+      "Supergiant Games",
+      "Team Cherry",
+      "Hello Games"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego recaudó aproximadamente 800 millones de dólares en sus primeras 24 horas?",
+    "opts": [
+      "Call of Duty: Modern Warfare 2",
+      "Grand Theft Auto V",
+      "Cyberpunk 2077"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué técnica de renderizado simula el rebote real de la luz para crear sombras y reflejos hiperrealistas?",
+    "opts": [
+      "Rasterización",
+      "Ray Tracing",
+      "Sombreado plano"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué película de 1999 dirigida por David Fincher se convirtió en un ícono del cine de culto?",
+    "opts": [
+      "The Game",
+      "Fight Club",
+      "Se7en"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Cómo se denomina el universo cinematográfico que culminó con 'Avengers: Endgame'?",
+    "opts": [
+      "DC Extended Universe",
+      "Marvel Cinematic Universe",
+      "Sony's Spider-Man Universe"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué película de animación japonesa de 1988 redefinió la producción de anime a nivel mundial?",
+    "opts": [
+      "Akira",
+      "Ghost in the Shell",
+      "Nausicaä del Valle del Viento"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿En qué serie de Netflix se volvió viral el juego 'Luz roja, luz verde' como prueba eliminatoria?",
+    "opts": [
+      "Alice in Borderland",
+      "Squid Game",
+      "The 8 Show"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué actor interpreta al protagonista de la saga 'John Wick'?",
+    "opts": [
+      "Keanu Reeves",
+      "Liam Neeson",
+      "Jason Statham"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Cuál es el nombre del villano principal en la trilogía original de 'Star Wars'?",
+    "opts": [
+      "Emperador Palpatine",
+      "Darth Vader",
+      "Darth Maul"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué película de Christopher Nolan explora la arquitectura de los sueños y la extracción de ideas?",
+    "opts": [
+      "Interstellar",
+      "Inception",
+      "Tenet"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué franquicia de terror presenta al personaje Freddy Krueger?",
+    "opts": [
+      "Viernes 13",
+      "A Nightmare on Elm Street",
+      "Halloween"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué serie de HBO es una precuela de 'Juego de Tronos' centrada en la guerra civil Targaryen?",
+    "opts": [
+      "House of the Dragon",
+      "The Witcher",
+      "The Last Kingdom"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué estudio de animación produjo 'Spider-Man: Into the Spider-Verse'?",
+    "opts": [
+      "Pixar",
+      "DreamWorks",
+      "Sony Pictures Animation"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "¿Qué película de 2014, dirigida por Alejandro G. Iñárritu, ganó el Oscar a Mejor Película y fue filmada como un plano secuencia continuo?",
+    "opts": [
+      "1917",
+      "Birdman",
+      "The Revenant"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué personaje de 'The Matrix' es interpretado por Laurence Fishburne?",
+    "opts": [
+      "Neo",
+      "Morpheus",
+      "Agent Smith"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es el título original en inglés de 'El Laberinto del Fauno'?",
+    "opts": [
+      "The Labyrinth",
+      "Pan's Labyrinth",
+      "The Devil's Backbone"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué película de 2023 de Christopher Nolan narra la creación de la bomba atómica?",
+    "opts": [
+      "Dunkirk",
+      "Oppenheimer",
+      "Tenet"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué protocolo de encriptación es el estándar actual para asegurar conexiones web (HTTPS)?",
+    "opts": [
+      "FTP",
+      "TLS",
+      "HTTP"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué tipo de ataque informático utiliza correos o sitios falsos para robar credenciales?",
+    "opts": [
+      "Phishing",
+      "DDoS",
+      "Ransomware"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué componente de hardware se especializa en el procesamiento y renderizado de gráficos?",
+    "opts": [
+      "CPU",
+      "GPU",
+      "RAM"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué lenguaje de programación domina el ecosistema de Node.js y el desarrollo web moderno?",
+    "opts": [
+      "Python",
+      "JavaScript",
+      "Ruby"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué tipo de almacenamiento utiliza memoria flash sin partes móviles para mayor velocidad?",
+    "opts": [
+      "HDD",
+      "SSD",
+      "Cinta magnética"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué criptomoneda fue la primera en implementar una red peer-to-peer descentralizada en 2009?",
+    "opts": [
+      "Ethereum",
+      "Bitcoin",
+      "Litecoin"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué método de autenticación verifica la identidad mediante rasgos biológicos únicos?",
+    "opts": [
+      "Autenticación de dos factores",
+      "Biometría",
+      "Token de hardware"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué empresa desarrolló el asistente virtual 'Alexa'?",
+    "opts": [
+      "Google",
+      "Amazon",
+      "Apple"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué estándar de conectividad inalámbrica sucesor de Wi-Fi 6/6E ofrece mayor ancho de banda y menor latencia?",
+    "opts": [
+      "Wi-Fi 5",
+      "Wi-Fi 6E",
+      "Wi-Fi 7"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "¿Qué tecnología enmascara la dirección IP y cifra el tráfico para proteger la privacidad en línea?",
+    "opts": [
+      "Proxy",
+      "VPN",
+      "Firewall"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué modelo de IA de código abierto desarrollado por Meta destaca en generación de lenguaje natural?",
+    "opts": [
+      "Llama",
+      "GPT-4",
+      "Claude"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué tipo de malware cifra archivos y exige un pago para restaurar el acceso?",
+    "opts": [
+      "Spyware",
+      "Ransomware",
+      "Adware"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué protocolo de red es fundamental para el envío de correos electrónicos?",
+    "opts": [
+      "HTTP",
+      "FTP",
+      "SMTP"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "¿Qué dispositivo fabrica objetos físicos capa por capa a partir de archivos digitales 3D?",
+    "opts": [
+      "Escáner 3D",
+      "Fresadora CNC",
+      "Impresora 3D"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "¿Qué banda británica lanzó el álbum conceptual 'The Dark Side of the Moon' en 1973?",
+    "opts": [
+      "Led Zeppelin",
+      "Pink Floyd",
+      "The Beatles"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué artista es conocido mundialmente como el 'Rey del Pop' por su álbum 'Thriller'?",
+    "opts": [
+      "Prince",
+      "Michael Jackson",
+      "David Bowie"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué subgénero del metal se caracteriza por blast beats, tempos rápidos y vocales guturales?",
+    "opts": [
+      "Black Metal",
+      "Death Metal",
+      "Thrash Metal"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué DJ y productor sueco popularizó la fusión de EDM con folk en 'Wake Me Up'?",
+    "opts": [
+      "Deadmau5",
+      "Avicii",
+      "Calvin Harris"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué rapero lanzó el aclamado álbum 'To Pimp a Butterfly' en 2015?",
+    "opts": [
+      "J. Cole",
+      "Kendrick Lamar",
+      "Drake"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué banda de grunge lanzó 'Nevermind' en 1991, cambiando el panorama del rock alternativo?",
+    "opts": [
+      "Pearl Jam",
+      "Nirvana",
+      "Soundgarden"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué artista de hip-hop es considerado uno de los principales exponentes del 'mumble rap' y trap melódico?",
+    "opts": [
+      "Kanye West",
+      "Future",
+      "Eminem"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué marca de guitarras es famosa por el modelo 'Les Paul' y su sonido cálido y sostenido?",
+    "opts": [
+      "Fender",
+      "Gibson",
+      "PRS"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué subgénero del EDM se identifica por un tempo de ~140 BPM y bajos pesados y oscilantes?",
+    "opts": [
+      "House",
+      "Dubstep",
+      "Trance"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué álbum visual de Beyoncé de 2016 es elogiado por su narrativa feminista y cinematografía?",
+    "opts": [
+      "B'Day",
+      "Lemonade",
+      "4"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué selección nacional ganó la Copa Mundial de la FIFA 2022?",
+    "opts": [
+      "Francia",
+      "Argentina",
+      "Brasil"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué organización sanciona las principales peleas de MMA a nivel global?",
+    "opts": [
+      "Bellator",
+      "UFC",
+      "ONE Championship"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué disciplina de fitness se basa en el dominio del peso corporal y progresión de habilidades calisténicas?",
+    "opts": [
+      "CrossFit",
+      "Calistenia",
+      "Pilates"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué luchador profesional es conocido como 'The Phenom' y mantuvo una racha histórica de 21-0 en WrestleMania?",
+    "opts": [
+      "Stone Cold Steve Austin",
+      "The Undertaker",
+      "Triple H"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué futbolista ha ganado la mayor cantidad de Balones de Oro en la historia?",
+    "opts": [
+      "Cristiano Ronaldo",
+      "Lionel Messi",
+      "Neymar"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué arte marcial brasileño se especializa en combate en el suelo y sumisiones articulares?",
+    "opts": [
+      "Muay Thai",
+      "Brazilian Jiu-Jitsu",
+      "Judo"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué torneo de tenis es el único Grand Slam que se juega sobre arcilla roja?",
+    "opts": [
+      "Wimbledon",
+      "Roland Garros",
+      "US Open"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué suplemento deportivo se utiliza comúnmente para aumentar la síntesis de proteínas post-entrenamiento?",
+    "opts": [
+      "Creatina",
+      "Proteína de suero",
+      "BCAAs"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué equipo de la NFL dominó la conferencia AFC durante más de dos décadas bajo el entrenador Bill Belichick?",
+    "opts": [
+      "Dallas Cowboys",
+      "New England Patriots",
+      "Green Bay Packers"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué disciplina combina natación, ciclismo y carrera en una sola competencia continua?",
+    "opts": [
+      "Pentatlón moderno",
+      "Triatlón",
+      "Duatlón"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué marca alemana es famosa por el modelo '911' y su configuración de motor trasero refrigerado por aire original?",
+    "opts": [
+      "BMW",
+      "Porsche",
+      "Audi"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué tipo de propulsión utilizan los vehículos Tesla para funcionar sin emisiones directas?",
+    "opts": [
+      "Híbrida enchufable",
+      "Eléctrica pura",
+      "Hidrógeno verde"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué fabricante japonés es reconocido por el modelo 'Civic' y su enfoque en eficiencia y confiabilidad?",
+    "opts": [
+      "Toyota",
+      "Honda",
+      "Nissan"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué sistema de tracción distribuye potencia a las cuatro ruedas para mejorar adherencia en curvas y superficies resbaladizas?",
+    "opts": [
+      "Tracción delantera",
+      "Tracción integral (AWD)",
+      "Tracción trasera"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué marca de motocicletas es sinónimo de estilo 'cruiser' y cultura rebelde estadounidense?",
+    "opts": [
+      "Yamaha",
+      "Harley-Davidson",
+      "Ducati"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué categoría de automovilismo representa la famosa carrera de las 24 Horas de Le Mans?",
+    "opts": [
+      "Fórmula 1",
+      "Carreras de resistencia",
+      "Rally"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué ciclo termodinámico describe el funcionamiento estándar de un motor de gasolina de cuatro tiempos?",
+    "opts": [
+      "Diésel",
+      "Wankel",
+      "Otto"
+    ],
+    "answer": 2
+  },
+  {
+    "q": "¿Qué sistema de asistencia al conductor mantiene automáticamente la distancia con el vehículo de adelante?",
+    "opts": [
+      "Asistente de mantenimiento de carril",
+      "Control de crucero adaptativo",
+      "Frenado automático de emergencia"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué marca italiana es famosa por sus motocicletas deportivas y el uso distintivo de motores en V a 90° (L-twin)?",
+    "opts": [
+      "Aprilia",
+      "Ducati",
+      "MV Agusta"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué principio de diseño automotriz reduce la resistencia al aire para optimizar velocidad y eficiencia?",
+    "opts": [
+      "Aerodinámica",
+      "Chasis monocasco",
+      "Suspensión activa"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué ciudad europea es tradicionalmente conocida como la 'Ciudad de la Luz'?",
+    "opts": [
+      "Londres",
+      "París",
+      "Roma"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué gastronomía se caracteriza por el uso de especias complejas, arroz basmati y hornos tandoor?",
+    "opts": [
+      "Tailandesa",
+      "India",
+      "Mexicana"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué bioma sudamericano abarca nueve países y alberga la mayor biodiversidad terrestre del planeta?",
+    "opts": [
+      "Pantanal",
+      "Amazonas",
+      "Cerrado"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué técnica culinaria francesa consiste en cocinar alimentos sellados al vacío a temperatura controlada?",
+    "opts": [
+      "Ahumado en frío",
+      "Sous-vide",
+      "Confit"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué destilado de uva envejecido en barrica de roble es originario de la región francesa que lleva su nombre?",
+    "opts": [
+      "Whisky",
+      "Cognac",
+      "Ron añejo"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué filosofía de vida promueve reducir posesiones para priorizar experiencias, libertad y bienestar mental?",
+    "opts": [
+      "Nomadismo digital",
+      "Minimalismo",
+      "Slow living"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué país africano es considerado la cuna botánica del café y donde se descubrió por primera vez?",
+    "opts": [
+      "Etiopía",
+      "Colombia",
+      "Vietnam"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué estilo de vida combina trabajo remoto con viajes prolongados por diferentes ciudades o países?",
+    "opts": [
+      "Ecoturismo",
+      "Nómada digital",
+      "Staycation"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué ingrediente base de la pasta artesanal italiana se obtiene exclusivamente de trigo duro?",
+    "opts": [
+      "Harina de arroz",
+      "Sémola de trigo duro",
+      "Maíz molido"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué fenómeno atmosférico polar ilumina el cielo nocturno con cortinas de colores verdes y violetas?",
+    "opts": [
+      "Aurora Austral",
+      "Aurora Boreal",
+      "Crepúsculo civil"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué plataforma de streaming lanzó series como 'The Witcher' y 'Stranger Things' bajo modelo de suscripción?",
+    "opts": [
+      "Amazon Prime Video",
+      "Netflix",
+      "Disney+"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué red social se originó como microblogging y es clave para tendencias culturales, noticias y debates en tiempo real?",
+    "opts": [
+      "Instagram",
+      "Twitter/X",
+      "TikTok"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué plataforma popularizó el modelo de suscripción directa para creadores de contenido exclusivo y premium?",
+    "opts": [
+      "Patreon",
+      "OnlyFans",
+      "Substack"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué protocolo de verificación de identidad ayuda a proteger a creadores y consumidores en plataformas de contenido digital?",
+    "opts": [
+      "KYC (Conoce a tu Cliente)",
+      "GDPR",
+      "SSL"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué infraestructura de red distribuye contenido estático y videos mediante servidores cercanos al usuario para reducir latencia?",
+    "opts": [
+      "VPN",
+      "CDN (Red de Distribución de Contenidos)",
+      "API Gateway"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué organismo de la ONU promueve la cooperación internacional en educación, ciencia y cultura?",
+    "opts": [
+      "OMS",
+      "UNESCO",
+      "FMI"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué modelo económico describe la tendencia a valorar experiencias y acceso por encima de la propiedad física?",
+    "opts": [
+      "Capitalismo de consumo",
+      "Economía experiencial",
+      "Minimalismo radical"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué documento de 1948 establece por primera vez los derechos humanos fundamentales a nivel global?",
+    "opts": [
+      "Carta de la ONU",
+      "Declaración Universal de los Derechos Humanos",
+      "Acuerdo de París"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué fenómeno climático oceánico-atmosférico calienta el Pacífico ecuatorial y altera patrones meteorológicos mundiales?",
+    "opts": [
+      "La Niña",
+      "El Niño",
+      "Oscilación del Atlántico Norte"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué campo interdisciplinario analiza el impacto ético, social y político de la tecnología en la sociedad?",
+    "opts": [
+      "Bioética",
+      "Estudios CTS (Ciencia, Tecnología y Sociedad)",
+      "Cibernética"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué tipo de moneda digital es emitida y respaldada directamente por un banco central?",
+    "opts": [
+      "Bitcoin",
+      "CBDC (Moneda Digital de Banco Central)",
+      "Stablecoin privada"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué teoría psicológica jerarquiza las motivaciones humanas desde necesidades básicas hasta la autorrealización?",
+    "opts": [
+      "Teoría de los dos factores",
+      "Pirámide de Maslow",
+      "Condicionamiento operante"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué movimiento artístico del siglo XX fragmentó la realidad en formas geométricas y perspectivas múltiples?",
+    "opts": [
+      "Impresionismo",
+      "Cubismo",
+      "Surrealismo"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué estrategia de marketing personaliza mensajes según el comportamiento histórico y preferencias del usuario?",
+    "opts": [
+      "Marketing masivo",
+      "Targeting conductual",
+      "Marketing viral"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué innovación en logística urbana utiliza drones o vehículos autónomos para entregas de última milla?",
+    "opts": [
+      "Dropshipping",
+      "Logística automatizada",
+      "Crowdsourcing de repartos"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué videojuego popular incluye el modo 'Battle Royale' con 100 jugadores?",
+    "opts": [
+      "Fortnite",
+      "The Witcher 3",
+      "Cyberpunk 2077"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué empresa desarrolló la consola PlayStation?",
+    "opts": [
+      "Microsoft",
+      "Sony",
+      "Nintendo"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué significa CPU en tecnología?",
+    "opts": [
+      "Central Processing Unit",
+      "Computer Personal Unit",
+      "Core Power Utility"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué lenguaje se usa principalmente para desarrollo web frontend?",
+    "opts": [
+      "Python",
+      "JavaScript",
+      "C++"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué red social es conocida por comunidades tipo foros?",
+    "opts": [
+      "Instagram",
+      "Reddit",
+      "TikTok"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué saga incluye el personaje Master Chief?",
+    "opts": [
+      "Halo",
+      "Call of Duty",
+      "Destiny"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es un NFT?",
+    "opts": [
+      "Un tipo de criptomoneda",
+      "Un archivo único digital",
+      "Un videojuego"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué anime incluye a Goku?",
+    "opts": [
+      "Naruto",
+      "Dragon Ball",
+      "One Piece"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué significa FPS en videojuegos?",
+    "opts": [
+      "Frames Per Second",
+      "First Play System",
+      "Fast Player Speed"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué compañía creó Windows?",
+    "opts": [
+      "Apple",
+      "Microsoft",
+      "IBM"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué superhéroe es conocido como el Caballero Oscuro?",
+    "opts": [
+      "Iron Man",
+      "Batman",
+      "Spider-Man"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué planeta es el más grande del sistema solar?",
+    "opts": [
+      "Saturno",
+      "Júpiter",
+      "Neptuno"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué tecnología permite pagos sin contacto?",
+    "opts": [
+      "Bluetooth",
+      "NFC",
+      "USB"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué videojuego es conocido por bloques y construcción libre?",
+    "opts": [
+      "Minecraft",
+      "Roblox",
+      "Terraria"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa VPN?",
+    "opts": [
+      "Virtual Private Network",
+      "Very Personal Node",
+      "Verified Protocol Network"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué saga incluye el personaje Kratos?",
+    "opts": [
+      "God of War",
+      "Assassin's Creed",
+      "Dark Souls"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué red social usa principalmente videos cortos?",
+    "opts": [
+      "TikTok",
+      "LinkedIn",
+      "Pinterest"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué dispositivo mide la frecuencia cardíaca en fitness?",
+    "opts": [
+      "Smartwatch",
+      "Tablet",
+      "Router"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué lenguaje es popular en ciencia de datos?",
+    "opts": [
+      "Python",
+      "HTML",
+      "CSS"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué compañía fabrica el iPhone?",
+    "opts": [
+      "Samsung",
+      "Apple",
+      "Huawei"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué género musical incluye bandas como Metallica?",
+    "opts": [
+      "Pop",
+      "Metal",
+      "Jazz"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué deporte incluye el término 'knockout'?",
+    "opts": [
+      "Boxeo",
+      "Tenis",
+      "Golf"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué serie incluye dragones y política medieval?",
+    "opts": [
+      "Breaking Bad",
+      "Game of Thrones",
+      "The Office"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué consola es portátil?",
+    "opts": [
+      "PS5",
+      "Nintendo Switch",
+      "Xbox Series X"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué es RAM?",
+    "opts": [
+      "Memoria temporal",
+      "Disco duro",
+      "Procesador"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué coche eléctrico es de Tesla?",
+    "opts": [
+      "Model S",
+      "Mustang",
+      "Civic"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué red usa contenido efímero tipo historias?",
+    "opts": [
+      "Snapchat",
+      "Reddit",
+      "YouTube"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego es tipo MOBA?",
+    "opts": [
+      "League of Legends",
+      "FIFA",
+      "GTA V"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa AI?",
+    "opts": [
+      "Artificial Intelligence",
+      "Automated Input",
+      "Advanced Internet"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué anime trata sobre piratas?",
+    "opts": [
+      "Bleach",
+      "One Piece",
+      "Death Note"
+    ],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué saga tiene el personaje Geralt?",
+    "opts": [
+      "The Witcher",
+      "Skyrim",
+      "Elden Ring"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué lenguaje se usa en apps Android?",
+    "opts": [
+      "Kotlin",
+      "Swift",
+      "Ruby"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa HTTP?",
+    "opts": [
+      "HyperText Transfer Protocol",
+      "High Transfer Text Program",
+      "Hyper Tool Transfer Process"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué red social es más profesional?",
+    "opts": [
+      "LinkedIn",
+      "Instagram",
+      "TikTok"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego es de supervivencia con zombis?",
+    "opts": [
+      "Resident Evil",
+      "FIFA",
+      "Gran Turismo"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es blockchain?",
+    "opts": [
+      "Base de datos descentralizada",
+      "Lenguaje",
+      "Sistema operativo"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué consola compite con Xbox?",
+    "opts": [
+      "PlayStation",
+      "GameBoy",
+      "Atari"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué app es de streaming?",
+    "opts": [
+      "Netflix",
+      "Excel",
+      "Photoshop"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué deporte usa octágono?",
+    "opts": [
+      "MMA",
+      "Fútbol",
+      "Baloncesto"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego incluye 'V-Bucks'?",
+    "opts": [
+      "Fortnite",
+      "Warzone",
+      "Apex"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa SSD?",
+    "opts": [
+      "Solid State Drive",
+      "Super Speed Disk",
+      "System Storage Device"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es phishing?",
+    "opts": [
+      "Ataque de engaño",
+      "Software",
+      "Juego"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué plataforma usa suscripciones de contenido exclusivo?",
+    "opts": [
+      "OnlyFans",
+      "Wikipedia",
+      "Google Docs"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué película es de ciencia ficción?",
+    "opts": [
+      "Interstellar",
+      "Titanic",
+      "Rocky"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué lenguaje usa iOS?",
+    "opts": [
+      "Swift",
+      "Java",
+      "C#"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es un streamer?",
+    "opts": [
+      "Creador en vivo",
+      "Programador",
+      "Diseñador"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego es sandbox criminal?",
+    "opts": [
+      "GTA V",
+      "FIFA",
+      "Halo"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es 5G?",
+    "opts": [
+      "Red móvil",
+      "GPU",
+      "App"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué saga incluye Ezio?",
+    "opts": [
+      "Assassin's Creed",
+      "Far Cry",
+      "Hitman"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué red es de microblogging?",
+    "opts": [
+      "Twitter",
+      "TikTok",
+      "Snapchat"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa UI?",
+    "opts": [
+      "User Interface",
+      "Universal Input",
+      "Unit Index"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es un bug?",
+    "opts": [
+      "Error",
+      "Juego",
+      "Usuario"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué app es para chat gamer?",
+    "opts": [
+      "Discord",
+      "Excel",
+      "Zoom"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es VR?",
+    "opts": [
+      "Realidad virtual",
+      "Video render",
+      "Visual range"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué juego es battle royale realista?",
+    "opts": [
+      "Warzone",
+      "Mario Kart",
+      "Zelda"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa GPU?",
+    "opts": [
+      "Graphics Processing Unit",
+      "General Power Unit",
+      "Game Performance Utility"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué consola usa cartuchos híbridos?",
+    "opts": [
+      "Switch",
+      "PS5",
+      "Xbox"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es criptomoneda?",
+    "opts": [
+      "Moneda digital",
+      "App",
+      "Juego"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego es RPG?",
+    "opts": [
+      "Skyrim",
+      "FIFA",
+      "Rocket League"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué lenguaje es backend?",
+    "opts": [
+      "Node.js",
+      "HTML",
+      "CSS"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa API?",
+    "opts": [
+      "Application Programming Interface",
+      "Advanced Program Input",
+      "App Personal Interface"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué app es para edición de fotos?",
+    "opts": [
+      "Photoshop",
+      "Chrome",
+      "Spotify"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es un servidor?",
+    "opts": [
+      "Computadora que da servicios",
+      "Usuario",
+      "App"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué red es visual?",
+    "opts": [
+      "Instagram",
+      "Reddit",
+      "Twitter"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué juego es competitivo en equipos 5v5?",
+    "opts": [
+      "Valorant",
+      "Skyrim",
+      "GTA"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es streaming?",
+    "opts": [
+      "Transmisión en vivo",
+      "Descarga",
+      "Edición"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa UX?",
+    "opts": [
+      "User Experience",
+      "Universal X",
+      "User Extension"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué app es para música?",
+    "opts": [
+      "Spotify",
+      "Excel",
+      "Notepad"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego es de construcción y supervivencia?",
+    "opts": [
+      "Rust",
+      "FIFA",
+      "Halo"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es firewall?",
+    "opts": [
+      "Sistema de seguridad",
+      "Juego",
+      "App"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa LAN?",
+    "opts": [
+      "Local Area Network",
+      "Large Access Node",
+      "Light Area Net"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué app es para videos largos?",
+    "opts": [
+      "YouTube",
+      "Snapchat",
+      "Twitter"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es eSports?",
+    "opts": [
+      "Deporte electrónico",
+      "Juego casual",
+      "App"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué lenguaje es orientado a objetos?",
+    "opts": [
+      "Java",
+      "HTML",
+      "SQL"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es cloud computing?",
+    "opts": [
+      "Servicios en la nube",
+      "Juego",
+      "App"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué consola es de Microsoft?",
+    "opts": [
+      "Xbox",
+      "PlayStation",
+      "Switch"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué app es de mensajería?",
+    "opts": [
+      "WhatsApp",
+      "Photoshop",
+      "Steam"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es algoritmo?",
+    "opts": [
+      "Conjunto de pasos",
+      "Juego",
+      "App"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué videojuego es de carreras?",
+    "opts": [
+      "Forza",
+      "Halo",
+      "Zelda"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa SQL?",
+    "opts": [
+      "Structured Query Language",
+      "Simple Query Logic",
+      "System Query Level"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es hacking ético?",
+    "opts": [
+      "Seguridad informática legal",
+      "Crimen",
+      "Juego"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué app es para comprar juegos?",
+    "opts": [
+      "Steam",
+      "Excel",
+      "Word"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa HTML?",
+    "opts": [
+      "HyperText Markup Language",
+      "HighText Machine Language",
+      "Hyper Tool Multi Language"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es realidad aumentada?",
+    "opts": [
+      "Elementos digitales en el mundo real",
+      "VR",
+      "Juego"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué juego es tipo roguelike?",
+    "opts": [
+      "Hades",
+      "FIFA",
+      "GTA"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa CSS?",
+    "opts": [
+      "Cascading Style Sheets",
+      "Creative Style System",
+      "Control Style Setup"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué app es para edición de video?",
+    "opts": [
+      "Premiere",
+      "Chrome",
+      "Slack"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué es un kernel?",
+    "opts": [
+      "Núcleo del sistema",
+      "App",
+      "Juego"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué consola es más potente generación actual?",
+    "opts": [
+      "PS5",
+      "PS2",
+      "Wii"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué significa DNS?",
+    "opts": [
+      "Domain Name System",
+      "Data Network Service",
+      "Digital Name Setup"
+    ],
+    "answer": 0
+  }
 ]
