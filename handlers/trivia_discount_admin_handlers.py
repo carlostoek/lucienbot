@@ -308,6 +308,8 @@ async def duration_type_fixed(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "duration_type_relative", lambda cb: is_admin(cb.from_user.id))
 async def duration_type_relative(callback: CallbackQuery, state: FSMContext):
     """Usuario eligió duración relativa"""
+    await state.update_data(duration_type='relative')
+
     await callback.message.edit_text(
         "🎩 <b>Lucien:</b>\n\n"
         "<i>Paso 5b:</i> Ingrese la duración\n\n"
