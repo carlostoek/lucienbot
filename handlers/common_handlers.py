@@ -4,7 +4,7 @@ Handlers Comunes - Lucien Bot
 Handlers para comandos básicos y flujos generales.
 """
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, ReactionTypeEmoji
 from aiogram.filters import CommandStart, Command
 from aiogram.enums import ChatType
 from config.settings import bot_config
@@ -288,3 +288,15 @@ async def coming_soon_features(callback: CallbackQuery):
         parse_mode="HTML"
     )
     await callback.answer()
+
+
+@router.message(F.chat.type == ChatType.PRIVATE, F.text)
+async def react_with_heart(message: Message):
+    """
+    Reacciona con un corazón a cada mensaje privado del usuario.
+    Solo mensajes de texto (no comandos).
+    """
+    try:
+        await message.react([ReactionTypeEmoji(emoji="❤️")])
+    except Exception as e:
+        logger.warning(f"[heart_reaction] No se pudo reactinar mensaje: {e}")

@@ -59,6 +59,9 @@ from handlers import (
     backpack_router,
 )
 
+from handlers.rate_limit_middleware import ThrottlingMiddleware
+from handlers.chat_action_middleware import ChatActionMiddleware
+
 # Configurar logging
 logging.basicConfig(
     level=logging.INFO,
@@ -224,6 +227,10 @@ async def main():
     bot = Bot(token=bot_config.TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     storage = create_storage()
     dp = Dispatcher(storage=storage)
+
+    # Middlewares globales - indication de "escribiendo..." mientras se procesa
+    dp.message.middleware(ChatActionMiddleware())
+    dp.callback_query.middleware(ChatActionMiddleware())
 
     # Registrar routers
     dp.include_router(common_router)
