@@ -10,7 +10,7 @@ aiogram==3.24.0
 SQLAlchemy==2.0.28
 
 # Alembic migration management
-alembic==1.12.1
+alembic==1.18.4
 
 # PostgreSQL (para producción en Railway)
 psycopg2-binary==2.9.9
