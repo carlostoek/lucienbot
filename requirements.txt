@@ -37,7 +37,7 @@ APScheduler==3.10.4
 
 # ==================== FSM STORAGE ====================
 # Redis async client for RedisStorage (aiogram FSM persistence)
-redis==5.0.1
+redis==7.4.0
 
 # ==================== MONITOREO (OPCIONAL) ====================
 # Logging avanzado
