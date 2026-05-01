@@ -184,6 +184,21 @@ async def _process_expired_subscriptions():
 
         for subscription in expired:
             try:
+                # ── FIX: Check if user has ANY other active subscription ──
+                other_active = db.query(Subscription).filter(
+                    Subscription.user_id == subscription.user_id,
+                    Subscription.id != subscription.id,
+                    Subscription.is_active == True,
+                    Subscription.end_date > datetime.utcnow()
+                ).first()
+
+                if other_active:
+                    # User has other active subscription - skip expulsion
+                    subscription.is_active = False
+                    db.commit()
+                    logger.info(f"[Scheduler] User has other active sub, skipping expulsion: user_id={subscription.user_id}, expired_sub_id={subscription.id}")
+                    continue
+
                 channel = subscription.channel
                 if not channel or not channel.is_active:
                     continue

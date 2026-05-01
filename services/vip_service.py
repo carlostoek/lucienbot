@@ -192,9 +192,7 @@ class VIPService:
         token.redeemed_at = datetime.utcnow()
         token.redeemed_by_id = user_id
 
-        # Crear suscripción
         tariff = token.tariff
-        end_date = datetime.utcnow() + timedelta(days=tariff.duration_days)
 
         # Buscar canal VIP (asumimos el primero disponible o se especifica)
         vip_channel = db.query(Channel).filter(
@@ -205,6 +203,24 @@ class VIPService:
         if not vip_channel:
             db.rollback()
             return None
+
+        # ── FIX: Check for existing active subscription to EXTEND ──
+        existing_active = db.query(Subscription).filter(
+            Subscription.user_id == user_id,
+            Subscription.channel_id == vip_channel.id,
+            Subscription.is_active == True,
+            Subscription.end_date > datetime.utcnow()
+        ).with_for_update().first()
+
+        if existing_active:
+            # Extend existing subscription's end_date instead of creating new
+            existing_active.end_date = existing_active.end_date + timedelta(days=tariff.duration_days)
+            db.commit()
+            logger.info(f"[VIP] Extended subscription: user_id={user_id}, new_end_date={existing_active.end_date}")
+            return existing_active
+
+        # No existing active subscription - create new one
+        end_date = datetime.utcnow() + timedelta(days=tariff.duration_days)
 
         subscription = Subscription(
             user_id=user_id,
