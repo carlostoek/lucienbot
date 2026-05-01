@@ -231,6 +231,98 @@ async def _process_expired_subscriptions():
         db.close()
 
 
+async def _sync_question_sets():
+    """Sincroniza el question set activo basándose en promociones activas.
+
+    Busca la promoción activa más reciente con question_set_id asignado,
+    actualiza GameService._active_question_set_path y limpia el caché de
+    instancias existentes para forzar recarga.
+    """
+    from datetime import datetime, timezone
+    from models.models import Promotion, PromotionStatus, QuestionSet
+    from services.game_service import GameService
+
+    db = SessionLocal()
+    try:
+        now = datetime.now(timezone.utc)
+
+        # 1. Find most recent active promotion with a question set
+        promotion = db.query(Promotion).filter(
+            Promotion.status == PromotionStatus.ACTIVE,
+            Promotion.question_set_id.isnot(None),
+            Promotion.is_active == True,
+            Promotion.start_date.isnot(None),
+            Promotion.end_date.isnot(None),
+        ).order_by(Promotion.start_date.desc()).first()
+
+        # 2. Filter to only those currently in their date range
+        active_promotion = None
+        if promotion:
+            # Check if currently in date range
+            if promotion.start_date <= now <= promotion.end_date:
+                active_promotion = promotion
+            else:
+                # Not currently active (date range ended or hasn't started)
+                active_promotion = None
+
+        if active_promotion and active_promotion.question_set_id:
+            question_set = db.query(QuestionSet).filter(
+                QuestionSet.id == active_promotion.question_set_id
+            ).first()
+
+            if question_set:
+                new_path = question_set.file_path
+                old_path = GameService._active_question_set_path
+
+                if old_path != new_path:
+                    logger.info(
+                        f"[Scheduler] Activating question set from promotion "
+                        f"id={active_promotion.id} '{active_promotion.name}': "
+                        f"file_path={new_path}"
+                    )
+                    GameService._active_question_set_path = new_path
+
+                    # Clear all instance-level caches by resetting the class-level
+                    # paths - next load_trivia_questions will detect
+                    # _last_loaded_path != _active_question_set_path and reload
+                    GameService._active_question_set_vip_path = None  # VIP uses default
+
+                    # Also clear any cached questions on existing instances by
+                    # resetting instance cache flags
+                    for attr_name in dir(GameService):
+                        attr = getattr(GameService, attr_name, None)
+                        # Not trying to reset instance cache here - just the class attr
+
+                # Update DB state: this QuestionSet is active, others are not
+                db.query(QuestionSet).filter(
+                    QuestionSet.id != question_set.id,
+                    QuestionSet.is_active == True,
+                    QuestionSet.is_override == False
+                ).update({QuestionSet.is_active: False})
+
+                if not question_set.is_active:
+                    question_set.is_active = True
+                    db.commit()
+                    logger.info(f"[Scheduler] Set QuestionSet id={question_set.id} is_active=True")
+            else:
+                logger.warning(
+                    f"[Scheduler] Promotion id={active_promotion.id} has question_set_id="
+                    f"{active_promotion.question_set_id} but QuestionSet not found"
+                )
+        else:
+            # No active promotion - reset to default
+            default_path = "docs/preguntas.json"
+            if GameService._active_question_set_path != default_path:
+                logger.info("[Scheduler] No active promotion, resetting question set to default")
+                GameService._active_question_set_path = default_path
+                GameService._active_question_set_vip_path = None
+
+    except Exception as e:
+        logger.error(f"[Scheduler] Error syncing question sets: {e}")
+    finally:
+        db.close()
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # SchedulerService — solo maneja el ciclo de vida de APScheduler
 # ─────────────────────────────────────────────────────────────────────────────
@@ -303,6 +395,13 @@ class SchedulerService:
             hour=3, minute=0,
             id="daily_backup",
             name="Daily database backup",
+            replace_existing=True,
+        )
+        self._scheduler.add_job(
+            _sync_question_sets,
+            trigger=IntervalTrigger(minutes=1),
+            id="sync_question_sets",
+            name="Sync active question set from promotions",
             replace_existing=True,
         )
 

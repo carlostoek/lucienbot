@@ -749,6 +749,9 @@ class Promotion(Base):
     # Conteo manual de archivos (para promociones sin paquete)
     manual_file_count = Column(Integer, nullable=True)
 
+    # Pregunta de trivia asociada (opcional)
+    question_set_id = Column(Integer, ForeignKey("question_sets.id"), nullable=True)
+
     # Precio en pesos mexicanos (dinero real)
     price_mxn = Column(Integer, nullable=False)  # Precio en centavos para evitar decimales
 
