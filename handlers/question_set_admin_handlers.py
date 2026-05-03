@@ -132,7 +132,7 @@ async def view_question_sets(callback: CallbackQuery):
 
 # ==================== VER DETALLES SET ====================
 
-@router.callback_query(F.data.regex(r"^view_qs_\d+$"), lambda cb: is_admin(cb.from_user.id))
+@router.callback_query(F.data.startswith("view_qs_"), lambda cb: is_admin(cb.from_user.id))
 async def view_question_set_details(callback: CallbackQuery, state: FSMContext):
     """Ver detalles de un QuestionSet específico"""
     set_id = int(callback.data.replace("view_qs_", ""))
@@ -434,7 +434,7 @@ async def activate_question_set_start(callback: CallbackQuery, state: FSMContext
     await callback.answer()
 
 
-@router.callback_query(F.data.regex(r"^activate_set_\d+$"), lambda cb: is_admin(cb.from_user.id))
+@router.callback_query(F.data.startswith("activate_set_"), lambda cb: is_admin(cb.from_user.id))
 async def activate_question_set_confirm(callback: CallbackQuery, state: FSMContext):
     """Activar el set seleccionado"""
     set_id = int(callback.data.replace("activate_set_", ""))
