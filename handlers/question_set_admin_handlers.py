@@ -92,6 +92,7 @@ async def view_question_sets(callback: CallbackQuery):
 
         lines = ["📋 <b>Sets de preguntas registrados:</b>\n"]
 
+        keyboard_buttons = []
         for s in sets:
             status_parts = []
             if s.is_active:
@@ -107,14 +108,81 @@ async def view_question_sets(callback: CallbackQuery):
                 f"   📁 {s.file_path}\n"
                 f"   Estado: {status}\n"
             )
+            keyboard_buttons.append([
+                InlineKeyboardButton(
+                    text=f"📖 {s.name}",
+                    callback_data=f"view_qs_{s.id}"
+                )
+            ])
 
         text = "".join(lines)
+        keyboard_buttons.append([
+            InlineKeyboardButton(text="🔙 Volver", callback_data="admin_question_sets")
+        ])
 
         await callback.message.edit_text(
             f"🎩 <b>Lucien:</b>\n\n{text}",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_question_sets")]
-            ]),
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard_buttons),
+            parse_mode="HTML"
+        )
+    finally:
+        service.close()
+    await callback.answer()
+
+
+# ==================== VER DETALLES SET ====================
+
+@router.callback_query(F.data.regex(r"^view_qs_\d+$"), lambda cb: is_admin(cb.from_user.id))
+async def view_question_set_details(callback: CallbackQuery, state: FSMContext):
+    """Ver detalles de un QuestionSet específico"""
+    set_id = int(callback.data.replace("view_qs_", ""))
+    user_id = callback.from_user.id
+
+    service = QuestionSetService()
+    try:
+        question_set = service.get_set_by_id(set_id)
+
+        if not question_set:
+            logger.warning(
+                f"question_set_admin - view details failed: set not found: "
+                f"user_id={user_id}, set_id={set_id}"
+            )
+            await callback.message.edit_text(
+                "🎩 <b>Lucien:</b>\n\n"
+                "<i>No se encontró el set de preguntas.</i>",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="🔙 Volver", callback_data="view_question_sets")]
+                ]),
+                parse_mode="HTML"
+            )
+            await callback.answer()
+            return
+
+        status_parts = []
+        if question_set.is_active:
+            status_parts.append("✅ Activo")
+        if question_set.is_override:
+            status_parts.append("⚡ Override")
+        status = " | ".join(status_parts) if status_parts else "❌ Inactivo"
+
+        desc = question_set.description or "Sin descripción"
+
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text="⚡ Activar override",
+                callback_data=f"activate_set_{question_set.id}"
+            )],
+            [InlineKeyboardButton(text="🔙 Volver", callback_data="view_question_sets")]
+        ])
+
+        await callback.message.edit_text(
+            f"🎩 <b>Lucien:</b>\n\n"
+            f"<b>{question_set.name}</b>\n\n"
+            f"📝 <b>Descripción:</b> {desc}\n"
+            f"📁 <b>Archivo:</b> <code>{question_set.file_path}</code>\n"
+            f"📊 <b>Estado:</b> {status}\n"
+            f"🆔 <b>ID:</b> {question_set.id}",
+            reply_markup=keyboard,
             parse_mode="HTML"
         )
     finally:
