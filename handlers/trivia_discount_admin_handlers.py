@@ -48,7 +48,11 @@ async def admin_trivia_discount_menu(callback: CallbackQuery):
     """Menú principal de gestión de promociones por racha"""
     service = TriviaDiscountService()
     try:
-        configs = service.get_active_trivia_promotion_configs()
+        all_configs = service.get_all_trivia_promotion_configs()
+        active = [c for c in all_configs if c.status == 'active']
+        paused = [c for c in all_configs if c.status == 'paused']
+        expired = [c for c in all_configs if c.status == 'expired']
+        completed = [c for c in all_configs if c.status == 'completed']
 
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(
@@ -57,13 +61,27 @@ async def admin_trivia_discount_menu(callback: CallbackQuery):
             )]
         ])
 
-        if configs:
+        # Mostrar todas las categorías con conteos
+        if all_configs:
+            status_lines = []
+            if active:
+                status_lines.append(f"✅ Activas: {len(active)}")
+            if paused:
+                status_lines.append(f"⏸️ Pausadas: {len(paused)}")
+            if expired:
+                status_lines.append(f"🔚 Terminadas: {len(expired)}")
+            if completed:
+                status_lines.append(f"📭 Completadas: {len(completed)}")
+
+            status_text = "\n".join(status_lines)
             keyboard.inline_keyboard.append([
                 InlineKeyboardButton(
-                    text="📋 Ver promociones activas",
+                    text="📋 Ver todas las promociones",
                     callback_data="view_trivia_discounts"
                 )
             ])
+        else:
+            status_text = "\n<i>No hay configuraciones creadas.</i>"
 
         keyboard.inline_keyboard.append([
             InlineKeyboardButton(
@@ -75,7 +93,7 @@ async def admin_trivia_discount_menu(callback: CallbackQuery):
         await callback.message.edit_text(
             "🎩 <b>Lucien:</b>\n\n"
             "<i>Las recompensas que el conocimiento merece...</i>\n\n"
-            f"Promociones activas: {len(configs)}\n\n"
+            f"{status_text}\n\n"
             "Configure promociones que se desbloquean al alcanzar rachas en trivia.",
             reply_markup=keyboard,
             parse_mode="HTML"
@@ -821,17 +839,14 @@ async def view_trivia_discounts(callback: CallbackQuery):
         config = all_configs[0]
         stats = service.get_discount_stats(config.id)
 
-        # Determinar estado
-        is_expired = False
-        if not config.is_active:
-            # Verificar si expiró por fecha fija
-            if config.end_date:
-                from datetime import datetime, timezone
-                if datetime.now(timezone.utc) > config.end_date:
-                    is_expired = True
-            status_text = "⏸️ Inactiva"
-        else:
-            status_text = "✅ Activa"
+        # Determinar estado basado en status
+        status_labels = {
+            'active': '✅ Activa',
+            'paused': '⏸️ Pausada',
+            'expired': '🔚 Terminada',
+            'completed': '📭 Completada'
+        }
+        status_text = status_labels.get(config.status, '❓ Desconocido')
 
         # Construir botones según el tipo de vigencia
         keyboard_buttons = [
@@ -852,7 +867,7 @@ async def view_trivia_discounts(callback: CallbackQuery):
             else:
                 cycles_info = ""
             time_info = f"\n⏱️ Tiempo: {remaining}{cycles_info}"
-            if config.is_active:
+            if config.status == 'active':
                 keyboard_buttons.append([
                     InlineKeyboardButton(
                         text="⏰ Extender",
@@ -870,7 +885,8 @@ async def view_trivia_discounts(callback: CallbackQuery):
             else:
                 time_info = ""
 
-        if config.is_active:
+        # Botones según estado
+        if config.status == 'active':
             keyboard_buttons.extend([
                 [InlineKeyboardButton(
                     text="⏸️ Pausar",
@@ -881,7 +897,19 @@ async def view_trivia_discounts(callback: CallbackQuery):
                     callback_data=f"delete_trivia_{config.id}"
                 )]
             ])
+        elif config.status in ('paused', 'expired'):
+            keyboard_buttons.extend([
+                [InlineKeyboardButton(
+                    text="▶️ Reanudar",
+                    callback_data=f"resume_trivia_{config.id}"
+                )],
+                [InlineKeyboardButton(
+                    text="🗑️ Eliminar",
+                    callback_data=f"delete_trivia_{config.id}"
+                )]
+            ])
         else:
+            # completed u otro estado - solo eliminar
             keyboard_buttons.append([
                 InlineKeyboardButton(
                     text="🗑️ Eliminar",
@@ -1000,6 +1028,24 @@ async def pause_trivia_discount(callback: CallbackQuery):
     await callback.message.edit_text(
         "🎩 <b>Lucien:</b>\n\n"
         f"<i>Configuración {'pausada' if result else 'error al pausar'}.</i>",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_trivia_discount")]
+        ]),
+        parse_mode="HTML"
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("resume_trivia_"), lambda cb: is_admin(cb.from_user.id))
+async def resume_trivia_discount(callback: CallbackQuery):
+    """Reanudar configuración pausada o terminada"""
+    config_id = int(callback.data.replace("resume_trivia_", ""))
+    service = TriviaDiscountService()
+    result = service.resume_trivia_promotion_config(config_id)
+
+    await callback.message.edit_text(
+        "🎩 <b>Lucien:</b>\n\n"
+        f"<i>Configuración {'reanudada' if result else 'error al reanudar'}.</i>",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_trivia_discount")]
         ]),

@@ -113,7 +113,7 @@ class TriviaDiscountService:
                 joinedload(TriviaPromotionConfig.promotion),
                 joinedload(TriviaPromotionConfig.question_set)
             ).filter(
-                TriviaPromotionConfig.is_active == True
+                TriviaPromotionConfig.status == 'active'
             ).all()
             logger.info(f"trivia_discount_service - get_active_trivia_promotion_configs - count: {len(configs)}")
             return configs
@@ -163,8 +163,12 @@ class TriviaDiscountService:
                 return False
 
     def pause_trivia_promotion_config(self, config_id: int) -> bool:
-        """Pausa configuración"""
-        return self.update_trivia_promotion_config(config_id, is_active=False)
+        """Pausa configuración (marca como paused)"""
+        return self.update_trivia_promotion_config(config_id, status='paused', is_active=False)
+
+    def resume_trivia_promotion_config(self, config_id: int) -> bool:
+        """Reanuda configuración pausada o terminada"""
+        return self.update_trivia_promotion_config(config_id, status='active', is_active=True)
 
     # ==================== DURACIÓN RELATIVA ====================
 
@@ -229,17 +233,19 @@ class TriviaDiscountService:
                         logger.info(f"trivia_discount_service - get_time_remaining - {config_id} - auto reset to {reset_duration} min, cycle {config.reset_count}")
                         return reset_duration
                     else:
-                        # Ya no hay ciclos disponibles - marcar como inactiva
+                        # Ya no hay ciclos disponibles - marcar como expirada
+                        config.status = 'expired'
                         config.is_active = False
                         session.commit()
-                        logger.info(f"trivia_discount_service - get_time_remaining - {config_id} - no cycles left, deactivated")
+                        logger.info(f"trivia_discount_service - get_time_remaining - {config_id} - no cycles left, expired")
                         return 0
 
-                # Si tiempo expiró y no tiene reinicio automático, marcar inactiva
-                if remaining <= 0 and not config.auto_reset_enabled and config.is_active:
+                # Si tiempo expiró y no tiene reinicio automático, marcar expirada
+                if remaining <= 0 and not config.auto_reset_enabled and config.status == 'active':
+                    config.status = 'expired'
                     config.is_active = False
                     session.commit()
-                    logger.info(f"trivia_discount_service - get_time_remaining - {config_id} - duration expired, deactivated")
+                    logger.info(f"trivia_discount_service - get_time_remaining - {config_id} - duration expired, expired")
                     return 0
 
                 return remaining
@@ -293,7 +299,7 @@ class TriviaDiscountService:
                 configs = session.query(TriviaPromotionConfig).options(
                     joinedload(TriviaPromotionConfig.promotion)
                 ).filter(
-                    TriviaPromotionConfig.is_active == True
+                    TriviaPromotionConfig.status == 'active'
                 ).all()
 
                 for config in configs:
@@ -327,8 +333,8 @@ class TriviaDiscountService:
             try:
                 # Verificar que la configuración existe y está activa
                 config = session.get(TriviaPromotionConfig, config_id)
-                if not config or not config.is_active:
-                    logger.warning(f"trivia_discount_service - generate_discount_code - {user_id} - config not found or inactive")
+                if not config or config.status != 'active':
+                    logger.warning(f"trivia_discount_service - generate_discount_code - {user_id} - config not found or not active")
                     return None
 
                 # Verificar vigencia de fechas
@@ -452,6 +458,27 @@ class TriviaDiscountService:
                 logger.error(f"trivia_discount_service - cancel_discount_code - {code_id} - error: {e}")
                 return False
 
+    def invalidate_user_code(self, user_id: int, config_id: int) -> bool:
+        """Invalida el código activo de un usuario para una configuración (por fallo en racha)"""
+        with SessionLocal() as session:
+            try:
+                code = session.query(DiscountCode).filter(
+                    DiscountCode.user_id == user_id,
+                    DiscountCode.config_id == config_id,
+                    DiscountCode.status == DiscountCodeStatus.ACTIVE
+                ).first()
+                if not code:
+                    logger.info(f"trivia_discount_service - invalidate_user_code - {user_id}/{config_id} - no_active_code")
+                    return False
+                code.status = DiscountCodeStatus.CANCELLED
+                session.commit()
+                logger.info(f"trivia_discount_service - invalidate_user_code - {user_id}/{config_id} - invalidated:{code.code}")
+                return True
+            except Exception as e:
+                session.rollback()
+                logger.error(f"trivia_discount_service - invalidate_user_code - {user_id}/{config_id} - error: {e}")
+                return False
+
     # ==================== VERIFICACIÓN ====================
 
     def get_config_by_promotion(self, promotion_id: int) -> Optional[TriviaPromotionConfig]:
@@ -559,8 +586,8 @@ class TriviaDiscountService:
         with SessionLocal() as session:
             try:
                 config = session.get(TriviaPromotionConfig, config_id)
-                if not config or not config.is_active:
-                    logger.warning(f"trivia_discount_service - generate_tiered_discount_code - {user_id} - config not found or inactive")
+                if not config or config.status != 'active':
+                    logger.warning(f"trivia_discount_service - generate_tiered_discount_code - {user_id} - config not found or not active")
                     return None
 
                 # Verificar vigencia
