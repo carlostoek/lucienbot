@@ -231,14 +231,20 @@ async def _process_expired_subscriptions():
         db.close()
 
 
-def _is_config_active(config, now: datetime) -> bool:
+def _is_config_active(config, now: datetime, check_started_at: bool = True) -> bool:
     """Verifica si una TriviaPromotionConfig está actualmente activa."""
     if not config.is_active:
         return False
     # Duración relativa: usar started_at + duration_minutes
-    if config.duration_minutes and config.started_at:
-        from datetime import timedelta
-        elapsed = now - config.started_at
+    if check_started_at and config.duration_minutes and config.started_at:
+        started = config.started_at
+        # Normalizar: si started es naive y now es aware, convertir started a aware UTC
+        if started.tzinfo is None and now.tzinfo is not None:
+            started = started.replace(tzinfo=now.tzinfo)
+        # Si started es aware y now es naive, convertir now a aware
+        elif started.tzinfo is not None and now.tzinfo is None:
+            now = now.replace(tzinfo=started.tzinfo)
+        elapsed = now - started
         return elapsed.total_seconds() < (config.duration_minutes * 60)
     # Duración fija: verificar start_date <= now <= end_date
     is_started = config.start_date is None or config.start_date <= now

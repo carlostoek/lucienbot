@@ -173,6 +173,11 @@ async def on_startup(bot: Bot):
     scheduler = get_scheduler(bot)
     await scheduler.start()
     logger.info("Scheduler iniciado")
+
+    # Sincronizar question sets inmediatamente al iniciar
+    from services.scheduler_service import _sync_question_sets
+    await _sync_question_sets()
+    logger.info("Question sets sincronizados al startup")
     
     # Notificar a administradores
     for admin_id in bot_config.ADMIN_IDS:

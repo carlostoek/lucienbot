@@ -1,0 +1,559 @@
+[
+  {"q": "¿Qué evento histórico internacional dio origen al Día del Trabajo el 1 de mayo?", "opts": ["Revolución Francesa", "Huelga de Cananea", "Revuelta de Haymarket", "Tratado de Versalles"], "answer": 2},
+  {"q": "¿En qué ciudad ocurrió la Revuelta de Haymarket?", "opts": ["Nueva York", "Chicago", "Boston", "Filadelfia"], "answer": 1},
+  {"q": "¿En qué año ocurrieron los eventos de Haymarket?", "opts": ["1876", "1886", "1896", "1906"], "answer": 1},
+  {"q": "¿Cuál era la principal demanda de los trabajadores en Haymarket?", "opts": ["Aumento salarial", "Jornada de 8 horas", "Derecho a huelga", "Seguro social"], "answer": 1},
+  {"q": "¿Qué presidente mexicano decretó oficialmente el 1 de mayo como día conmemorativo?", "opts": ["Porfirio Díaz", "Venustiano Carranza", "Álvaro Obregón", "Lázaro Cárdenas"], "answer": 1},
+  {"q": "¿En qué año se celebró por primera vez el Día del Trabajo en México?", "opts": ["1900", "1913", "1915", "1920"], "answer": 1},
+  {"q": "¿Qué organización tuvo gran influencia en el movimiento obrero mexicano temprano?", "opts": ["CTM", "CROM", "SNTE", "UNT"], "answer": 1},
+  {"q": "¿Qué significa la sigla CROM?", "opts": ["Confederación Regional Obrera Mexicana", "Central Revolucionaria Obrera Mexicana", "Coalición Regional Obrera Mexicana", "Confederación Revolucionaria Obrera Mexicana"], "answer": 0},
+  {"q": "¿Qué artículo de la Constitución Mexicana regula los derechos laborales?", "opts": ["Artículo 3", "Artículo 27", "Artículo 123", "Artículo 130"], "answer": 2},
+  {"q": "¿Qué derecho laboral NO está contemplado en el Artículo 123?", "opts": ["Jornada máxima de trabajo", "Derecho a huelga", "Educación gratuita", "Salario mínimo"], "answer": 2},
+
+  {"q": "¿Qué país invadió México en 1862, provocando la Batalla del 5 de mayo?", "opts": ["España", "Francia", "Estados Unidos", "Inglaterra"], "answer": 1},
+  {"q": "¿Qué emperador francés ordenó la intervención en México?", "opts": ["Napoleón I", "Napoleón II", "Napoleón III", "Luis XVI"], "answer": 2},
+  {"q": "¿Quién era el presidente de México durante la Batalla de Puebla?", "opts": ["Porfirio Díaz", "Benito Juárez", "Antonio López de Santa Anna", "Ignacio Comonfort"], "answer": 1},
+  {"q": "¿Quién comandó al ejército mexicano en la Batalla de Puebla?", "opts": ["Porfirio Díaz", "Ignacio Zaragoza", "Vicente Guerrero", "Mariano Escobedo"], "answer": 1},
+  {"q": "¿En qué año ocurrió la Batalla de Puebla?", "opts": ["1857", "1862", "1867", "1876"], "answer": 1},
+  {"q": "¿Qué fuerte fue clave en la defensa mexicana durante la batalla?", "opts": ["Chapultepec", "San Juan de Ulúa", "Loreto y Guadalupe", "San Diego"], "answer": 2},
+  {"q": "¿Cuál era la principal ventaja del ejército francés?", "opts": ["Mayor número de tropas", "Mejor armamento y entrenamiento", "Conocimiento del terreno", "Apoyo indígena"], "answer": 1},
+  {"q": "¿Cuál era la situación del ejército mexicano frente al francés?", "opts": ["Superior en número", "Mejor equipado", "Inferior en recursos", "Neutral"], "answer": 2},
+  {"q": "¿Qué general mexicano también participó en la defensa de Puebla?", "opts": ["Emiliano Zapata", "Porfirio Díaz", "Pancho Villa", "Felipe Ángeles"], "answer": 1},
+  {"q": "¿Qué mensaje envió Ignacio Zaragoza tras la victoria?", "opts": ["México ha vencido", "Las armas nacionales se han cubierto de gloria", "Victoria absoluta", "Francia ha caído"], "answer": 1},
+
+  {"q": "¿Qué consecuencia tuvo la victoria del 5 de mayo a nivel internacional?", "opts": ["Derrota definitiva de Francia", "Retraso de la invasión francesa", "Fin del imperio mexicano", "Independencia total"], "answer": 1},
+  {"q": "¿Qué ocurrió años después pese a la victoria en Puebla?", "opts": ["México invadió Francia", "Francia conquistó México temporalmente", "Se firmó la paz inmediata", "Estados Unidos intervino"], "answer": 1},
+  {"q": "¿Quién fue impuesto como emperador de México por Francia?", "opts": ["Maximiliano de Habsburgo", "Fernando VII", "Luis Felipe", "Carlos V"], "answer": 0},
+  {"q": "¿Qué tratado internacional influyó en la intervención francesa?", "opts": ["Tratado de Guadalupe Hidalgo", "Tratado de Londres", "Tratado de Tordesillas", "Tratado de Versalles"], "answer": 1},
+  {"q": "¿Qué países firmaron el Tratado de Londres?", "opts": ["Francia, España e Inglaterra", "Estados Unidos, Francia y México", "España, Portugal y Francia", "Inglaterra, Alemania y Francia"], "answer": 0},
+
+  {"q": "¿Qué tipo de conmemoración es el 1 de mayo en México?", "opts": ["Religiosa", "Histórica", "Laboral y social", "Militar"], "answer": 2},
+  {"q": "¿Qué actividad es común el 1 de mayo en México?", "opts": ["Desfiles militares", "Marchas sindicales", "Eventos religiosos", "Celebraciones escolares"], "answer": 1},
+  {"q": "¿Qué institución representa a muchos trabajadores en México?", "opts": ["INE", "CTM", "SEDENA", "IMSS"], "answer": 1},
+  {"q": "¿Qué significa CTM?", "opts": ["Confederación de Trabajadores de México", "Central de Trabajadores Mexicanos", "Confederación Técnica Mexicana", "Consejo de Trabajo Mexicano"], "answer": 0},
+  {"q": "¿Qué derecho protege la sindicalización?", "opts": ["Artículo 27", "Artículo 3", "Artículo 123", "Artículo 1"], "answer": 2},
+
+  {"q": "¿Qué simboliza el 5 de mayo para México?", "opts": ["Independencia", "Resistencia y soberanía", "Revolución", "Conquista"], "answer": 1},
+  {"q": "¿En qué estado ocurrió la Batalla de Puebla?", "opts": ["Veracruz", "Puebla", "Tlaxcala", "Oaxaca"], "answer": 1},
+  {"q": "¿Cómo se llama actualmente la ciudad donde ocurrió la batalla?", "opts": ["Puebla de Zaragoza", "Nueva Puebla", "Puebla Real", "Zaragoza"], "answer": 0},
+  {"q": "¿Qué rango tenía Ignacio Zaragoza?", "opts": ["Coronel", "General", "Teniente", "Capitán"], "answer": 1},
+  {"q": "¿Qué tipo de conflicto era la intervención francesa?", "opts": ["Civil", "Internacional", "Religioso", "Ideológico"], "answer": 1},
+
+  {"q": "¿Qué grupo social fue clave en las movilizaciones del 1 de mayo?", "opts": ["Campesinos", "Obreros industriales", "Militares", "Empresarios"], "answer": 1},
+  {"q": "¿Qué buscaban los movimientos obreros del siglo XIX?", "opts": ["Expansión territorial", "Mejores condiciones laborales", "Control político", "Independencia nacional"], "answer": 1},
+  {"q": "¿Qué jornada laboral era común antes de las reformas?", "opts": ["6 horas", "8 horas", "12-16 horas", "4 horas"], "answer": 2},
+  {"q": "¿Qué evento mexicano también influyó en la lucha obrera?", "opts": ["Grito de Dolores", "Huelga de Cananea", "Batalla de Chapultepec", "Plan de Ayala"], "answer": 1},
+
+  {"q": "¿Qué tipo de armamento usaban principalmente los franceses en 1862?", "opts": ["Arcos", "Artillería moderna", "Espadas", "Lanzas"], "answer": 1},
+  {"q": "¿Qué factor ayudó al ejército mexicano en Puebla?", "opts": ["Superioridad numérica", "Terreno y estrategia", "Apoyo extranjero", "Tecnología avanzada"], "answer": 1},
+  {"q": "¿Qué fuerte defendieron los mexicanos principalmente?", "opts": ["Loreto", "Guadalupe", "Ambos", "Ninguno"], "answer": 2},
+  {"q": "¿Qué general francés lideraba las tropas?", "opts": ["Napoleón III", "Charles de Gaulle", "Charles Latrille", "Maximiliano"], "answer": 2},
+
+  {"q": "¿Por qué México suspendió el pago de la deuda externa en 1861?", "opts": ["Falta de recursos", "Estrategia militar", "Acuerdo internacional", "Presión social"], "answer": 0},
+  {"q": "¿Qué país se retiró de la intervención antes del conflicto armado?", "opts": ["Francia", "España", "Inglaterra", "Estados Unidos"], "answer": 1},
+  {"q": "¿Qué país también se retiró junto con España?", "opts": ["Francia", "Inglaterra", "Alemania", "Portugal"], "answer": 1},
+
+  {"q": "¿Qué representa el 1 de mayo hoy en día?", "opts": ["Solo descanso", "Lucha histórica y derechos laborales", "Evento político únicamente", "Celebración religiosa"], "answer": 1},
+  {"q": "¿Qué representa el 5 de mayo en la cultura popular internacional?", "opts": ["Independencia de México", "Fiesta nacional", "Error histórico común", "Revolución mexicana"], "answer": 2},
+
+  {
+    "q": "¿Cuál fue la causa principal que originó la intervención francesa que llevó a la Batalla de Puebla?",
+    "opts": ["La ambición de Napoleón III por expandir su imperio", "La suspensión de pagos de la deuda externa por Benito Juárez", "El apoyo de Francia a los conservadores mexicanos"],
+    "answer": 1
+  },
+  {
+    "q": "¿Quién era el general al mando del Ejército Francés durante la Batalla de Puebla el 5 de mayo de 1862?",
+    "opts": ["Achille Bazaine", "Élie-Frédéric Forey", "Charles Ferdinand Latrille, Conde de Lorencez"],
+    "answer": 2
+  },
+  {
+    "q": "¿Qué nombre recibía el cuerpo de ejército mexicano comandado por Ignacio Zaragoza?",
+    "opts": ["Ejército de Oriente", "División del Norte", "Ejército Trigarante"],
+    "answer": 0
+  },
+  {
+    "q": "¿En qué fuertes de la ciudad de Puebla se concentró la defensa mexicana?",
+    "opts": ["San Juan de Ulúa y San Carlos", "Loreto y Guadalupe", "Castillo de Chapultepec y Molino del Rey"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué famoso militar, que más tarde sería presidente, destacó por su estrategia en la Batalla de Puebla?",
+    "opts": ["Victoriano Huerta", "Porfirio Díaz", "Álvaro Obregón"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál fue la frase célebre que Ignacio Zaragoza envió en un telegrama al presidente Juárez tras la victoria?",
+    "opts": ["El respeto al derecho ajeno es la paz", "Las armas nacionales se han cubierto de gloria", "La patria es primero"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué batallón indígena es recordado por su valiente participación en la defensa de los fuertes?",
+    "opts": ["Batallón de San Patricio", "Batallón de Zacapoaxtla", "Batallón de los Supremos Poderes"],
+    "answer": 1
+  },
+  {
+    "q": "Antes de la batalla, ¿qué tratado firmado por Manuel Doblado buscaba evitar la intervención armada mediante el diálogo?",
+    "opts": ["Tratados de Miramar", "Tratados de la Soledad", "Tratado de McLane-Ocampo"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué países formaron la Alianza Tripartita para reclamar el pago de deudas a México en 1861?",
+    "opts": ["España, Francia y Reino Unido", "Francia, Austria y Estados Unidos", "España, Estados Unidos y Prusia"],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué sucedió con Ignacio Zaragoza pocos meses después de la victoria del 5 de mayo?",
+    "opts": ["Fue nombrado Ministro de Guerra", "Murió de fiebre tifoidea", "Renunció a su cargo por diferencias con Juárez"],
+    "answer": 1
+  },
+  {
+    "q": "¿Por qué la victoria del 5 de mayo es considerada estratégicamente importante a nivel internacional?",
+    "opts": ["Evitó que Francia apoyara a la Confederación en la Guerra Civil de EE. UU.", "Marcó el fin definitivo del Segundo Imperio Mexicano", "Provocó la caída inmediata de Napoleón III"],
+    "answer": 0
+  },
+  {
+    "q": "¿En qué año regresaron los franceses con refuerzos para finalmente tomar la ciudad de Puebla?",
+    "opts": ["1862", "1863", "1864"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué general sustituyó a Lorencez tras el fracaso francés en Puebla?",
+    "opts": ["Miguel Miramón", "Élie-Frédéric Forey", "Leonardo Márquez"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cómo se llamaba el general mexicano que defendió el fuerte de Guadalupe?",
+    "opts": ["Miguel Negrete", "Felipe Berriozábal", "Lamadrid"],
+    "answer": 0
+  },
+  {
+    "q": "¿Cuál era la proporción aproximada de soldados entre el ejército francés y el mexicano en la batalla?",
+    "opts": ["1 a 1", "2 franceses por cada 1 mexicano", "3 franceses por cada 1 mexicano"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué estado de EE. UU. se celebra el 5 de mayo con mayor fervor que en gran parte de México?",
+    "opts": ["Texas", "California", "Illinois"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué grupo político mexicano apoyó la intervención francesa con la esperanza de instaurar una monarquía?",
+    "opts": ["Liberales", "Conservadores", "Federalistas"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué tipo de armamento utilizaba el ejército francés, considerado el más moderno de la época?",
+    "opts": ["Fusiles de chispa", "Fusiles de percusión y cañones estriados", "Arcabuces"],
+    "answer": 1
+  },
+  {
+    "q": "¿A qué ciudad fue trasladado el gobierno de Juárez tras la caída de Puebla en 1863?",
+    "opts": ["Veracruz", "San Luis Potosí", "Paso del Norte (hoy Ciudad Juárez)"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué error táctico cometió Lorencez al atacar los fuertes?",
+    "opts": ["Atacar por los flancos en lugar del centro", "Subestimar las defensas y atacar de frente el punto más fuerte", "No utilizar su caballería"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué día se decretó oficialmente el 5 de mayo como día de fiesta nacional en México?",
+    "opts": ["En 1862, por Benito Juárez", "En 1890, por Porfirio Díaz", "En 1917, tras la Revolución"],
+    "answer": 0
+  },
+  {
+    "q": "¿Cuál era el lema de los soldados franceses antes de ser derrotados en Puebla?",
+    "opts": ["Libertad, Igualdad, Fraternidad", "Somos los dueños del mundo", "Por el honor de Francia"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué papel jugaron las condiciones climáticas en la batalla del 5 de mayo?",
+    "opts": ["Un calor extremo que agotó a los franceses", "Una fuerte tormenta con granizo que dificultó el avance francés", "Una densa niebla que impidió la visibilidad"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué general mexicano comandaba la caballería que persiguió a los franceses en retirada?",
+    "opts": ["Mariano Escobedo", "Porfirio Díaz", "Tomás Mejía"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué lugar exacto nació Ignacio Zaragoza?",
+    "opts": ["Puebla", "Coahuila", "Bahía del Espíritu Santo, Texas"],
+    "answer": 2
+  },
+  {
+    "q": "¿Qué evento internacional dio origen a la conmemoración del 1 de mayo como Día del Trabajo?",
+    "opts": ["La Revolución Rusa", "La huelga de Haymarket en Chicago", "La Revolución Mexicana"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué año se celebró por primera vez el Día del Trabajo en México de forma masiva?",
+    "opts": ["1910", "1913", "1923"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué organización obrera mexicana organizó el primer desfile del 1 de mayo en 1913?",
+    "opts": ["CTM", "CROM", "Casa del Obrero Mundial"],
+    "answer": 2
+  },
+  {
+    "q": "¿Cuál era la principal demanda de los 'Mártires de Chicago' que se recuerda el 1 de mayo?",
+    "opts": ["Salario mínimo", "Jornada laboral de 8 horas", "Derecho al voto"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué huelga en México de 1906 es considerada precursora de la lucha obrera y del 1 de mayo?",
+    "opts": ["Huelga de Río Blanco", "Huelga de Cananea", "Huelga de Nueva Rosita"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué artículo de la Constitución de 1917 consagra los derechos de los trabajadores en México?",
+    "opts": ["Artículo 3", "Artículo 27", "Artículo 123"],
+    "answer": 2
+  },
+  {
+    "q": "¿Quién era el presidente de México cuando se oficializó el 1 de mayo como día de descanso obligatorio?",
+    "opts": ["Venustiano Carranza", "Álvaro Obregón", "Plutarco Elías Calles"],
+    "answer": 2
+  },
+  {
+    "q": "¿Qué evento trágico ocurrió en Veracruz en 1907 relacionado con la lucha obrera?",
+    "opts": ["La matanza de Río Blanco", "El motín de Orizaba", "La toma de Veracruz"],
+    "answer": 0
+  },
+  {
+    "q": "¿Cuál era el nombre de la empresa minera donde estalló la huelga de Cananea?",
+    "opts": ["Cananea Consolidated Copper Company", "Mexican Petroleum Co.", "Peñoles"],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué figura ideológica influyó profundamente en las huelgas de Cananea y Río Blanco?",
+    "opts": ["Francisco I. Madero", "Ricardo Flores Magón", "Emiliano Zapata"],
+    "answer": 1
+  },
+  {
+    "q": "¿Bajo qué gobierno se reprimieron violentamente las huelgas de Cananea y Río Blanco?",
+    "opts": ["Benito Juárez", "Porfirio Díaz", "Sebastián Lerdo de Tejada"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué buscaban los trabajadores textiles de Río Blanco en su pliego petitorio?",
+    "opts": ["Solo aumento de sueldo", "Mejores condiciones de salud y fin de las tiendas de raya", "La propiedad de las fábricas"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es la diferencia entre el 1 de mayo en México y el 'Labor Day' en Estados Unidos?",
+    "opts": ["Se celebran el mismo día", "El de EE. UU. se celebra en septiembre", "El de México es por la Revolución y el de EE. UU. por Chicago"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué organización sindical fue la más poderosa en México durante gran parte del siglo XX?",
+    "opts": ["UNT", "CROM", "CTM"],
+    "answer": 2
+  },
+  {
+    "q": "¿Quién fue el primer secretario general de la CTM?",
+    "opts": ["Fidel Velázquez", "Vicente Lombardo Toledano", "Luis N. Morones"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué significa el término 'Tienda de Raya'?",
+    "opts": ["Una tienda de uniformes laborales", "Un sistema donde el trabajador recibía crédito en lugar de efectivo", "Una tienda exclusiva para militares"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué ciudad se fundó la Casa del Obrero Mundial?",
+    "opts": ["Puebla", "Pachuca", "Ciudad de México"],
+    "answer": 2
+  },
+  {
+    "q": "¿Cuál de estos derechos NO está originalmente en el Artículo 123 constitucional?",
+    "opts": ["Derecho a huelga", "Vacaciones pagadas de 30 días desde el primer año", "Día de descanso semanal"],
+    "answer": 1
+  },
+  {
+    "q": "¿A qué se refiere el término 'Esquirol' en el contexto del 1 de mayo?",
+    "opts": ["Un líder sindical corrupto", "Un trabajador que rompe una huelga", "Un inspector del trabajo"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué presidente mexicano fue el primero en desfilar junto a los obreros un 1 de mayo?",
+    "opts": ["Lázaro Cárdenas", "Adolfo López Mateos", "Álvaro Obregón"],
+    "answer": 2
+  },
+  {
+    "q": "¿Cuál era la principal queja de los mineros de Cananea respecto a sus compañeros extranjeros?",
+    "opts": ["La falta de herramientas", "La desigualdad salarial por el mismo trabajo", "El horario nocturno"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué periódico fundado por los hermanos Flores Magón promovía los derechos laborales?",
+    "opts": ["El Universal", "Regeneración", "El Hijo del Ahuizote"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué papel jugaron los 'Batallones Rojos' en la Revolución Mexicana?",
+    "opts": ["Eran fuerzas campesinas de Zapata", "Eran obreros que apoyaron a Carranza contra Villa y Zapata", "Eran guardias presidenciales de Madero"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué congreso internacional se estableció el 1 de mayo como día de lucha proletaria?",
+    "opts": ["Congreso de Viena", "Congreso Obrero Socialista de la Segunda Internacional (París)", "Tratado de Versalles"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál es la ley reglamentaria del Artículo 123 en México?",
+    "opts": ["Ley Federal del Trabajo", "Ley del Seguro Social", "Constitución Política"],
+    "answer": 0
+  },
+  {
+    "q": "¿En qué ciudad de EE.UU. ocurrieron las huelgas de 1886 que dieron origen al Día Internacional del Trabajo?",
+    "opts": ["Detroit", "Chicago", "Pittsburgh"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál era la principal demanda de los trabajadores en las marchas de Chicago en 1886?",
+    "opts": ["Salario mínimo garantizado", "Jornada laboral de 8 horas", "Derecho al voto para obreros"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué año la Segunda Internacional proclamó oficialmente el 1° de mayo como Día Internacional del Trabajo?",
+    "opts": ["1886", "1889", "1900"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué trágico suceso ocurrió el 4 de mayo de 1886 en la Plaza Haymarket de Chicago?",
+    "opts": ["Un incendio en una fábrica textil", "Estallido de una bomba durante una manifestación obrera", "El asesinato de un gobernador por huelguistas"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué artículo de la Constitución Mexicana de 1917 regula los derechos de los trabajadores?",
+    "opts": ["Artículo 27", "Artículo 123", "Artículo 115"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué año se promulgó la primera Ley Federal del Trabajo en México?",
+    "opts": ["1917", "1931", "1945"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué central obrera mexicana fue fundada en 1918 bajo el liderazgo de Luis N. Morones?",
+    "opts": ["CTM", "CROM", "CROC"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué año fue fundada la CTM (Confederación de Trabajadores de México)?",
+    "opts": ["1928", "1936", "1943"],
+    "answer": 1
+  },
+  {
+    "q": "¿Quién fue el primer secretario general de la CTM?",
+    "opts": ["Lázaro Cárdenas", "Vicente Lombardo Toledano", "Fidel Velázquez"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué presidente mexicano promulgó la Constitución de 1917, que incluyó el histórico Artículo 123 laboral?",
+    "opts": ["Porfirio Díaz", "Venustiano Carranza", "Francisco I. Madero"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué huelga de 1906 en Sonora es considerada precursora de la Revolución Mexicana y del movimiento obrero moderno?",
+    "opts": ["Huelga de Río Blanco", "Huelga de Cananea", "Huelga de los ferrocarrileros"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué estado ocurrió la violenta represión a los trabajadores textiles de Río Blanco en 1907?",
+    "opts": ["Puebla", "Veracruz", "Oaxaca"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos días de salario mínimo corresponden como aguinaldo a los trabajadores en México según la LFT?",
+    "opts": ["10 días", "15 días", "30 días"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántas horas tiene como máximo la jornada diurna en México según la legislación laboral vigente?",
+    "opts": ["7 horas", "8 horas", "9 horas"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué organismo del gobierno federal mexicano tiene la función de fijar el salario mínimo?",
+    "opts": ["IMSS", "CONASAMI", "STPS"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué año fue fundado el IMSS (Instituto Mexicano del Seguro Social)?",
+    "opts": ["1938", "1943", "1952"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos días de vacaciones mínimas corresponden a un trabajador tras su primer año de servicios según la reforma a la LFT de 2022?",
+    "opts": ["6 días", "12 días", "20 días"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué año fue creada la Organización Internacional del Trabajo (OIT)?",
+    "opts": ["1919", "1945", "1948"],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué países NO adoptaron el 1° de mayo como Día del Trabajo y en cambio lo celebran el primer lunes de septiembre?",
+    "opts": ["México y Cuba", "Canadá y Estados Unidos", "Argentina y Brasil"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos años aproximadamente lideró Fidel Velázquez la CTM, convirtiéndose en el sindicalista más longevo del poder en México?",
+    "opts": ["20 años", "35 años", "Más de 55 años"],
+    "answer": 2
+  },
+  {
+    "q": "¿En qué año México reformó la LFT para reconocer la libertad sindical y la votación directa en contratos colectivos, vinculada al T-MEC?",
+    "opts": ["2012", "2019", "2023"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál de las siguientes prestaciones NO es obligatoria por ley para todos los trabajadores formales en México?",
+    "opts": ["Aguinaldo", "Seguro de gastos médicos mayores", "Prima vacacional"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué tipo de jornada reconoce la LFT mexicana para trabajos que se realizan entre las 8 p.m. y las 6 a.m.?",
+    "opts": ["Jornada mixta", "Jornada nocturna", "Jornada extraordinaria"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál de las siguientes NO es una jornada laboral reconocida en la Ley Federal del Trabajo de México?",
+    "opts": ["Jornada diurna", "Jornada mixta", "Jornada extraordinaria indefinida"],
+    "answer": 2
+  },
+  {
+    "q": "¿Qué tipo de trabajadores protagonizaron la huelga de Cananea de 1906, uno de los conflictos laborales más importantes del porfiriato?",
+    "opts": ["Ferroviarios", "Mineros", "Textiles"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué año ocurrió la Batalla de Puebla?",
+    "opts": ["1847", "1862", "1867"],
+    "answer": 1
+  },
+  {
+    "q": "¿Contra qué ejército combatieron los mexicanos en la Batalla del 5 de mayo?",
+    "opts": ["Ejército español", "Ejército francés", "Ejército austro-húngaro"],
+    "answer": 1
+  },
+  {
+    "q": "¿Quién comandó las fuerzas mexicanas en la Batalla de Puebla?",
+    "opts": ["Benito Juárez", "Ignacio Zaragoza", "Porfirio Díaz"],
+    "answer": 1
+  },
+  {
+    "q": "¿Quién comandó el ejército francés derrotado en la Batalla de Puebla?",
+    "opts": ["Maximiliano de Habsburgo", "Charles de Lorencez", "François Bazaine"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál fue la principal razón por la que Francia intervino militarmente en México en 1862?",
+    "opts": ["Apoyar a los conservadores mexicanos en la guerra civil", "El decreto de Juárez que suspendió el pago de la deuda externa", "Vengar la expulsión de misioneros franceses de México"],
+    "answer": 1
+  },
+  {
+    "q": "¿Quién era presidente de México durante la Batalla de Puebla?",
+    "opts": ["Antonio López de Santa Anna", "Benito Juárez", "Sebastián Lerdo de Tejada"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál fue el resultado de la Batalla de Puebla el 5 de mayo de 1862?",
+    "opts": ["Victoria del ejército francés", "Victoria del ejército mexicano", "La batalla terminó sin un vencedor claro"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué tratado internacional de 1861 unió a Francia, España e Inglaterra para cobrar deudas a México?",
+    "opts": ["Tratado de Guadalupe", "Convención de Londres", "Tratado de París"],
+    "answer": 1
+  },
+  {
+    "q": "¿Por qué España e Inglaterra se retiraron de la alianza contra México antes de la batalla?",
+    "opts": ["Porque México saldó sus deudas con ellos", "Porque Francia reveló sus intenciones de instalar un Imperio en México", "Por presión diplomática de Estados Unidos"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué año murió el general Ignacio Zaragoza, héroe de la Batalla de Puebla?",
+    "opts": ["1862", "1867", "1871"],
+    "answer": 0
+  },
+  {
+    "q": "¿De qué enfermedad murió el general Zaragoza meses después de la batalla?",
+    "opts": ["Heridas de combate", "Fiebre tifoidea", "Tuberculosis"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué ciudad del estado de Puebla lleva el apellido del héroe de la Batalla del 5 de mayo?",
+    "opts": ["Tehuacán", "Puebla de Zaragoza", "San Andrés Cholula"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué futuro presidente de México participó como joven oficial en la Batalla de Puebla?",
+    "opts": ["Sebastián Lerdo de Tejada", "Manuel González", "Porfirio Díaz"],
+    "answer": 2
+  },
+  {
+    "q": "A pesar del triunfo del 5 de mayo de 1862, ¿qué ocurrió al año siguiente?",
+    "opts": ["México firmó la paz con Francia", "Los franceses capturaron la Ciudad de México", "Zaragoza derrotó nuevamente al ejército francés"],
+    "answer": 1
+  },
+  {
+    "q": "¿Quién fue proclamado Emperador de México en 1864 con apoyo francés y de los conservadores mexicanos?",
+    "opts": ["Napoleón III", "Maximiliano de Habsburgo", "Carlos I de Austria"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué ciudad fue ejecutado Maximiliano de Habsburgo en 1867?",
+    "opts": ["Ciudad de México", "Querétaro", "Puebla"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué cerros de la ciudad de Puebla se concentraron los combates del 5 de mayo de 1862?",
+    "opts": ["Cerro de las Campanas y Cerro Grande", "Cerros de Loreto y Guadalupe", "Cerro del Borrego y Tepeyac"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál era el objetivo estratégico de Napoleón III al intervenir en México, según los historiadores?",
+    "opts": ["Recuperar territorios perdidos por Francia en América", "Crear un Imperio latino que contrarrestara la influencia anglosajona en América", "Obtener concesiones mineras y petroleras en territorio mexicano"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué tan decisiva fue la Batalla de Puebla en el contexto de la Segunda Intervención Francesa?",
+    "opts": ["Fue el golpe definitivo que expulsó a los franceses de México", "Fue una victoria simbólica que retrasó el avance francés pero no lo detuvo", "Obligó a Francia a negociar la paz de inmediato"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuántos años tenía aproximadamente Ignacio Zaragoza cuando comandó la Batalla de Puebla?",
+    "opts": ["27 años", "33 años", "41 años"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué medida tomó Benito Juárez en 1861 que detonó la intervención extranjera en México?",
+    "opts": ["La secularización de los cementerios nacionales", "La suspensión del pago de la deuda externa por dos años", "La expropiación de empresas británicas y francesas"],
+    "answer": 1
+  },
+  {
+    "q": "¿El 5 de mayo es considerado un día festivo oficial a nivel nacional en México?",
+    "opts": ["Sí, es feriado en todo el país", "No, solo es festivo en el estado de Puebla", "Es feriado solo para dependencias del gobierno federal"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué país se celebra el Cinco de Mayo con más fervor fuera de México?",
+    "opts": ["España", "Estados Unidos", "Francia"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué error estratégico cometió el general Lorencez que contribuyó decisivamente a su derrota el 5 de mayo?",
+    "opts": ["Atacó de noche sin conocer el terreno", "Subestimó a las fuerzas mexicanas y lanzó un ataque frontal contra posiciones defensivas elevadas", "Dividió sus tropas en tres columnas sin comunicación entre sí"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál era la reputación del ejército francés en 1862 que hacía impensable su derrota ante México?",
+    "opts": ["Era el ejército más numeroso del mundo en ese momento", "Era considerado el más poderoso de Europa tras sus victorias en Crimea e Italia", "Había conquistado recientemente a Rusia y a varios imperios asiáticos"],
+    "answer": 1
+  }
+]
