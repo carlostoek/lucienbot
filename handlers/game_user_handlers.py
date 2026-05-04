@@ -190,12 +190,18 @@ async def trivia_answer(callback: CallbackQuery, state: FSMContext):
                 svc.invalidate_streak_code(user_id, config_id)
         await state.clear()
         keyboard = game_menu_keyboard()
+
+        service = GameService()
+        header = service._select_template(service.STREAK_TEMPLATES['continue_wrong_header'])
+        lost = service._select_template(service.STREAK_TEMPLATES['continue_wrong_lost'])
+        footer = service._select_template(service.STREAK_TEMPLATES['continue_wrong_footer'])
+
         message = (
-            f"🎩 <b>Lucien:</b>\n\n"
-            f"<i>El silencio de una respuesta incorrecta es ensordecedor.</i>\n\n"
-            f"Su descuento del <b>{tier_discount}%</b> se ha desvanecido.\n\n"
-            "<i>La próximas preguntas esperarán su regreso.</i>"
+            f"{header}\n\n"
+            f"{lost.format(discount=tier_discount)}\n\n"
+            f"<i>{footer}</i>"
         )
+
         await callback.message.edit_text(message, reply_markup=keyboard)
         await callback.answer()
         logger.info(f"game_user_handlers - trivia_answer - {user_id} - streak_continue_wrong")
@@ -592,19 +598,21 @@ async def streak_retire(callback: CallbackQuery, state: FSMContext):
     await state.clear()
 
     if discount and discount.get('code'):
+        service_instance = GameService()
+        header = service_instance._select_template(service_instance.STREAK_TEMPLATES['retire_success_header'])
+        code_t = service_instance._select_template(service_instance.STREAK_TEMPLATES['retire_success_code'])
+        promo_t = service_instance._select_template(service_instance.STREAK_TEMPLATES['retire_success_promo'])
+        footer = service_instance._select_template(service_instance.STREAK_TEMPLATES['retire_success_footer'])
+
         message = (
-            f"🎩 <b>Lucien:</b>\n\n"
-            f"Ha asegurado su descuento del <b>{discount_percentage}%</b>.\n\n"
-            f"📋 <b>Código:</b> <code>{discount['code']}</code>\n"
-            f"💰 <b>Descuento:</b> {discount_percentage}% en {discount['promotion_name']}\n\n"
-            f"<i>Usa este código al comprar la promoción.</i>"
+            f"{header}\n\n"
+            f"{code_t.format(code=discount['code'])}\n"
+            f"{promo_t.format(discount=discount_percentage, promo=discount.get('promotion_name', 'la promoción'))}\n\n"
+            f"{footer}"
         )
         keyboard = discount_claim_keyboard(discount['code'])
     else:
-        message = (
-            "🎩 <b>Lucien:</b>\n\n"
-            "<i>No se pudo generar el código. Puede que ya no haya códigos disponibles.</i>"
-        )
+        message = service_instance._select_template(service_instance.STREAK_TEMPLATES['retire_no_codes'])
         keyboard = game_menu_keyboard()
 
     await callback.message.edit_text(message, reply_markup=keyboard)
@@ -623,10 +631,15 @@ async def streak_exit(callback: CallbackQuery, state: FSMContext):
 
     await state.clear()
 
+    service = GameService()
+    header = service._select_template(service.STREAK_TEMPLATES['exit_header'])
+    discount_t = service._select_template(service.STREAK_TEMPLATES['exit_discount_waiting'])
+    footer = service._select_template(service.STREAK_TEMPLATES['exit_footer'])
+
     message = (
-        f"🎩 <b>Lucien:</b>\n\n"
-        f"Su descuento del <b>{tier_discount}%</b> aguarda pacientemente.\n\n"
-        "<i>Podrá reclamarlo cuando lo desee desde el menú.</i>"
+        f"{header}\n\n"
+        f"{discount_t.format(discount=tier_discount)}\n\n"
+        f"{footer}"
     )
     keyboard = game_menu_keyboard()
 
@@ -672,13 +685,22 @@ async def streak_continue(callback: CallbackQuery, state: FSMContext):
     # Mostrar siguiente pregunta
     next_streak = data.get('current_tier_streak', 0)
     next_discount = data.get('next_tier_discount', 0)
+    next_streak_val = next_streak + 5
 
-    text = (
-        f"🎯 <b>Continúa en su racha!</b>\n\n"
-        f"Ha acumulado <b>{next_streak}</b> respuestas correctas.\n"
-        f"Su próximo objetivo: <b>{next_streak + 5}</b> para el <b>{next_discount}%</b> de descuento.\n\n"
-        f"Cuidado: si falla, perderá TODO el descuento acumulado.\n\n"
-        f"❓ <b>Pregunta:</b> {question['q']}"
+    service = GameService()
+    header = service._select_template(service.STREAK_TEMPLATES['continue_header'])
+    progress = service._select_template(service.STREAK_TEMPLATES['continue_progress'])
+    next_obj = service._select_template(service.STREAK_TEMPLATES['continue_next_objective'])
+    warning = service._select_template(service.STREAK_TEMPLATES['continue_warning'])
+    question_t = service._select_template(service.STREAK_TEMPLATES['continue_prompt_question'])
+
+    message = (
+        f"{header}\n\n"
+        f"{progress.format(streak=next_streak)}\n"
+        f"{next_obj.format(next_streak=next_streak_val, next_discount=next_discount)}\n\n"
+        f"{warning}\n\n"
+        f"────────────────────────────\n"
+        f"{question_t.format(question=question['q'])}"
     )
 
     # Mantener el estado para la siguiente respuesta
@@ -689,7 +711,7 @@ async def streak_continue(callback: CallbackQuery, state: FSMContext):
     else:
         keyboard = trivia_keyboard(question, question_idx)
 
-    await callback.message.edit_text(text, reply_markup=keyboard)
+    await callback.message.edit_text(message, reply_markup=keyboard)
     await callback.answer()
     logger.info(f"game_user_handlers - streak_continue - {user_id} - next_question")
 
