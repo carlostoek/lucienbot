@@ -1,4 +1,164 @@
 [
+  {"q": "¿Qué se celebra el 1 de mayo en México?", "opts": ["Día de la Independencia", "Día del Niño", "Día del Trabajo", "Día de la Revolución"], "answer": 2},
+  {"q": "¿Qué se celebra el 5 de mayo en México?", "opts": ["Batalla de Puebla", "Día de la Bandera", "Navidad", "Año Nuevo"], "answer": 0},
+  {"q": "¿Quién trabaja para ganar dinero?", "opts": ["Los trabajadores", "Los árboles", "Los animales", "Las montañas"], "answer": 0},
+  {"q": "¿El 1 de mayo celebra a quién?", "opts": ["A los niños", "A los trabajadores", "A los animales", "A los maestros"], "answer": 1},
+  {"q": "¿En qué mes es el 1 de mayo?", "opts": ["Enero", "Marzo", "Mayo", "Diciembre"], "answer": 2},
+  {"q": "¿En qué mes es el 5 de mayo?", "opts": ["Abril", "Mayo", "Junio", "Febrero"], "answer": 1},
+
+  {"q": "¿Quién defendió México en la Batalla de Puebla?", "opts": ["Los franceses", "Los mexicanos", "Los españoles", "Los ingleses"], "answer": 1},
+  {"q": "¿Contra qué país luchó México el 5 de mayo?", "opts": ["Estados Unidos", "España", "Francia", "Brasil"], "answer": 2},
+  {"q": "¿México ganó o perdió la Batalla de Puebla?", "opts": ["Ganó", "Perdió", "Empató", "No hubo batalla"], "answer": 0},
+  {"q": "¿En qué lugar fue la Batalla de Puebla?", "opts": ["Guadalajara", "Monterrey", "Puebla", "Cancún"], "answer": 2},
+
+  {"q": "¿Qué hacen algunas personas el 1 de mayo?", "opts": ["Van a la playa", "Marchan", "Duermen todo el día", "Juegan fútbol"], "answer": 1},
+  {"q": "¿Qué usan los trabajadores para hacer su trabajo?", "opts": ["Herramientas", "Juguetes", "Comida", "Películas"], "answer": 0},
+  {"q": "¿Los trabajadores ayudan a?", "opts": ["Nada", "La sociedad", "Solo a ellos", "A los animales"], "answer": 1},
+
+  {"q": "¿Quién fue un líder mexicano en la Batalla de Puebla?", "opts": ["Benito Juárez", "Ignacio Zaragoza", "Pancho Villa", "Miguel Hidalgo"], "answer": 1},
+  {"q": "¿Los franceses eran amigos o enemigos en esa batalla?", "opts": ["Amigos", "Enemigos", "Vecinos", "Familia"], "answer": 1},
+
+  {"q": "¿El 5 de mayo es sobre una batalla o una fiesta?", "opts": ["Batalla", "Fiesta", "Juego", "Película"], "answer": 0},
+  {"q": "¿El 1 de mayo es para recordar el trabajo o la guerra?", "opts": ["Trabajo", "Guerra", "Deporte", "Música"], "answer": 0},
+
+  {"q": "¿Qué país es México?", "opts": ["Europa", "Asia", "América", "África"], "answer": 2},
+  {"q": "¿Qué hacen los trabajadores todos los días?", "opts": ["Trabajan", "Vuelan", "Nadan", "Duermen siempre"], "answer": 0},
+
+  {"q": "¿El 5 de mayo es importante para México?", "opts": ["Sí", "No", "A veces", "Nunca"], "answer": 0},
+  {"q": "¿El 1 de mayo es un día importante?", "opts": ["Sí", "No", "Solo para niños", "Solo para animales"], "answer": 0},
+
+  {"q": "¿Qué celebramos el 1 de mayo?", "opts": ["A los trabajadores", "A los maestros", "A los doctores", "A los policías"], "answer": 0},
+  {"q": "¿Dónde ocurrió la batalla del 5 de mayo?", "opts": ["En una escuela", "En Puebla", "En un parque", "En una casa"], "answer": 1},
+
+  {"q": "¿Qué hicieron los mexicanos en la Batalla de Puebla?", "opts": ["Ganaron", "Perdieron", "Durmieron", "Se escondieron"], "answer": 0},
+  {"q": "¿El 5 de mayo recuerda una victoria o una derrota?", "opts": ["Victoria", "Derrota", "Empate", "Nada"], "answer": 0},
+  
+  {
+    "q": "¿Qué celebramos en México el 1 de mayo?",
+    "opts": ["El Día del Niño", "El Día del Trabajo", "Navidad"],
+    "answer": 1
+  },
+  {
+    "q": "¿A quiénes festejamos el 1 de mayo?",
+    "opts": ["A los juguetes", "A los trabajadores", "A los dinosaurios"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué suelen hacer los trabajadores en su día para que los escuchen?",
+    "opts": ["Un desfile o marcha", "Dormir en la calle", "Una fiesta de disfraces"],
+    "answer": 0
+  },
+  {
+    "q": "¿Qué gran evento ocurrió el 5 de mayo de 1862?",
+    "opts": ["La Independencia", "La Batalla de Puebla", "El descubrimiento de América"],
+    "answer": 1
+  },
+  {
+    "q": "¿En qué ciudad de México pelearon los soldados el 5 de mayo?",
+    "opts": ["Monterrey", "Puebla", "Acapulco"],
+    "answer": 1
+  },
+  {
+    "q": "¿Contra qué país peleó México en la Batalla de Puebla?",
+    "opts": ["Francia", "Estados Unidos", "España"],
+    "answer": 0
+  },
+  {
+    "q": "¿Quién era el general valiente que mandaba al ejército mexicano?",
+    "opts": ["Miguel Hidalgo", "Ignacio Zaragoza", "El Chavo del Ocho"],
+    "answer": 1
+  },
+  {
+    "q": "¿Quién era el presidente de México en esa época?",
+    "opts": ["Benito Juárez", "Porfirio Díaz", "Santa Claus"],
+    "answer": 0
+  },
+  {
+    "q": "¿Cómo se llamaban los edificios de piedra donde se defendieron los mexicanos?",
+    "opts": ["Castillos de arena", "Fuertes de Loreto y Guadalupe", "Casas de madera"],
+    "answer": 1
+  },
+  {
+    "q": "¿Quién ganó la batalla el 5 de mayo?",
+    "opts": ["Los franceses", "Los mexicanos", "Nadie, quedaron empate"],
+    "answer": 1
+  },
+  {
+    "q": "¿De qué colores es la bandera que defendieron los soldados?",
+    "opts": ["Azul y amarillo", "Verde, blanco y rojo", "Rosa y morado"],
+    "answer": 1
+  },
+  {
+    "q": "El 1 de mayo es un día feriado. ¿Qué significa eso?",
+    "opts": ["Que hay más tarea", "Que no hay clases y se descansa", "Que es obligatorio trabajar el doble"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué animal aparece en el escudo de nuestra bandera?",
+    "opts": ["Un león", "Un águila", "Un gatito"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué hacían los valientes indígenas de Zacapoaxtla?",
+    "opts": ["Ayudaron a defender a México", "Se quedaron dormidos", "Hicieron una comida"],
+    "answer": 0
+  },
+  {
+    "q": "¿En qué mes ocurren estas dos fiestas?",
+    "opts": ["Enero", "Mayo", "Diciembre"],
+    "answer": 1
+  },
+  {
+    "q": "¿Cuál de estos es un trabajo que celebramos el 1 de mayo?",
+    "opts": ["Ser un árbol", "Ser bombero o doctor", "Ser una piedra"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué mensaje mandó Zaragoza al ganar la batalla?",
+    "opts": ["Que tenía mucha hambre", "Que las armas nacionales se cubrieron de gloria", "Que quería ir al cine"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué instrumento usaban los soldados para avisar órdenes?",
+    "opts": ["Una trompeta o tambor", "Un celular", "Un silbato de juguete"],
+    "answer": 0
+  },
+  {
+    "q": "¿Cómo se sentían los mexicanos después de ganar la batalla?",
+    "opts": ["Tristes", "Con mucho orgullo y alegría", "Aburridos"],
+    "answer": 1
+  },
+  {
+    "q": "Si una persona cura a los enfermos, ¿qué trabajo tiene?",
+    "opts": ["Es un cartero", "Es un médico o doctor", "Es un payaso"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué es un derecho de los trabajadores?",
+    "opts": ["No comer nunca", "Recibir un pago por su esfuerzo", "Trabajar 24 horas sin parar"],
+    "answer": 1
+  },
+  {
+    "q": "¿Qué usaban los soldados para defenderse (que no es láser)?",
+    "opts": ["Cañones y fusiles", "Espadas de luz", "Varitas mágicas"],
+    "answer": 0
+  },
+  {
+    "q": "¿En qué billete azul de 20 pesos aparece Benito Juárez?",
+    "opts": ["En el de 20 pesos", "En el de 1000 pesos", "En ninguno"],
+    "answer": 0
+  },
+  {
+    "q": "¿Cómo se llama el lugar donde se planta la bandera?",
+    "opts": ["Maceta", "Asta bandera", "Caja"],
+    "answer": 1
+  },
+  {
+    "q": "¿Por qué recordamos estas fechas en la escuela?",
+    "opts": ["Para conocer nuestra historia", "Porque nos sobran cuadernos", "Para perder el tiempo"],
+    "answer": 0
+  },
+
   {"q": "¿Qué evento histórico internacional dio origen al Día del Trabajo el 1 de mayo?", "opts": ["Revolución Francesa", "Huelga de Cananea", "Revuelta de Haymarket", "Tratado de Versalles"], "answer": 2},
   {"q": "¿En qué ciudad ocurrió la Revuelta de Haymarket?", "opts": ["Nueva York", "Chicago", "Boston", "Filadelfia"], "answer": 1},
   {"q": "¿En qué año ocurrieron los eventos de Haymarket?", "opts": ["1876", "1886", "1896", "1906"], "answer": 1},
