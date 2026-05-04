@@ -54,11 +54,22 @@ class TriviaDiscountService:
         duration_minutes: Optional[int] = None,
         auto_reset_enabled: bool = False,
         max_reset_cycles: Optional[int] = None,
-        question_set_id: Optional[int] = None
+        question_set_id: Optional[int] = None,
+        discount_tiers: Optional[List[dict]] = None
     ) -> Optional[TriviaPromotionConfig]:
         """Crea configuración de promoción por racha"""
+        # Validar tiers si se proporcionan
+        if discount_tiers:
+            is_valid, error_msg = self.validate_discount_tiers(discount_tiers)
+            if not is_valid:
+                logger.warning(f"trivia_discount_service - create_trivia_promotion_config - {created_by} - invalid tiers: {error_msg}")
+                return None
+
         with SessionLocal() as session:
             try:
+                # Convertir tiers a JSON si se proporcionan
+                tiers_json = json.dumps(discount_tiers) if discount_tiers else None
+
                 config = TriviaPromotionConfig(
                     name=name,
                     promotion_id=promotion_id,
@@ -72,7 +83,8 @@ class TriviaDiscountService:
                     auto_reset_enabled=auto_reset_enabled,
                     max_reset_cycles=max_reset_cycles,
                     created_by=created_by,
-                    question_set_id=question_set_id
+                    question_set_id=question_set_id,
+                    discount_tiers=tiers_json
                 )
                 session.add(config)
                 session.commit()
@@ -461,6 +473,48 @@ class TriviaDiscountService:
             if not config:
                 return 0
             return max(0, config.max_codes - config.codes_claimed)
+
+    def validate_discount_tiers(self, tiers: List[dict]) -> tuple[bool, str]:
+        """Valida estructura de tiers. Retorna (es_valido, mensaje_error)"""
+        if not tiers:
+            return False, "La lista de tiers no puede estar vacía"
+
+        if len(tiers) > 5:
+            return False, "Máximo 5 tiers permitidos"
+
+        if len(tiers) < 1:
+            return False, "Al menos 1 tier requerido"
+
+        prev_streak = 0
+        prev_discount = 0
+
+        for i, tier in enumerate(tiers):
+            if 'streak' not in tier or 'discount' not in tier:
+                return False, f"Tier {i+1} debe tener 'streak' y 'discount'"
+
+            streak = tier['streak']
+            discount = tier['discount']
+
+            if not isinstance(streak, int) or streak < 1:
+                return False, f"Tier {i+1}: streak debe ser entero positivo"
+
+            if not isinstance(discount, int) or discount < 0 or discount > 100:
+                return False, f"Tier {i+1}: discount debe ser 0-100"
+
+            if streak <= prev_streak:
+                return False, f"Tier {i+1}: streak debe ser mayor que el anterior ({prev_streak})"
+
+            if discount <= prev_discount and discount != 100:
+                return False, f"Tier {i+1}: discount debe ser mayor que el anterior ({prev_discount}) o 100%"
+
+            prev_streak = streak
+            prev_discount = discount
+
+        # El último tier debe ser 100%
+        if tiers[-1]['discount'] != 100:
+            return False, "El último tier debe ser 100% (descuento completo)"
+
+        return True, ""
 
     # ==================== TIERS DE DESCUENTO ====================
 

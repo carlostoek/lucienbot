@@ -167,11 +167,68 @@ async def trivia_answer(callback: CallbackQuery, state: FSMContext):
     answer_idx = int(parts[2])
     question_idx = int(parts[3])
 
+    # Verificar si está en modo streak_continue
+    current_state = await state.get_state()
+    is_streak_continue = current_state == TriviaStreakStates.streak_continue.state
+
     with get_service(GameService) as service:
         result = service.play_trivia(user_id, question_idx, answer_idx)
 
     message = result['message']
     tier_info = result.get('tier_info')
+
+    # Caso especial: streak_continue + respuesta incorrecta = perder todo
+    if is_streak_continue and not result['correct']:
+        await state.clear()
+        keyboard = game_menu_keyboard()
+        await callback.message.edit_text(message, reply_markup=keyboard)
+        await callback.answer()
+        logger.info(f"game_user_handlers - trivia_answer - {user_id} - streak_continue_wrong")
+        return
+
+    # Caso especial: streak_continue + respuesta correcta sin nuevo tier = seguir jugando
+    if is_streak_continue and result['correct'] and not tier_info:
+        with get_service(GameService) as service:
+            entry_data = service.get_trivia_entry_data(user_id)
+            if not entry_data['can_play']:
+                await state.clear()
+                await callback.message.edit_text(
+                    entry_data['limit_message'],
+                    reply_markup=game_menu_keyboard()
+                )
+                await callback.answer()
+                return
+
+            question, question_idx = service.get_random_question()
+            if question is None:
+                await state.clear()
+                await callback.message.edit_text(
+                    "Las preguntas están en el taller de Lucien. Regresa más tarde.",
+                    reply_markup=game_menu_keyboard()
+                )
+                await callback.answer()
+                return
+
+        data = await state.get_data()
+        current_streak = data.get('current_tier_streak', 0)
+        next_tier_streak = data.get('next_tier_streak', 0) or (current_streak + 5)
+
+        text = (
+            f"🎯 <b>Continúas en tu racha!</b>\n\n"
+            f"Llevas <b>{current_streak + 1}</b> respuestas correctas.\n"
+            f"Tu próximo objetivo: <b>{next_tier_streak}</b> para el "
+            f"<b>{data.get('next_tier_discount', 0)}%</b> de descuento.\n\n"
+            f"Cuidado: si fallas, perderás TODO el descuento acumulado.\n\n"
+            f"❓ <b>Pregunta:</b> {question['q']}"
+        )
+
+        await state.set_state(TriviaStreakStates.streak_continue)
+
+        keyboard = trivia_keyboard(question, question_idx)
+        await callback.message.edit_text(text, reply_markup=keyboard)
+        await callback.answer()
+        logger.info(f"game_user_handlers - trivia_answer - {user_id} - streak_continue_correct")
+        return
 
     # Caso 1: Respuesta incorrecta (pierde TODO)
     if not result['correct']:
@@ -315,11 +372,68 @@ async def trivia_vip_answer(callback: CallbackQuery, state: FSMContext):
     answer_idx = int(parts[3])
     question_idx = int(parts[4])
 
+    # Verificar si está en modo streak_continue
+    current_state = await state.get_state()
+    is_streak_continue = current_state == TriviaStreakStates.streak_continue.state
+
     with get_service(GameService) as service:
         result = service.play_trivia_vip(user_id, question_idx, answer_idx)
 
     message = result['message']
     tier_info = result.get('tier_info')
+
+    # Caso especial: streak_continue + respuesta incorrecta = perder todo
+    if is_streak_continue and not result['correct']:
+        await state.clear()
+        keyboard = game_menu_keyboard()
+        await callback.message.edit_text(message, reply_markup=keyboard)
+        await callback.answer()
+        logger.info(f"game_user_handlers - trivia_vip_answer - {user_id} - streak_continue_wrong")
+        return
+
+    # Caso especial: streak_continue + respuesta correcta sin nuevo tier = seguir jugando
+    if is_streak_continue and result['correct'] and not tier_info:
+        with get_service(GameService) as service:
+            entry_data = service.get_trivia_vip_entry_data(user_id)
+            if not entry_data['can_play']:
+                await state.clear()
+                await callback.message.edit_text(
+                    entry_data['limit_message'],
+                    reply_markup=game_menu_keyboard()
+                )
+                await callback.answer()
+                return
+
+            question, question_idx = service.get_random_vip_question()
+            if question is None:
+                await state.clear()
+                await callback.message.edit_text(
+                    "Las preguntas secretas están en el taller de Lucien. Regresa más tarde.",
+                    reply_markup=game_menu_keyboard()
+                )
+                await callback.answer()
+                return
+
+        data = await state.get_data()
+        current_streak = data.get('current_tier_streak', 0)
+        next_tier_streak = data.get('next_tier_streak', 0) or (current_streak + 5)
+
+        text = (
+            f"🎯 <b>Continúas en tu racha!</b>\n\n"
+            f"Llevas <b>{current_streak + 1}</b> respuestas correctas.\n"
+            f"Tu próximo objetivo: <b>{next_tier_streak}</b> para el "
+            f"<b>{data.get('next_tier_discount', 0)}%</b> de descuento.\n\n"
+            f"Cuidado: si fallas, perderás TODO el descuento acumulado.\n\n"
+            f"👑 <b>Pregunta Secreta:</b> {question['q']}"
+        )
+
+        await state.set_state(TriviaStreakStates.streak_continue)
+
+        keyboard = trivia_vip_keyboard(question, question_idx)
+        await callback.message.edit_text(text, reply_markup=keyboard)
+        await callback.answer()
+        logger.info(f"game_user_handlers - trivia_vip_answer - {user_id} - streak_continue_correct")
+        return
 
     # Caso 1: Respuesta incorrecta (pierde TODO)
     if not result['correct']:
