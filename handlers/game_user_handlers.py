@@ -274,10 +274,17 @@ async def trivia_answer(callback: CallbackQuery, state: FSMContext):
                 discount = service._generate_tier_discount_code(user_id, config_id, 100)
 
             if discount and discount.get('code'):
-                message += f"\n\n🏆 <b>¡DESCUENTO COMPLETO!</b>\n\n"
-                message += f"📋 <b>Código:</b> <code>{discount['code']}</code>\n"
-                message += f"💰 <b>Descuento:</b> 100% (GRATIS) en {discount['promotion_name']}\n\n"
-                message += "<i>Usa este código para obtener el producto gratuitamente.</i>"
+                header_template = service._select_template(service.STREAK_TEMPLATES['final_win_header'])
+                code_template = service._select_template(service.STREAK_TEMPLATES['final_win_code'])
+                promo_template = service._select_template(service.STREAK_TEMPLATES['final_win_promo'])
+                footer_template = service._select_template(service.STREAK_TEMPLATES['final_win_footer'])
+
+                message = (
+                    f"{header_template}\n\n"
+                    f"{code_template.format(code=discount['code'])}\n"
+                    f"{promo_template.format(promo=discount.get('promotion_name', 'la promoción'))}\n\n"
+                    f"{footer_template}"
+                )
                 keyboard = streak_final_keyboard()
             else:
                 keyboard = game_menu_keyboard()
@@ -286,9 +293,27 @@ async def trivia_answer(callback: CallbackQuery, state: FSMContext):
             next_discount = next_tier['discount'] if next_tier else None
             tier_index = tier_info.get('tier_index', 1)
 
-            message += f"\n\n🔥 <b>Nivel de descuento {tier_index}</b>\n\n"
-            message += f"💰 Ha desbloqueado <b>{current_discount}%</b> de descuento.\n\n"
-            message += "<i>¿Qué desea hacer?</i>"
+            # Nuevo formato de nivel alcanzado
+            header_template = service._select_template(service.STREAK_TEMPLATES['tier_header'])
+            unlock_template = service._select_template(service.STREAK_TEMPLATES['tier_unlock_text'])
+            bar_template = service._select_template(service.STREAK_TEMPLATES['tier_unlock_bar'])
+            icon_template = service._select_template(service.STREAK_TEMPLATES['tier_unlock_icon'])
+            prompt_template = service._select_template(service.STREAK_TEMPLATES['tier_options_prompt'])
+            encouragement_template = service._select_template(service.STREAK_TEMPLATES['correct_encouragement'])
+            next_template = service._select_template(service.STREAK_TEMPLATES['correct_next_streak'])
+
+            message = (
+                f"🎩 Lucien hace una reverencia... medida.\n\n"
+                f'"{current_streak}. Ha llegado a {current_streak}.\n'
+                f'Debo admitir que no lo tenía del todo previsto."\n\n'
+                f"{header_template.format(tier=tier_index)}\n"
+                f"{bar_template}\n"
+                f"  {icon_template} {unlock_template.format(discount=current_discount)}\n"
+                f"{bar_template}\n\n"
+                f"{encouragement_template.format(remaining=result['remaining_after'])}\n"
+                f"{next_template.format(next_streak=next_streak)}\n\n"
+                f"{prompt_template}"
+            )
 
             # Guardar estado para cuando regrese
             await state.update_data(
