@@ -217,6 +217,251 @@ class GameService:
         ]
     }
 
+    STREAK_TEMPLATES = {
+        # ========================================
+        # ENTRADA A TRIVIA (con promoción activa)
+        # ========================================
+        'entry_header': [
+            "🎩 Lucien aguarda, con paciencia infinita...",
+            "🎩 Lucien observa, en silencio calculado...",
+            "🎩 El salón permanece en calma..."
+        ],
+        'entry_promotion_bar': [
+            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n┃ 🎁 Su recompensa está cerca. Relativamente. ┃\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛",
+            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n┃ 🏆 El destino te observa con curiosidad. ┃\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+        ],
+        'entry_promotion_progress': [
+            "▓▓░░░░░░░░  {remaining_streak} aciertos más → {discount}% de descuento",
+            "▒▒▒▒░░░░░░  Faltan {remaining_streak} para su {discount}%",
+            "▒▒░░░░░░░░░  {remaining_streak} más hasta su recompensa"
+        ],
+        'entry_no_promotion': [
+            "No le pido rapidez. Le pido acierto.\nSon cosas distintas, como habrá notado.",
+            "La sabiduría no entiende de presión.\nPero Diana... sí.",
+            "Cada respuesta es un susurro al oído de quien sabe escuchar."
+        ],
+        'entry_footer_question': [
+            "❓ {question}",
+            "❓ La pregunta aguarda su respuesta: {question}",
+            "❓ Y bien, ¿qué sabe usted? {question}"
+        ],
+
+        # ========================================
+        # RESPUESTA CORRECTA (con streak message)
+        # ========================================
+        'correct_header': [
+            "🎩 Lucien hace una reverencia... medida.",
+            "🎩 Lucien inclina la cabeza, reconocido.",
+            "🎩 Un destello de aprobación cruza el rostro de Lucien."
+        ],
+        'correct_number_sabe': [
+            '"{number}. Ha llegado a {number}. Debo admitir que no lo tenía del todo previsto."',
+            '"{number}. Sin duda, {number} no es algo que cualquiera logre."',
+            '"{number}. Y {number} sigue siendo {number}, que no es poco."'
+        ],
+        'correct_reward': [
+            "+{besitos} besitos 💋",
+            "+{besitos} besitos 💋... bien merecido.",
+            "+{besitos} besito{'s' if besitos > 1 else ''} 💋"
+        ],
+        'correct_encouragement': [
+            "Le quedan {remaining} intentos.",
+            "Tiene {remaining} oportunidades restantes.",
+            "{remaining} caminos aún permanecen abiertos."
+        ],
+        'correct_next_streak': [
+            "El siguiente nivel aguarda a {next_streak} aciertos más.",
+            "Faltan {next_streak} para el siguiente nivel.",
+            "El destino exige {next_streak} más para la siguiente recompensa."
+        ],
+
+        # ========================================
+        # RESPUESTA INCORRECTA
+        # ========================================
+        'incorrect_header': [
+            "🎩 Lucien permanece inmóvil, procesando.",
+            "🎩 Un silencio breve. Luego, Lucien habla.",
+            "🎩 Lucien observa el resultado con expresión indescifrable."
+        ],
+        'incorrect_answer_reveal': [
+            "La respuesta era: <b>{correct_answer}</b>",
+            "Correcta era: <b>{correct_answer}</b>",
+            "<b>{correct_answer}</b>... esa era la clave."
+        ],
+        'incorrect_footer': [
+            "Diana dice que equivocarse es inevitable.\nLo revelador es cómo uno continúa después.",
+            "Lucien ha visto errores similares. También ha visto éxitos similares.",
+            "El conocimiento es así. A veces se prueba, a veces no."
+        ],
+
+        # ========================================
+        # NIVEL ALCANZADO (TIER REACHED)
+        # ========================================
+        'tier_header': [
+            "✦ NIVEL {tier} COMPLETADO ✦",
+            "✦ HA ALCANZADO EL NIVEL {tier} ✦",
+            "✦ NIVEL {tier} — UNLOCKED ✦"
+        ],
+        'tier_unlock_bar': [
+            "───────────────────────────────────────────",
+            "───────────────────────────────────────────",
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        ],
+        'tier_unlock_icon': [
+            "🔓",
+            "🗝️",
+            "✦"
+        ],
+        'tier_unlock_text': [
+            "{discount}% de descuento — desbloqueado",
+            "DESCUENTO DE {discount}% — su recompensa",
+            "{discount}% de descuento — bien merecido"
+        ],
+        'tier_options_prompt': [
+            '"¿Continuamos? Le prometo que\nlas preguntas no se volverán más sencillas."',
+            '"¿Qué elige, visitante? El camino continúa,\no puede asegurar lo que tiene."',
+            '"Una decisión delicada. ¿Prosperar o conservar?\nDiana aprecia ambas filosofía."'
+        ],
+        'tier_exit_message': [
+            "El descuento aguarda. Paciente,\ncomo todo lo verdaderamente valioso.",
+            "Su recompensa no irá a ninguna parte.\nA diferencia de usted, que puede volver cuando desee."
+        ],
+
+        # ========================================
+        # STREAK CONTINUE (continuar jugando)
+        # ========================================
+        'continue_header': [
+            "🎯 Continúa en su racha.",
+            "🎯 La racha persiste.",
+            "🎯 El camino continúa."
+        ],
+        'continue_progress': [
+            "Acumulado: <b>{streak}</b> respuestas correctas.",
+            "Lleva <b>{streak}</b> aciertos consecutivos.",
+            "<b>{streak}</b>... así se construye una racha."
+        ],
+        'continue_next_objective': [
+            "Próximo objetivo: <b>{next_streak}</b> para el <b>{next_discount}%</b>.",
+            "Necesita <b>{next_streak}</b> más para el {next_discount}%.",
+            "El {next_discount}% está a {next_streak} aciertos de distancia."
+        ],
+        'continue_warning': [
+            "⚠️ Cuidado: si falla, perderá TODO el descuento acumulado.",
+            "⚠️ Un tropiezo y todo vuelve a cero.",
+            "⚠️ El precio del fracaso es alto. Muy alto."
+        ],
+        'continue_prompt_question': [
+            "❓ {question}",
+            "❓ La siguiente pregunta: {question}",
+            "❓ ¿Sabe la respuesta? {question}"
+        ],
+
+        # ========================================
+        # STREAK CONTINUE — RESPUESTA INCORRECTA (PIERDE TODO)
+        # ========================================
+        'continue_wrong_header': [
+            "🎩 Lucien:\n\n<i>El silencio de una respuesta incorrecta es ensordecedor.</i>",
+            "🎩 Lucien observa, impasible:\n\n<i>El destino no perdona.</i>",
+            "🎩 Un momento de calma. Luego:\n\n<i>Bueno. Así son los juegos.</i>"
+        ],
+        'continue_wrong_lost': [
+            "Su descuento del <b>{discount}%</b> se ha desvanecido.",
+            "El <b>{discount}%</b>... evaporate. Como todo lo que no se asegura.",
+            "Todo perdido. El descuento, la racha... el orgullo."
+        ],
+        'continue_wrong_footer': [
+            "Las próximas preguntas esperarán su regreso.",
+            "El juego puede volver a comenzar. Sus códigos también.",
+            "Hasta la próxima vez."
+        ],
+
+        # ========================================
+        # RETIRARSE (STREAK RETIRE) — ÉXITO
+        # ========================================
+        'retire_success_header': [
+            "🎩 Lucien hace una reverencia... medida.",
+            "🎩 Lucien asiente con aprobación contenida.",
+            "🎩 Lucien observa cómo asegura su premio."
+        ],
+        'retire_success_code': [
+            "📋 <b>Código:</b> <code>{code}</code>",
+            "🎫 Su código: <code>{code}</code>",
+            "🔑 Código: <code>{code}</code>"
+        ],
+        'retire_success_promo': [
+            "💰 <b>Descuento:</b> {discount}% en {promo}",
+            "🏷️ {discount}% de descuento en {promo}",
+            "✦ {discount}% — su descuento en {promo}"
+        ],
+        'retire_success_footer': [
+            "Usa este código al comprar la promoción.",
+            "Este código es su llave. No lo pierda.\nAunque... Lucien duda que lo haga.",
+            "Uselo cuando guste. No expira...\nAunque su paciencia quizás sí."
+        ],
+        'retire_no_codes': [
+            "🎩 Lucien:\n\n<i>No se pudo generar el código.</i>\n\n<i>Parece que ya no hay códigos disponibles.</i>"
+        ],
+
+        # ========================================
+        # SALIR SIN RECLAMAR (STREAK EXIT)
+        # ========================================
+        'exit_header': [
+            "🎩 Lucien:\n\n<i>Sabe algo? La paciencia es una virtud\nque pocos cultivan hoy en día.</i>"
+        ],
+        'exit_discount_waiting': [
+            "Su descuento del <b>{discount}%</b> aguarda\npacientemente. Como debe ser.",
+            "El <b>{discount}%</b> estará aquí cuando regrese.\nEso sí... quién sabe cuándo será eso."
+        ],
+        'exit_footer': [
+            "Podrá reclamarlo cuando lo desee.",
+            "El código no se moverá. Pero usted tampoco\ntiene que hacerlo ahora.",
+            "Hasta que nuestros caminos se crucen nuevamente..."
+        ],
+
+        # ========================================
+        # FINAL WIN (100% DESC)
+        # ========================================
+        'final_win_header': [
+            "🏆 ¡DESCUENTO COMPLETO! 🏆",
+            "✦✦✦ 100% DESBLOQUEADO ✦✦✦",
+            "🎉 ¡HAS GANADO EL JUEGO! 🎉"
+        ],
+        'final_win_code': [
+            "📋 <b>Código:</b> <code>{code}</code>",
+            "🎫 Su código: <code>{code}</code>",
+            "🔑 Código: <code>{code}</code>"
+        ],
+        'final_win_promo': [
+            "💰 <b>Descuento:</b> 100% (GRATIS) en {promo}",
+            "✦ GRATIS — el precio más elegante.",
+            "🏷️ 100% en {promo}... Diana se inclina ante esto."
+        ],
+        'final_win_footer': [
+            "Usa este código para obtener el producto gratuitamente.",
+            "Es su momento. El destino ha sido...\nbien, como mínimo, favorable.",
+            "Úselo cuando guste. Es, técnicamente, gratis."
+        ],
+
+        # ========================================
+        # LÍMITE ALCANZADO
+        # ========================================
+        'limit_reached_header': [
+            "🎩 Lucien:\n\n<i>El examen ha terminado... por ahora.</i>",
+            "🎩 Lucien cierra el libro de preguntas.",
+            "🎩 Diana ha guardado sus preguntas para mañana."
+        ],
+        'limit_reached_body': [
+            "Ha agotado todos sus intentos disponibles.",
+            "No quedan más preguntas. Por hoy.",
+            "El conocimiento, como el buen vino, requiere pausas."
+        ],
+        'limit_reached_footer': [
+            "Regrese mañana. El descanso también es sabiduría.",
+            "Hasta que nuestros caminos se crucen nuevamente...",
+            "Que la curiosidad lo guíe de vuelta pronto."
+        ]
+    }
+
     def __init__(self, db: Session = None):
         self.db = db or SessionLocal()
         self.besito_service = BesitoService(self.db)
