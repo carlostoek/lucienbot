@@ -399,14 +399,16 @@ class GameService:
             "Uselo cuando guste. No expira...\nAunque su paciencia quizás sí."
         ],
         'retire_no_codes': [
-            "🎩 Lucien:\n\n<i>No se pudo generar el código.</i>\n\n<i>Parece que ya no hay códigos disponibles.</i>"
+            "🎩 Lucien:\n\n<i>No se pudo generar el código.</i>\n\n<i>Parece que ya no hay códigos disponibles.</i>",
+            "🎩 Lucien:\n\n<i>Los códigos se han agotado.</i>\n\n<i>Vuelve mañana para más oportunidades.</i>"
         ],
 
         # ========================================
         # SALIR SIN RECLAMAR (STREAK EXIT)
         # ========================================
         'exit_header': [
-            "🎩 Lucien:\n\n<i>Sabe algo? La paciencia es una virtud\nque pocos cultivan hoy en día.</i>"
+            "🎩 Lucien:\n\n<i>Sabe algo? La paciencia es una virtud\nque pocos cultivan hoy en día.</i>",
+            "🎩 Lucien:\n\n<i>La paciencia es una virtud,\ny usted la posee en abundancia.</i>"
         ],
         'exit_discount_waiting': [
             "Su descuento del <b>{discount}%</b> aguarda\npacientemente. Como debe ser.",
