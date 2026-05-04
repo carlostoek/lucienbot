@@ -874,7 +874,8 @@ class GameService:
             'is_vip': self.is_user_vip(user_id),
             'can_play': can_play,
             'limit_message': limit_message,
-            'discount_info': discount_info
+            'discount_info': discount_info,
+            'has_promotion': discount_info is not None
         }
 
     def load_trivia_questions(self) -> list:
