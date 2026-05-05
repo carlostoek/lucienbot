@@ -626,6 +626,19 @@ async def trivia_vip_answer(callback: CallbackQuery, state: FSMContext):
 async def streak_retire(callback: CallbackQuery, state: FSMContext):
     """Usuario elige retirarse con su descuento actual"""
     user_id = callback.from_user.id
+    # --- TIMEOUT CHECK ---
+    with get_service(GameService) as service:
+        data = await state.get_data()
+        if not service._check_streak_timeout(data):
+            service._handle_streak_timeout(user_id, data)
+            await state.clear()
+            timeout_msg = service._select_template(service.STREAK_TEMPLATES['timeout'])
+            message = f"{timeout_msg}\n\n<i>¿Qué desea hacer ahora?</i>"
+            await callback.message.edit_text(message, reply_markup=game_menu_keyboard())
+            await callback.answer()
+            logger.info(f"game_user_handlers - streak_retire - {user_id} - timeout_expired")
+            return
+    # --- END TIMEOUT CHECK ---
     data = await state.get_data()
 
     config_id = data.get('current_config_id')
@@ -675,6 +688,19 @@ async def streak_retire(callback: CallbackQuery, state: FSMContext):
 async def streak_exit(callback: CallbackQuery, state: FSMContext):
     """Usuario elige salir sin reclamar su descuento"""
     user_id = callback.from_user.id
+    # --- TIMEOUT CHECK ---
+    with get_service(GameService) as service:
+        data = await state.get_data()
+        if not service._check_streak_timeout(data):
+            service._handle_streak_timeout(user_id, data)
+            await state.clear()
+            timeout_msg = service._select_template(service.STREAK_TEMPLATES['timeout'])
+            message = f"{timeout_msg}\n\n<i>¿Qué desea hacer ahora?</i>"
+            await callback.message.edit_text(message, reply_markup=game_menu_keyboard())
+            await callback.answer()
+            logger.info(f"game_user_handlers - streak_exit - {user_id} - timeout_expired")
+            return
+    # --- END TIMEOUT CHECK ---
     data = await state.get_data()
 
     tier_discount = data.get('current_tier_discount', 0)
@@ -703,6 +729,19 @@ async def streak_exit(callback: CallbackQuery, state: FSMContext):
 async def streak_continue(callback: CallbackQuery, state: FSMContext):
     """Usuario elige continuar para buscar mayor descuento"""
     user_id = callback.from_user.id
+    # --- TIMEOUT CHECK ---
+    with get_service(GameService) as service:
+        data = await state.get_data()
+        if not service._check_streak_timeout(data):
+            service._handle_streak_timeout(user_id, data)
+            await state.clear()
+            timeout_msg = service._select_template(service.STREAK_TEMPLATES['timeout'])
+            message = f"{timeout_msg}\n\n<i>¿Qué desea hacer ahora?</i>"
+            await callback.message.edit_text(message, reply_markup=game_menu_keyboard())
+            await callback.answer()
+            logger.info(f"game_user_handlers - streak_continue - {user_id} - timeout_expired")
+            return
+    # --- END TIMEOUT CHECK ---
     data = await state.get_data()
     is_vip = data.get('vip_mode', False)
 
