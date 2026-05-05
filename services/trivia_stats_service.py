@@ -3,8 +3,10 @@ Trivia Stats Service - Estadísticas de Promociones y Usuarios de Trivia
 
 Proporciona métricas detalladas para promociones de trivia y usuarios.
 """
+import csv
 import json
 import logging
+import tempfile
 from datetime import datetime, timezone
 from typing import Optional, List
 
@@ -382,3 +384,150 @@ class TriviaStatsService:
         finally:
             if self._owns_session:
                 db.close()
+
+    # ─── CSV Export Methods ─────────────────────────────────────────────────────
+
+    def export_promotions_csv(self) -> str | None:
+        """Export all promotions stats to a CSV file."""
+        try:
+            promotions = self.get_all_promotions_stats()
+            if not promotions:
+                return None
+
+            tmp = tempfile.NamedTemporaryFile(
+                suffix=".csv", delete=False, newline="", mode="w"
+            )
+            writer = csv.DictWriter(
+                tmp,
+                fieldnames=[
+                    "id", "name", "status", "total_codes", "active", "used",
+                    "cancelled", "expired", "claimed", "available", "max_codes",
+                    "used_percentage", "question_set", "duration_remaining"
+                ]
+            )
+            writer.writeheader()
+            for promo in promotions:
+                codes = promo.get("codes_by_status", {})
+                writer.writerow({
+                    "id": promo.get("id"),
+                    "name": promo.get("name"),
+                    "status": promo.get("status"),
+                    "total_codes": promo.get("total_codes"),
+                    "active": codes.get("active"),
+                    "used": codes.get("used"),
+                    "cancelled": codes.get("cancelled"),
+                    "expired": codes.get("expired"),
+                    "claimed": promo.get("claimed"),
+                    "available": promo.get("available"),
+                    "max_codes": promo.get("max_codes"),
+                    "used_percentage": promo.get("used_percentage"),
+                    "question_set": promo.get("question_set"),
+                    "duration_remaining": promo.get("duration_remaining"),
+                })
+            tmp.close()
+            return tmp.name
+        except Exception as e:
+            logger.error(f"trivia_stats_service - export_promotions_csv - error: {e}")
+            return None
+
+    def export_users_stats_csv(self) -> str | None:
+        """Export per-user trivia stats to a CSV file."""
+        try:
+            db = self._get_db()
+            rows = db.query(GameRecord.user_id).filter(
+                GameRecord.game_type.in_(["trivia", "trivia_vip"])
+            ).distinct().all()
+            user_ids = [r[0] for r in rows]
+
+            if not user_ids:
+                return None
+
+            tmp = tempfile.NamedTemporaryFile(
+                suffix=".csv", delete=False, newline="", mode="w"
+            )
+            writer = csv.DictWriter(
+                tmp,
+                fieldnames=[
+                    "telegram_id", "username", "first_name", "game_type",
+                    "total_plays", "correct", "incorrect", "rate",
+                    "current_streak", "max_streak", "besitos",
+                    "codes_earned", "codes_used"
+                ]
+            )
+            writer.writeheader()
+
+            for uid in user_ids:
+                stats = self.get_user_trivia_stats(uid)
+                user_info = stats.get("user_id")
+                username = stats.get("username")
+                first_name = stats.get("first_name")
+                for game_type, data in stats.get("stats", {}).items():
+                    if data.get("total_plays", 0) > 0:
+                        writer.writerow({
+                            "telegram_id": user_info,
+                            "username": username,
+                            "first_name": first_name,
+                            "game_type": game_type,
+                            "total_plays": data.get("total_plays"),
+                            "correct": data.get("correct_answers"),
+                            "incorrect": data.get("incorrect_answers"),
+                            "rate": data.get("correctness_rate"),
+                            "current_streak": data.get("current_streak"),
+                            "max_streak": data.get("max_streak"),
+                            "besitos": data.get("besitos_earned"),
+                            "codes_earned": data.get("codes_earned"),
+                            "codes_used": data.get("codes_used"),
+                        })
+            tmp.close()
+            return tmp.name
+        except Exception as e:
+            logger.error(f"trivia_stats_service - export_users_stats_csv - error: {e}")
+            return None
+
+    def export_rankings_csv(self) -> str | None:
+        """Export rankings (scorers, streaks, codes) to a multi-section CSV file."""
+        try:
+            tmp = tempfile.NamedTemporaryFile(
+                suffix=".csv", delete=False, newline="", mode="w"
+            )
+            writer = csv.writer(tmp)
+
+            # Section 1: Top Scorers
+            writer.writerow(["=== TOP SCORERS (respuestas correctas) ==="])
+            writer.writerow(["rank", "telegram_id", "username", "first_name", "correct"])
+            for entry in self.get_top_scorers(limit=20):
+                writer.writerow([
+                    entry.get("rank"), entry.get("user_id"),
+                    entry.get("username"), entry.get("first_name"),
+                    entry.get("value")
+                ])
+
+            writer.writerow([])
+
+            # Section 2: Top Streaks
+            writer.writerow(["=== TOP STREAKS (racha maxima) ==="])
+            writer.writerow(["rank", "telegram_id", "username", "first_name", "streak"])
+            for entry in self.get_top_streaks(limit=20):
+                writer.writerow([
+                    entry.get("rank"), entry.get("user_id"),
+                    entry.get("username"), entry.get("first_name"),
+                    entry.get("value")
+                ])
+
+            writer.writerow([])
+
+            # Section 3: Top Codes
+            writer.writerow(["=== TOP CODES (codigos usados) ==="])
+            writer.writerow(["rank", "telegram_id", "username", "first_name", "codes"])
+            for entry in self.get_top_codes_redeemed(limit=20):
+                writer.writerow([
+                    entry.get("rank"), entry.get("user_id"),
+                    entry.get("username"), entry.get("first_name"),
+                    entry.get("value")
+                ])
+
+            tmp.close()
+            return tmp.name
+        except Exception as e:
+            logger.error(f"trivia_stats_service - export_rankings_csv - error: {e}")
+            return None
