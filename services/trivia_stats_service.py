@@ -159,3 +159,104 @@ class TriviaStatsService:
         except Exception as e:
             logger.error(f"trivia_stats_service - get_all_promotions_stats - error: {e}")
             return []
+
+    def _calculate_max_streak(self, user_id: int, game_type: str) -> int:
+        """Calcula la racha máxima observada en sesiones históricas"""
+        db = self._get_db()
+        try:
+            records = db.query(GameRecord).filter(
+                GameRecord.user_id == user_id,
+                GameRecord.game_type == game_type
+            ).order_by(GameRecord.played_at.asc()).all()
+
+            max_streak = 0
+            current_streak = 0
+
+            for record in records:
+                if record.payout > 0:
+                    current_streak += 1
+                    max_streak = max(max_streak, current_streak)
+                else:
+                    current_streak = 0
+
+            return max_streak
+        except Exception as e:
+            logger.error(f"trivia_stats_service - _calculate_max_streak - {user_id} - error: {e}")
+            return 0
+
+    def get_user_trivia_stats(self, user_id: int) -> dict:
+        """Obtiene métricas de trivia para UN usuario"""
+        db = self._get_db()
+        try:
+            user = db.query(User).filter(User.id == user_id).first()
+            if not user:
+                logger.info(f"trivia_stats_service - get_user_trivia_stats - {user_id} - user not found")
+                return {}
+
+            username = user.username
+            first_name = user.first_name
+
+            result = {
+                'user_id': user_id,
+                'username': username,
+                'first_name': first_name,
+                'stats': {}
+            }
+
+            for game_type in ['trivia', 'trivia_vip']:
+                records = db.query(GameRecord).filter(
+                    GameRecord.user_id == user_id,
+                    GameRecord.game_type == game_type
+                ).all()
+
+                total_plays = len(records)
+                correct_answers = sum(1 for r in records if r.payout > 0)
+                incorrect_answers = total_plays - correct_answers
+                correctness_rate = round(correct_answers / total_plays * 100, 1) if total_plays > 0 else 0.0
+                besitos_earned = sum(r.payout for r in records if r.payout > 0)
+
+                # Current streak (today only)
+                today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                today_records = db.query(GameRecord).filter(
+                    GameRecord.user_id == user_id,
+                    GameRecord.game_type == game_type,
+                    GameRecord.played_at >= today
+                ).order_by(GameRecord.played_at.desc()).all()
+
+                current_streak = 0
+                for record in today_records:
+                    if record.payout > 0:
+                        current_streak += 1
+                    else:
+                        break
+
+                max_streak = self._calculate_max_streak(user_id, game_type)
+
+                # Count codes
+                codes_earned = db.query(DiscountCode).filter(
+                    DiscountCode.user_id == user_id,
+                    DiscountCode.status == DiscountCodeStatus.ACTIVE
+                ).count()
+
+                codes_used = db.query(DiscountCode).filter(
+                    DiscountCode.user_id == user_id,
+                    DiscountCode.status == DiscountCodeStatus.USED
+                ).count()
+
+                result['stats'][game_type] = {
+                    'total_plays': total_plays,
+                    'correct_answers': correct_answers,
+                    'incorrect_answers': incorrect_answers,
+                    'correctness_rate': correctness_rate,
+                    'besitos_earned': besitos_earned,
+                    'current_streak': current_streak,
+                    'max_streak': max_streak,
+                    'codes_earned': codes_earned,
+                    'codes_used': codes_used
+                }
+
+            logger.info(f"trivia_stats_service - get_user_trivia_stats - {user_id} - found")
+            return result
+        except Exception as e:
+            logger.error(f"trivia_stats_service - get_user_trivia_stats - {user_id} - error: {e}")
+            return {}
