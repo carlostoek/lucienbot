@@ -591,3 +591,6 @@ class TriviaStatsService:
         except Exception as e:
             logger.error(f"trivia_stats_service - get_full_dashboard - error: {e}")
             return {}
+        finally:
+            if self._owns_session and db:
+                db.close()
