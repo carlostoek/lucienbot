@@ -4,6 +4,7 @@ Handlers de Minijuegos - Lucien Bot
 Maneja los flujos de usuario para dados y trivia.
 """
 import logging
+from datetime import datetime, timezone
 
 from aiogram import Router, F
 from aiogram.types import CallbackQuery
@@ -175,7 +176,28 @@ async def trivia_answer(callback: CallbackQuery, state: FSMContext):
     is_streak_continue = current_state == TriviaStreakStates.streak_continue.state
 
     with get_service(GameService) as service:
+        # --- STREAK TIMEOUT CHECK ---
+        if current_state in (TriviaStreakStates.waiting_streak_choice.state,
+                              TriviaStreakStates.streak_continue.state):
+            data = await state.get_data()
+            if not service._check_streak_timeout(data):
+                config_id = data.get('current_config_id')
+                game_type = 'trivia_vip' if data.get('vip_mode') else 'trivia'
+                service._handle_streak_timeout(user_id, data)
+                await state.clear()
+
+                timeout_msg = service._select_template(service.STREAK_TEMPLATES['timeout'])
+                message = f"{timeout_msg}\n\n<i>¿Qué desea hacer ahora?</i>"
+                await callback.message.edit_text(message, reply_markup=game_menu_keyboard())
+                await callback.answer()
+                logger.info(f"game_user_handlers - trivia_answer - {user_id} - timeout_expired")
+                return
+        # --- END TIMEOUT CHECK ---
         result = service.play_trivia(user_id, question_idx, answer_idx)
+
+        # Save streak start time when user goes from 0 to 1
+        if result['correct'] and result['new_streak'] == 1 and result['previous_streak'] == 0:
+            await state.update_data(streak_started_at=datetime.now(timezone.utc))
 
     message = result['message']
     tier_info = result.get('tier_info')
