@@ -2,6 +2,7 @@ from .channel_service import ChannelService
 from .vip_service import VIPService
 from .user_service import UserService
 from .scheduler_service import SchedulerService
+from .trivia_stats_service import TriviaStatsService
 # Fase 1 - Gamificacion
 from .besito_service import BesitoService
 from .broadcast_service import BroadcastService
@@ -18,7 +19,7 @@ from .store_service import StoreService
 from .backpack_service import BackpackService
 
 __all__ = [
-    'ChannelService', 'VIPService', 'UserService', 'SchedulerService',
+    'ChannelService', 'VIPService', 'UserService', 'SchedulerService', 'TriviaStatsService',
     # Fase 1 - Gamificacion
     'BesitoService', 'BroadcastService', 'DailyGiftService', 'GameService',
     # Fase 2 - Paquetes
