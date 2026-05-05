@@ -31,6 +31,9 @@ class GameService:
     DAILY_TRIVIA_LIMIT_FREE = 7
     DAILY_TRIVIA_LIMIT_VIP = 15
 
+    # Timeout
+    STREAK_TIMEOUT_SECONDS = 120  # 2 minutes max to answer all questions in a streak session
+
     # Recompensas por victoria
     DICE_WIN_BESITOS = 1
     TRIVIA_WIN_BESITOS = 1
@@ -1123,6 +1126,34 @@ class GameService:
             username=username,
             first_name=first_name
         )
+
+    def _check_streak_timeout(self, state_data: dict) -> bool:
+        """
+        Verifies if the user's streak session is still within the 2-minute window.
+        Returns True if OK, False if expired.
+        """
+        streak_started_at = state_data.get("streak_started_at")
+        if not streak_started_at:
+            return True  # No active streak being tracked
+
+        from datetime import datetime, timezone
+        elapsed = datetime.now(timezone.utc) - streak_started_at
+        return elapsed.total_seconds() <= self.STREAK_TIMEOUT_SECONDS
+
+    def _handle_streak_timeout(self, user_id: int, state_data: dict) -> None:
+        """
+        Executes full streak invalidation due to timeout:
+        - Cancels active discount code
+        - Breaks the streak in GameRecord
+        """
+        config_id = state_data.get("current_config_id")
+        game_type = 'trivia_vip' if state_data.get('vip_mode') else 'trivia'
+
+        if config_id:
+            self.invalidate_streak_code(user_id, config_id)
+
+        self.reset_trivia_streak(user_id, game_type)
+        logger.info(f"game_service - _handle_streak_timeout - {user_id} - streak_invalidated")
 
     def invalidate_streak_code(self, user_id: int, config_id: int) -> bool:
         """Invalida el código activo del usuario para una config (por fallo en racha)"""
