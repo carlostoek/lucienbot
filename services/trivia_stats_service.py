@@ -483,6 +483,9 @@ class TriviaStatsService:
         except Exception as e:
             logger.error(f"trivia_stats_service - export_users_stats_csv - error: {e}")
             return None
+        finally:
+            if self._owns_session and db:
+                db.close()
 
     def export_rankings_csv(self) -> str | None:
         """Export rankings (scorers, streaks, codes) to a multi-section CSV file."""
