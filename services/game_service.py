@@ -428,7 +428,7 @@ class GameService:
         # ========================================
         'final_win_header': [
             "🏆 ¡DESCUENTO COMPLETO! 🏆",
-            "✦✦✦ 100% DESBLOQUEADO ✦✦✦",
+            "✦✦✦ {discount}% DESBLOQUEADO ✦✦✦",
             "🎉 ¡HAS GANADO EL JUEGO! 🎉"
         ],
         'final_win_code': [
@@ -437,14 +437,14 @@ class GameService:
             "🔑 Código: <code>{code}</code>"
         ],
         'final_win_promo': [
-            "💰 <b>Descuento:</b> 100% (GRATIS) en {promo}",
-            "✦ GRATIS — el precio más elegante.",
-            "🏷️ 100% en {promo}... Diana se inclina ante esto."
+            "💰 <b>Descuento:</b> {discount}% en {promo}",
+            "✦ {discount}% — el precio más elegante.",
+            "🏷️ {discount}% en {promo}... Diana se inclina ante esto."
         ],
         'final_win_footer': [
-            "Usa este código para obtener el producto gratuitamente.",
+            "Usa este código para obtener el {discount}% de descuento.",
             "Es su momento. El destino ha sido...\nbien, como mínimo, favorable.",
-            "Úselo cuando guste. Es, técnicamente, gratis."
+            "Úselo cuando guste."
         ],
 
         # ========================================
@@ -1144,7 +1144,7 @@ class GameService:
             'current_tier': tier,
             'next_tier': next_tier,
             'config_id': config.id,
-            'is_final': next_tier is None,  # True si no hay siguiente tier (100% gratis)
+            'is_final': next_tier is None,  # True si no hay siguiente tier
             'tier_index': tier_index
         }
 

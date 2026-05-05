@@ -538,10 +538,6 @@ class TriviaDiscountService:
             prev_streak = streak
             prev_discount = discount
 
-        # El último tier debe ser 100%
-        if tiers[-1]['discount'] != 100:
-            return False, "El último tier debe ser 100% (descuento completo)"
-
         return True, ""
 
     # ==================== TIERS DE DESCUENTO ====================
@@ -689,22 +685,39 @@ class TriviaDiscountService:
             if not code:
                 return None
 
-            # Contar respuestas correctas del usuario que ocurrieron ANTES de generar el código
-            # El código se genera al terminar la racha, así que todas las jugadas de esa
-            # racha tienen played_at < generated_at
             from models.models import GameRecord
-            query = session.query(GameRecord).filter(
-                GameRecord.user_id == code.user_id,
-                GameRecord.game_type.in_(['trivia', 'trivia_vip'])
-            )
-            # Filtrar jugadas anteriores a la generación del código
-            if code.generated_at:
-                query = query.filter(GameRecord.played_at < code.generated_at)
 
-            records = query.order_by(GameRecord.played_at.desc()).all()
+            # Primero: intentar con discount_code_id (vinculación directa)
+            linked_records = session.query(GameRecord).filter(
+                GameRecord.discount_code_id == code_id
+            ).all()
+            correct_count = sum(1 for r in linked_records if r.payout > 0)
 
-            # Contar respuestas correctas (payout > 0)
-            correct_count = sum(1 for r in records if r.payout > 0)
+            # Si no hay registros vinculados (legacy), caer al fallback:
+            # contar solo las jugadas del día de la generación del código
+            # (no cuenta historial de días anteriores)
+            if correct_count == 0 and code.generated_at:
+                # Normalizar generated_at a naive datetime para comparaciones
+                gen_at = code.generated_at
+                if gen_at.tzinfo:
+                    gen_at = gen_at.replace(tzinfo=None)
+                day_start = gen_at.replace(hour=0, minute=0, second=0, microsecond=0)
+                fallback_records = session.query(GameRecord).filter(
+                    GameRecord.user_id == code.user_id,
+                    GameRecord.game_type.in_(['trivia', 'trivia_vip']),
+                    GameRecord.played_at >= day_start,
+                    GameRecord.played_at < gen_at
+                ).all()
+                correct_count = sum(1 for r in fallback_records if r.payout > 0)
+
+            # Si aún es 0, mostrar la racha que se usó para generar el código
+            # (el tier streak, no el total histórico)
+            if correct_count == 0:
+                tiers = self.parse_discount_tiers(code.config) if code.config else []
+                for tier in tiers:
+                    if tier['discount'] == code.discount_percentage:
+                        correct_count = tier['streak']
+                        break
 
             return {
                 'code_id': code.id,

@@ -295,11 +295,11 @@ async def trivia_answer(callback: CallbackQuery, state: FSMContext):
         current_discount = current_tier['discount']
         current_streak = current_tier['streak']
 
-        # Caso 2a: Es el tier final (100% - GRATIS)
+        # Caso 2a: Es el tier final (último tier disponible)
         if is_final:
-            # Generar código 100% automáticamente
+            # Generar código con el descuento del tier final (no necesariamente 100%)
             with get_service(GameService) as service:
-                discount = service._generate_tier_discount_code(user_id, config_id, 100)
+                discount = service._generate_tier_discount_code(user_id, config_id, current_discount)
 
             if discount and discount.get('code'):
                 header_template = service._select_template(service.STREAK_TEMPLATES['final_win_header'])
@@ -308,10 +308,10 @@ async def trivia_answer(callback: CallbackQuery, state: FSMContext):
                 footer_template = service._select_template(service.STREAK_TEMPLATES['final_win_footer'])
 
                 message = (
-                    f"{header_template}\n\n"
+                    f"{header_template.format(discount=current_discount)}\n\n"
                     f"{code_template.format(code=discount['code'])}\n"
-                    f"{promo_template.format(promo=discount.get('promotion_name', 'la promoción'))}\n\n"
-                    f"{footer_template}"
+                    f"{promo_template.format(discount=current_discount, promo=discount.get('promotion_name', 'la promoción'))}\n\n"
+                    f"{footer_template.format(discount=current_discount)}"
                 )
                 keyboard = streak_final_keyboard()
             else:
@@ -547,10 +547,10 @@ async def trivia_vip_answer(callback: CallbackQuery, state: FSMContext):
         current_discount = current_tier['discount']
         current_streak = current_tier['streak']
 
-        # Caso 2a: Es el tier final (100% - GRATIS)
+        # Caso 2a: Es el tier final (último tier disponible)
         if is_final:
             with get_service(GameService) as service:
-                discount = service._generate_tier_discount_code(user_id, config_id, 100)
+                discount = service._generate_tier_discount_code(user_id, config_id, current_discount)
 
             if discount and discount.get('code'):
                 header_template = service._select_template(service.STREAK_TEMPLATES['final_win_header'])
@@ -559,10 +559,10 @@ async def trivia_vip_answer(callback: CallbackQuery, state: FSMContext):
                 footer_template = service._select_template(service.STREAK_TEMPLATES['final_win_footer'])
 
                 message = (
-                    f"{header_template}\n\n"
+                    f"{header_template.format(discount=current_discount)}\n\n"
                     f"{code_template.format(code=discount['code'])}\n"
-                    f"{promo_template.format(promo=discount.get('promotion_name', 'la promoción'))}\n\n"
-                    f"{footer_template}"
+                    f"{promo_template.format(discount=current_discount, promo=discount.get('promotion_name', 'la promoción'))}\n\n"
+                    f"{footer_template.format(discount=current_discount)}"
                 )
                 keyboard = streak_final_keyboard()
             else:
