@@ -108,7 +108,7 @@ async def game_trivia(callback: CallbackQuery):
             await callback.answer()
             return
 
-        question, question_idx = service.get_random_question()
+        question, question_idx = service.get_random_question_by_streak(data['current_streak'])
 
         if question is None:
             await callback.message.edit_text(
@@ -242,7 +242,7 @@ async def trivia_answer(callback: CallbackQuery, state: FSMContext):
                 await callback.answer()
                 return
 
-            question, question_idx = service.get_random_question()
+            question, question_idx = service.get_random_question_by_streak(new_streak)
             if question is None:
                 await state.clear()
                 await callback.message.edit_text(

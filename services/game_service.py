@@ -924,6 +924,31 @@ class GameService:
         idx = random.randint(0, len(questions) - 1)
         return questions[idx], idx
 
+    def get_random_question_by_streak(self, current_streak: int) -> Tuple[Optional[dict], int]:
+        """
+        Retorna pregunta aleatoria basada en racha actual.
+        - Primeras 5 preguntas (streak 0-4): índice 0-49 (preguntas fáciles)
+        - Después del primer tier (streak >= 5): índice 50+ (preguntas difíciles)
+        """
+        questions = self.load_trivia_questions()
+        if not questions:
+            return None, -1
+
+        total_questions = len(questions)
+
+        if current_streak < 5 and total_questions > 50:
+            # Pool fácil: solo primeras 50 preguntas (índices 0-49)
+            idx = random.randint(0, 49)
+        else:
+            # Pool difícil: preguntas desde índice 50 en adelante
+            if total_questions > 50:
+                idx = random.randint(50, total_questions - 1)
+            else:
+                # Fallback: cualquier pregunta si hay menos de 50
+                idx = random.randint(0, total_questions - 1)
+
+        return questions[idx], idx
+
     def get_question_by_index(self, index: int) -> Optional[dict]:
         """Retorna pregunta por índice"""
         questions = self.load_trivia_questions()
