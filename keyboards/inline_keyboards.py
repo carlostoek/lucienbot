@@ -518,11 +518,11 @@ def streak_choice_keyboard(current_discount: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def streak_final_keyboard() -> InlineKeyboardMarkup:
-    """Teclado para cuando el usuario gana 100% - solo confirmar"""
+def streak_final_keyboard(discount_percentage: int = 100) -> InlineKeyboardMarkup:
+    """Teclado para cuando el usuario gana un tier final - muestra el porcentaje real"""
     buttons = [
         [InlineKeyboardButton(
-            text="🏆 ¡100% GRATIS!",
+            text=f"🏆 ¡{discount_percentage}% de descuento!",
             callback_data="streak_final_win"
         )],
         [InlineKeyboardButton(text="🔙 Volver al menú", callback_data="game_menu")]

@@ -313,7 +313,7 @@ async def trivia_answer(callback: CallbackQuery, state: FSMContext):
                     f"{promo_template.format(discount=current_discount, promo=discount.get('promotion_name', 'la promoción'))}\n\n"
                     f"{footer_template.format(discount=current_discount)}"
                 )
-                keyboard = streak_final_keyboard()
+                keyboard = streak_final_keyboard(current_discount)
             else:
                 keyboard = game_menu_keyboard()
         else:
@@ -564,7 +564,7 @@ async def trivia_vip_answer(callback: CallbackQuery, state: FSMContext):
                     f"{promo_template.format(discount=current_discount, promo=discount.get('promotion_name', 'la promoción'))}\n\n"
                     f"{footer_template.format(discount=current_discount)}"
                 )
-                keyboard = streak_final_keyboard()
+                keyboard = streak_final_keyboard(current_discount)
             else:
                 keyboard = game_menu_keyboard()
         else:

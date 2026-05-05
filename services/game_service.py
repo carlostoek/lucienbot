@@ -399,7 +399,7 @@ class GameService:
         'retire_success_footer': [
             "Usa este código al comprar la promoción.",
             "Este código es su llave. No lo pierda.\nAunque... Lucien duda que lo haga.",
-            "Uselo cuando guste. No expira...\nAunque su paciencia quizás sí."
+            "Tiene 30 minutos para canjearlo.\nDespués, el destino.close() lo olvidará."
         ],
         'retire_no_codes': [
             "🎩 Lucien:\n\n<i>No se pudo generar el código.</i>\n\n<i>Parece que ya no hay códigos disponibles.</i>",
