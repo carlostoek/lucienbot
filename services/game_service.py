@@ -464,7 +464,17 @@ class GameService:
             "Regrese mañana. El descanso también es sabiduría.",
             "Hasta que nuestros caminos se crucen nuevamente...",
             "Que la curiosidad lo guíe de vuelta pronto."
-        ]
+        ],
+
+        # ========================================
+        # TIMEOUT (racha expiró por inactividad)
+        # ========================================
+        'timeout': (
+            "🎩 <b>Lucien:</b>\n\n"
+            "<i>Ah... parece que sus dedos necesitaban un descanso más largo que su mente.\n"
+            "El tiempo corre, incluso para quienes creen que pueden burlarlo.\n"
+            "Su racha ha sido... olvidada.</i>"
+        )
     }
 
     def __init__(self, db: Session = None):
