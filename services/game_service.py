@@ -1190,6 +1190,22 @@ class GameService:
             logger.error(f"game_service - reset_trivia_streak - {user_id}/{game_type} - error: {e}")
             return False
 
+    def cleanup_expired_streaks(self) -> int:
+        """
+        Scheduler job: finds users with active streaks that have exceeded
+        the 2-minute timeout window and invalidates them.
+        Returns count of invalidated streaks.
+
+        Note: Full implementation requires access to FSM state storage.
+        This stub is a placeholder - the scheduler service handles the
+        actual iteration over FSM states and calls this method per-user.
+        """
+        # The actual implementation lives in the scheduler service which has
+        # access to FSM storage (Redis/MemoryStorage). It will iterate active
+        # streak states, check expiration, and call _handle_streak_timeout.
+        # This method remains as a hook for per-user invalidation logic.
+        return 0
+
     def _get_trivia_discount_info(self, user_id: int) -> Optional[dict]:
         """Obtiene información de descuento para mostrar en menú de trivia"""
         config = self._get_active_trivia_promotion()
