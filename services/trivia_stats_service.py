@@ -98,8 +98,10 @@ class TriviaStatsService:
             if config.duration_minutes:
                 from services.trivia_discount_service import TriviaDiscountService
                 discount_service = TriviaDiscountService()
-                duration_remaining = discount_service.get_time_remaining_formatted(config_id)
-                discount_service.close()
+                try:
+                    duration_remaining = discount_service.get_time_remaining_formatted(config_id)
+                finally:
+                    discount_service.close()
 
             # Formatear fechas
             start_date_str = None
