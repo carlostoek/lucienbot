@@ -160,30 +160,6 @@ class TriviaStatsService:
             logger.error(f"trivia_stats_service - get_all_promotions_stats - error: {e}")
             return []
 
-    def _calculate_max_streak(self, user_id: int, game_type: str) -> int:
-        """Calcula la racha máxima observada en sesiones históricas"""
-        db = self._get_db()
-        try:
-            records = db.query(GameRecord).filter(
-                GameRecord.user_id == user_id,
-                GameRecord.game_type == game_type
-            ).order_by(GameRecord.played_at.asc()).all()
-
-            max_streak = 0
-            current_streak = 0
-
-            for record in records:
-                if record.payout > 0:
-                    current_streak += 1
-                    max_streak = max(max_streak, current_streak)
-                else:
-                    current_streak = 0
-
-            return max_streak
-        except Exception as e:
-            logger.error(f"trivia_stats_service - _calculate_max_streak - {user_id} - error: {e}")
-            return 0
-
     def get_user_trivia_stats(self, user_id: int) -> dict:
         """Obtiene métricas de trivia para UN usuario"""
         db = self._get_db()
@@ -230,7 +206,15 @@ class TriviaStatsService:
                     else:
                         break
 
-                max_streak = self._calculate_max_streak(user_id, game_type)
+                # Calculate max_streak inline from already-loaded records
+                max_streak = 0
+                streak = 0
+                for record in records:
+                    if record.payout > 0:
+                        streak += 1
+                        max_streak = max(max_streak, streak)
+                    else:
+                        streak = 0
 
                 # Count codes
                 codes_earned = db.query(DiscountCode).filter(
@@ -260,3 +244,6 @@ class TriviaStatsService:
         except Exception as e:
             logger.error(f"trivia_stats_service - get_user_trivia_stats - {user_id} - error: {e}")
             return {}
+        finally:
+            if self._owns_session:
+                db.close()
