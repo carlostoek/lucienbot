@@ -534,3 +534,60 @@ class TriviaStatsService:
         except Exception as e:
             logger.error(f"trivia_stats_service - export_rankings_csv - error: {e}")
             return None
+
+    # ─── Dashboard Method ─────────────────────────────────────────────────────────
+
+    def get_full_dashboard(self) -> dict:
+        """Returns the complete dashboard combining all metrics."""
+        db = self._get_db()
+        try:
+            # Get all unique user IDs who have played trivia or trivia_vip
+            rows = db.query(GameRecord.user_id).filter(
+                GameRecord.game_type.in_(["trivia", "trivia_vip"])
+            ).distinct().all()
+            user_ids = [r[0] for r in rows]
+
+            total_trivia_users = 0
+            total_vip_trivia_users = 0
+            correctness_rates = []
+            max_streaks = []
+
+            for uid in user_ids:
+                stats = self.get_user_trivia_stats(uid)
+                trivia_stats = stats.get("stats", {}).get("trivia", {})
+                trivia_vip_stats = stats.get("stats", {}).get("trivia_vip", {})
+
+                if trivia_stats.get("total_plays", 0) > 0:
+                    total_trivia_users += 1
+                    correctness_rates.append(trivia_stats.get("correctness_rate", 0.0))
+                    max_streaks.append(trivia_stats.get("max_streak", 0))
+
+                if trivia_vip_stats.get("total_plays", 0) > 0:
+                    total_vip_trivia_users += 1
+                    correctness_rates.append(trivia_vip_stats.get("correctness_rate", 0.0))
+                    max_streaks.append(trivia_vip_stats.get("max_streak", 0))
+
+            avg_correctness_rate = round(sum(correctness_rates) / len(correctness_rates), 1) if correctness_rates else 0.0
+            avg_streak = round(sum(max_streaks) / len(max_streaks), 1) if max_streaks else 0.0
+
+            result = {
+                "generated_at": datetime.utcnow().isoformat(),
+                "promotions": self.get_all_promotions_stats(),
+                "users_summary": {
+                    "total_trivia_users": total_trivia_users,
+                    "total_vip_trivia_users": total_vip_trivia_users,
+                    "avg_correctness_rate": avg_correctness_rate,
+                    "avg_streak": avg_streak,
+                },
+                "rankings": {
+                    "top_scorers": self.get_top_scorers(limit=10),
+                    "top_streaks": self.get_top_streaks(limit=10),
+                    "top_codes": self.get_top_codes_redeemed(limit=10),
+                }
+            }
+
+            logger.info("trivia_stats_service - get_full_dashboard - dashboard generated")
+            return result
+        except Exception as e:
+            logger.error(f"trivia_stats_service - get_full_dashboard - error: {e}")
+            return {}
