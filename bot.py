@@ -59,6 +59,8 @@ from handlers import (
     question_set_admin_router,
     # Phase 18 - Trivia Management
     trivia_admin_router,
+    # Phase 19 - Trivia Stats Admin
+    trivia_stats_admin_router,
     # Phase 15 - Mochila
     backpack_router,
 )
@@ -282,6 +284,8 @@ async def main():
     dp.include_router(question_set_admin_router)
     # Phase 18 - Trivia Management
     dp.include_router(trivia_admin_router)
+    # Phase 19 - Trivia Stats Admin
+    dp.include_router(trivia_stats_admin_router)
     # Phase 15 - Mochila
     dp.include_router(backpack_router)
 
