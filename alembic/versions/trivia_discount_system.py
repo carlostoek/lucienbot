@@ -17,56 +17,90 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Create enum type if not exists (PostgreSQL)
-    # Note: SQLite doesn't support enum types, we use String instead
+    conn = op.get_bind()
+    dialect = conn.dialect.name
 
-    # Create trivia_promotion_configs table
-    op.create_table(
-        'trivia_promotion_configs',
-        sa.Column('id', sa.Integer(), primary_key=True),
-        sa.Column('name', sa.String(200), nullable=False),
-        sa.Column('promotion_id', sa.Integer(), sa.ForeignKey('promotions.id'), nullable=False),
-        sa.Column('discount_percentage', sa.Integer(), nullable=False),
-        sa.Column('required_streak', sa.Integer(), default=5, nullable=False),
-        sa.Column('is_active', sa.Boolean(), default=True),
-        sa.Column('max_codes', sa.Integer(), default=5),
-        sa.Column('codes_claimed', sa.Integer(), default=0),
-        sa.Column('start_date', sa.DateTime(timezone=True), nullable=True),
-        sa.Column('end_date', sa.DateTime(timezone=True), nullable=True),
-        sa.Column('created_by', sa.BigInteger(), nullable=True),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP')),
-    )
-    op.create_index('ix_trivia_promotion_configs_id', 'trivia_promotion_configs', ['id'])
-    op.create_index('ix_trivia_promotion_configs_promotion_id', 'trivia_promotion_configs', ['promotion_id'])
+    # Create trivia_promotion_configs table (idempotente)
+    if dialect == 'sqlite':
+        result = conn.execute(sa.text("SELECT name FROM sqlite_master WHERE type='table' AND name='trivia_promotion_configs'"))
+        table_exists = result.fetchone() is not None
+    else:
+        result = conn.execute(sa.text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'trivia_promotion_configs')"))
+        table_exists = result.scalar()
 
-    # Create discount_codes table
-    op.create_table(
-        'discount_codes',
-        sa.Column('id', sa.Integer(), primary_key=True),
-        sa.Column('config_id', sa.Integer(), sa.ForeignKey('trivia_promotion_configs.id'), nullable=False),
-        sa.Column('code', sa.String(20), nullable=False, unique=True),
-        sa.Column('user_id', sa.BigInteger(), nullable=False),
-        sa.Column('username', sa.String(100), nullable=True),
-        sa.Column('first_name', sa.String(100), nullable=True),
-        sa.Column('promotion_id', sa.Integer(), sa.ForeignKey('promotions.id'), nullable=False),
-        sa.Column('status', sa.String(20), default='active'),  # active, used, expired, cancelled
-        sa.Column('generated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP')),
-        sa.Column('used_at', sa.DateTime(timezone=True), nullable=True),
-    )
-    op.create_index('ix_discount_codes_id', 'discount_codes', ['id'])
-    op.create_index('ix_discount_codes_code', 'discount_codes', ['code'])
-    op.create_index('ix_discount_codes_user_id', 'discount_codes', ['user_id'])
-    op.create_index('ix_discount_codes_config_id', 'discount_codes', ['config_id'])
+    if not table_exists:
+        op.create_table(
+            'trivia_promotion_configs',
+            sa.Column('id', sa.Integer(), primary_key=True),
+            sa.Column('name', sa.String(200), nullable=False),
+            sa.Column('promotion_id', sa.Integer(), sa.ForeignKey('promotions.id'), nullable=False),
+            sa.Column('discount_percentage', sa.Integer(), nullable=False),
+            sa.Column('required_streak', sa.Integer(), default=5, nullable=False),
+            sa.Column('is_active', sa.Boolean(), default=True),
+            sa.Column('max_codes', sa.Integer(), default=5),
+            sa.Column('codes_claimed', sa.Integer(), default=0),
+            sa.Column('start_date', sa.DateTime(timezone=True), nullable=True),
+            sa.Column('end_date', sa.DateTime(timezone=True), nullable=True),
+            sa.Column('created_by', sa.BigInteger(), nullable=True),
+            sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP')),
+        )
+        op.create_index('ix_trivia_promotion_configs_id', 'trivia_promotion_configs', ['id'])
+        op.create_index('ix_trivia_promotion_configs_promotion_id', 'trivia_promotion_configs', ['promotion_id'])
+
+    # Create discount_codes table (idempotente)
+    if dialect == 'sqlite':
+        result = conn.execute(sa.text("SELECT name FROM sqlite_master WHERE type='table' AND name='discount_codes'"))
+        table_exists = result.fetchone() is not None
+    else:
+        result = conn.execute(sa.text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'discount_codes')"))
+        table_exists = result.scalar()
+
+    if not table_exists:
+        op.create_table(
+            'discount_codes',
+            sa.Column('id', sa.Integer(), primary_key=True),
+            sa.Column('config_id', sa.Integer(), sa.ForeignKey('trivia_promotion_configs.id'), nullable=False),
+            sa.Column('code', sa.String(20), nullable=False, unique=True),
+            sa.Column('user_id', sa.BigInteger(), nullable=False),
+            sa.Column('username', sa.String(100), nullable=True),
+            sa.Column('first_name', sa.String(100), nullable=True),
+            sa.Column('promotion_id', sa.Integer(), sa.ForeignKey('promotions.id'), nullable=False),
+            sa.Column('status', sa.String(20), default='active'),
+            sa.Column('generated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP')),
+            sa.Column('used_at', sa.DateTime(timezone=True), nullable=True),
+        )
+        op.create_index('ix_discount_codes_id', 'discount_codes', ['id'])
+        op.create_index('ix_discount_codes_code', 'discount_codes', ['code'])
+        op.create_index('ix_discount_codes_user_id', 'discount_codes', ['user_id'])
+        op.create_index('ix_discount_codes_config_id', 'discount_codes', ['config_id'])
 
     # Add discount_code_id to game_records
-    op.add_column('game_records',
-        sa.Column('discount_code_id', sa.Integer(), sa.ForeignKey('discount_codes.id'), nullable=True)
-    )
+    conn = op.get_bind()
+    dialect = conn.dialect.name
+
+    if dialect == 'sqlite':
+        # Check if column exists first (idempotente)
+        result = conn.execute(sa.text("PRAGMA table_info(game_records)"))
+        columns = [row[1] for row in result.fetchall()]
+        if 'discount_code_id' not in columns:
+            with op.batch_alter_table('game_records', schema=None) as batch_op:
+                batch_op.add_column(sa.Column('discount_code_id', sa.Integer(), nullable=True))
+    else:
+        op.add_column('game_records',
+            sa.Column('discount_code_id', sa.Integer(), sa.ForeignKey('discount_codes.id'), nullable=True)
+        )
 
 
 def downgrade() -> None:
+    conn = op.get_bind()
+    dialect = conn.dialect.name
+
     # Remove discount_code_id from game_records
-    op.drop_column('game_records', 'discount_code_id')
+    if dialect == 'sqlite':
+        with op.batch_alter_table('game_records', schema=None) as batch_op:
+            batch_op.drop_column('discount_code_id')
+    else:
+        op.drop_column('game_records', 'discount_code_id')
 
     # Drop discount_codes table
     op.drop_index('ix_discount_codes_config_id', table_name='discount_codes')

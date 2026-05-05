@@ -19,11 +19,22 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        'trivia_promotion_configs',
-        sa.Column('question_set_id', sa.Integer(), sa.ForeignKey('question_sets.id'), nullable=True)
-    )
+    conn = op.get_bind()
+    dialect = conn.dialect.name
+
+    if dialect == 'sqlite':
+        result = conn.execute(sa.text("PRAGMA table_info(trivia_promotion_configs)"))
+        columns = [row[1] for row in result.fetchall()]
+        column_exists = 'question_set_id' in columns
+    else:
+        result = conn.execute(sa.text("SELECT EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'trivia_promotion_configs' AND column_name = 'question_set_id')"))
+        column_exists = result.scalar()
+
+    if not column_exists:
+        with op.batch_alter_table('trivia_promotion_configs', schema=None) as batch_op:
+            batch_op.add_column(sa.Column('question_set_id', sa.Integer(), nullable=True))
 
 
 def downgrade() -> None:
-    op.drop_column('trivia_promotion_configs', 'question_set_id')
+    with op.batch_alter_table('trivia_promotion_configs', schema=None) as batch_op:
+        batch_op.drop_column('question_set_id')

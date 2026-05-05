@@ -50,7 +50,7 @@ def upgrade() -> None:
             sa.Column('description', sa.Text(), nullable=True),
             sa.Column('order_index', sa.Integer(), nullable=True),
             sa.Column('is_active', sa.Boolean(), nullable=True),
-            sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()')),
+            sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP')),
             sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
             sa.PrimaryKeyConstraint('id'),
             sa.UniqueConstraint('name')
@@ -73,25 +73,21 @@ def upgrade() -> None:
         column_exists = result.scalar()
 
     if not column_exists:
-        # Agregar columna category_id a packages
-        op.add_column('packages', sa.Column('category_id', sa.Integer(), nullable=True))
-        op.create_index('ix_packages_category_id', 'packages', ['category_id'])
+        # Agregar columna category_id a packages (idempotente)
+        with op.batch_alter_table('packages', schema=None) as batch_op:
+            batch_op.add_column(sa.Column('category_id', sa.Integer(), nullable=True))
 
-        # Agregar foreign key
-        op.create_foreign_key('fk_packages_category_id', 'packages', 'categories',
-                             ['category_id'], ['id'])
+        op.create_index('ix_packages_category_id', 'packages', ['category_id'])
+        # En SQLite, la foreign key se maneja a nivel de aplicación, no se crea constraint
 
 
 def downgrade() -> None:
-    # Eliminar foreign key primero
-    op.drop_constraint('fk_packages_category_id', 'packages', type_='foreignkey')
-
     # Eliminar índice en category_id
     op.drop_index('ix_packages_category_id', table_name='packages')
 
     # Eliminar columna category_id
-    op.drop_column('packages', 'category_id')
+    with op.batch_alter_table('packages', schema=None) as batch_op:
+        batch_op.drop_column('category_id')
 
-    # Eliminar tabla categories
-    op.drop_index('ix_categories_name', table_name='categories')
+    # Eliminar tabla categories (sin foreign key en SQLite)
     op.drop_table('categories')
