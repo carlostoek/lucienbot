@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "lucien-gamification-design", "runs": [{"id": "eval-0-with_skill", "prompt": "Quiero dise\u00f1ar un sistema de referidos para que los usuarios invites a sus amigos. Dame recomendaciones sobre qu\u00e9 tipo de impulso Octalysis usar, qu\u00e9 programa de reforzamiento es mejor, y c\u00f3mo evitar dark patterns.", "eval_id": 0, "outputs": [], "grading": null}, {"id": "eval-0-without_skill", "prompt": "Quiero dise\u00f1ar un sistema de referidos para que los usuarios invites a sus amigos. Dame recomendaciones sobre qu\u00e9 tipo de impulso Octalysis usar, qu\u00e9 programa de reforzamiento es mejor, y c\u00f3mo evitar dark patterns.", "eval_id": 0, "outputs": [{"name": "output.md", "type": "text", "content": "# Sistema de Referidos para Lucien Bot: Recomendaciones de Gamificacion\n\n## 1. Impulso Octalysis Recomendado: Core Drive 3 y 7 en Combinacion\n\n### Impulso primario: Core Drive 5 - Influencia Social\n\nEl referral es inherentemente un acto social. El usuario no solo gana para si, sino que conecta a alguien mas con algo valioso. Esto activa:\n\n- **Filial Social**: \"Le estoy dando algo bueno a un amigo\"\n- **Imitacion Social**: \"Mi amigo vio lo que yo hago y quiso estar aqui\"\n- **Envidia/Pertenencia**: \"Yo traje a alguien, mi amigo esta en el circulo de Diana\"\n\n**Activacion en Lucien**: Cada visitado ve un contador personal \"Visitantes traidos al circulo de Diana\" con su nombre. El referidor recibe notificacion cuando alguien acepta la invitacion.\n\n### Impulso secundario: Core Drive 7 - Impredictibilidad\n\nPara evitar la extincion del comportamiento (el usuario deja de invitar despues de las primeras recompensas), se anaden **sorpresas** cada N invitados:\n\n- Cada 5-20 invitados (aleatorio): sorpresa de +X besitos adicionales\n- Limite maximo: 3 sorpresas por dia para evitar adiccion tipo slot machine\n- Probabilidad maxima: 35% acumulado\n\n### Impulso terciario: Core Drive 2 - Desarrollo y Logro\n\nCada umbral de referido alcanzado es un logro concreto:\n\n```\n1 referido     -> 50 besitos + insignia \"Embajador\"\n3 referidos    -> 100 besitos + acceso a mision exclusiva\n5 referidos    -> 200 besitos + 1 dia VIP gratis\n10 referidos   -> 500 besitos + rol \"Embajador Dorado\" en perfil\n20 referidos   -> Paquete especial \"Circulo Interior\" (contenido unico)\n```\n\n### Impulso terciario: Core Drive 4 - Posesion y Propiedad\n\nEl referidor acumula un historial de quienes trajo. \"Has introducido a 12 personas al circulo de Diana.\" Eso se convierte en badge permanente y fuente de orgullo.\n\n---\n\n## 2. Programa de Reforzamiento Recomendado: Hibrido FR + VR con Techo\n\n### Por que no un programa simple de \"1 referido = X besitos\"\n\nLos programas de reforzamiento **fijos** (Fixed Ratio) crean meseta de motivacion: una vez que el usuario comprende el patron, la anticipacion desaparece. Para mantener engagement sostenido en referral, se necesita **variabilidad**.\n\n### Programa recomendado: **FR escalonado con splash de VR**\n\n```\nEstructura de recompensas escalonadas:\n\nReferidos completados     Recompensa\n1                          50 besitos + badge \"Embajador\"\n3                          100 besitos + acceso a mision exclusiva\n5                          200 besitos + 1 dia VIP gratis\n10                         500 besitos + rol \"Embajador Dorado\"\n20                         Paquete especial \"Circulo Interior\"\n```\n\n**Como funciona (basado en teoria de Skinner)**\n\n1. **FR dentro de cada umbral**: El usuario sabe exactamenteantos referidos necesita para el siguiente nivel. Esto genera alta tasa de respuesta.\n\n2. **VR splash**: En lugar de 10 besitos por referido, el sistema hace que cada 3 referidos de un \"splash\" de 100 besitos. El cerebro percibe que hay mas valor en esperar al umbral que en referido inmediato.\n\n3. **Escalamiento no lineal**: Los primeros referidos son faciles (baja friccion). Del 5 al 10 es mas dificil, por eso la recompensa salta mas. La curva refleja esfuerzo real.\n\n4. **VR sorpresa adicional**: Cada 5-20 invitados (aleatorio) + sorpresa de +X besitos. Limite de 3 por dia. Probabilidad maxima 35%.\n\n### Evitar: Reforzamiento continuo (CRF)\n\nDar besitos por cada accion individual (envio link, abrio link, se registro) genera **saciedad prematura**. El usuario pierde el sentido de evento especial. El referral debe sentirse como un **evento**, no como una transaccion.\n\n---\n\n## 3. Dark Patterns a Evitar y Alternativas Eticas\n\n### Dark Pattern 1: Fake social proof (\"Tu amigo ya se unio... casi\")\n\n- **Que NO hacer**: Mostrar notificaciones falsas de que alguien se unio para presionar accion.\n- **Por que es danino**: Rompe confianza con el usuario y con el invitado.\n- **Alternativa etica**: Solo mostrar referidos reales verificados. Si hay estado pendiente (invitado creo cuenta pero no verifico), mostrar \"invitacion enviada, pendiente de confirmacion\" \u2014 con transparencia.\n\n### Dark Pattern 2: Ambiguedad predatory (\"Invita y... quien sabe que pasa?\")\n\n- **Que NO hacer**: Ocultar que recibe el invitado o el referidor hasta despues de que el invitado se une.\n- **Alternativa etica**: Diseno de doble ventana:\n  - **Para el referidor**: \"Tu amigo recibe 20 besitos al unirse; tu recibes 50 besitos cuando el complete su primer besito\"\n  - **Para el invitado**: \"Te envia 20 besitos de bienvenida. Sin compromiso.\"\n\n### Dark Pattern 3: Coercion disfrazada (\"Invita o pierdes tu racha\")\n\n- **Que NO hacer**: Amenazar con reset de racha o quitar beneficios si no se invita.\n- **Por que es manipulador**: Convierte el referral en obligacion, no en acto voluntario.\n- **Alternativa etica**: Ofrecer el referral como **oportunidad adicional**, no como requisito. \"Tu racha esta a salvo. Pero si quieres multiplicarla...\"\n\n### Dark Pattern 4: Urgencia falsa (\"Solo hoy: doble recompensa\")\n\n- **Que NO hacer**: Temporizadores artificiales que resetean.\n- **Alternativa etica**: Eventos reales con fechas limite honestas, comunicadas con anticipacion. Si no hay fecha limite real, no fingir una.\n\n### Dark Pattern 5: Countdown enganoso\n\n- **Que NO hacer**: \"3 personas viendo este link ahora mismo\" \u2014 datos ficticios.\n- **Alternativa etica**: Solo metricas reales. Si no hay datos, simplemente no mostrar ese dato.\n\n### Dark Pattern 6: VR sin limites\n\n- **Que NO hacer**: Recompensas aleatorias cada interaccion sin limite, sin parar.\n- **Por que es danino**: Motor de slot machines. El usuario presiona sin pausa.\n- **Alternativa etica**:\n  - Maximo 3 VR surprises por dia\n  - Limite de probabilidad (35% max)\n  - Pausa obligatoria despues de N recompensas seguidas\n  - Nunca usar VR para transacciones financieras\n\n### Dark Pattern 7: Escalera que desaparece\n\n- **Que NO hacer**: Cuando el usuario alcanza un nivel, el siguiente nivel cambia.\n- **Alternativa etica**: Las metas son fijas y publicas. \"5 referidos = VIP dia gratis\" no cambia una vez comunicado.\n\n---\n\n## 4. Diseno Recomendado para Lucien Bot\n\n### Mecanica Central: \"Embajadores de Diana\"\n\n```\n1. El Visitante genera un link unico: t.me/LucienBot?ref=USERNAME123\n2. Cada vez que alguien se une via ese link y completa una accion minima\n   (ej: enviar primer besito), el referidor gana.\n3. El sistema muestra: progreso + recompensa pendiente + proximo umbral.\n4. En cada umbral alcanzado, notificacion discreta tipo:\n   \"Lucien reconoce tu lealtad: has traido a 3 visitantes al circulo de Diana.\"\n```\n\n### Resumen de Core Drives activados\n\n| Core Drive | Como se activa |\n|---|---|---|\n| CD5 Impacto Social | Ver a amigos unirse, compartir link |\n| CD7 Impredictibilidad | Sorpresa cada 5-20 invitados (con limite) |\n| CD2 Logro | Umbrales de referido, insignias |\n| CD4 Posesion | Contador personalizado, perfil con badge |\n| CD1 Significado Epico | Meta de 20 referidos (logro epico \"Circulo Interior\") |\n\n### Recompensa etica escalonada\n\n- **50 besitos** por primer referido (baja friccion, onboarding)\n- **+20 besitos** al invitado para que sienta valor inmediatamente\n- **Recompensa splash** cada 3 referidos (evita saciedad)\n- **Badge visible** en perfil (reconocimiento social intrinseco)\n- **Premio especial** para 20 referidos: paquete \"Circulo Interior\" (contenido unico no disponible en tienda)\n\n### Voz de Lucien en las notificaciones\n\n```\n\"Lucien reconoce tu lealtad: has traido a 3 visitantes al circulo de Diana.\n Tu recompensa de 100 besitos esta lista. Colocale un mo\u00f1o con el brillo\n de quien construye comunidad.\"\n```\n\n---\n\n## 5. Metricas para Medir Salud del Sistema\n\n- **Tasa de conversion**: De clicks en link a registros completados. Objetivo: > 15 por ciento\n- **Tasa de activacion**: De registros a primer besito del invitado. Objetivo: > 60 por ciento\n- **Viralidad**: R0 efectivo (cada referido cantos trae). Objetivo: > 0.8\n- **Churn de referidor**: Vuelven a invitar despues de 30 dias? Esto revela si el programa tiene fatiga o engagement real.\n- **Ratio de recompensa**: Besitos entregados vs besitos generados por referido. Debe ser > 1 para ser sostenible.\n\n---\n\n## 6. Checklist de Ethical Gamification (aplicado a referidos)\n\nAntes de implementar, verificar:\n\n- [ ] El usuario puede desconectarse sintiendose bien\n- [ ] La escasez es real o artificial\n- [ ] Hay limites en VR para evitar adiccion\n- [ ] El sistema no fuerza ni presiona a invitar\n- [ ] Las notificaciones son consentidas y controladas por el usuario\n- [ ] El usuario entiende que obtendra y a que precio\n- [ ] La mecanica genera valor real o solo manipulacion\n- [ ] No hay fake social proof\n- [ ] Las metas son fijas y publicas\n- [ ] El invitado tambien recibe valor (no solo el referidor)\n\n**Si la respuesta a cualquiera es \"no\", reconsiderar el diseno.**"}], "grading": null}, {"id": "eval-1-with_skill", "prompt": "Los usuarios no est\u00e1n regresando despu\u00e9s del primer d\u00eda. \u00bfQu\u00e9 est\u00e1 pasando? \u00bfQu\u00e9 impulsos Octalysis deber\u00eda usar para mejorar retenci\u00f3n?", "eval_id": 1, "outputs": [], "grading": null}, {"id": "eval-1-without_skill", "prompt": "Los usuarios no est\u00e1n regresando despu\u00e9s del primer d\u00eda. \u00bfQu\u00e9 est\u00e1 pasando? \u00bfQu\u00e9 impulsos Octalysis deber\u00eda usar para mejorar retenci\u00f3n?", "eval_id": 1, "outputs": [{"name": "output.md", "type": "text", "content": "# Diagnostico de Retencion del Primer Dia en Lucien Bot\n\n## 1. \u00bfQue esta pasando?\n\nEl sintoma clasico: **usuarios llegan, interactuan una vez, y nunca regresan**. En terminos de gamificacion, esto se llama \"churn del primer dia\" y es el problema mas dificil de resolver en cualquier sistema engagement-driven.\n\n### Analisis del sistema actual\n\nBasandonos en el codigo revisado, el bot tiene las siguientes mec\u00e1nicas de engagement:\n\n**Lo que existe:**\n- Sistema de besitos (puntos) - solo funciona si el usuario ya jugo\n- Racha diaria de trivia (streak) - se rompe con una respuesta incorrecta\n- Regalo diario de 10 besitos - una vez al dia, 24h cooldown\n- Minijuegos de dados y trivia con limites diarios\n- Sistema de descuentos por racha de trivia (TRI-codes)\n\n**Lo que NO existe (huecos criticos):**\n\n1. **No hay impulso de Significado Epico** - El usuario no siente que forma parte de algo mayor. No hay narrativa de \"comunidad\", no hay mision colectiva. El onboarding es puramente transactional.\n\n2. **No hay ciclo de Desarrollo y Logro visible** - No hay niveles, no hay barras de progreso, no hay insignias o milestones. El usuario no sabe cuanto falta para \"subir\" o completar algo.\n\n3. **No hay Social** - Sin leaderboards (ni siquiera segmentados), sin referidos, sin misiones sociales (\"invita a un amigo\").\n\n4. **No hay VR (Recompensa Variable)** - Todo es determinista. Si el usuario sabe exactamente que obtendra, pierde emocion. Los programas de reforzamiento variable son los que mantienen la dopamina.\n\n5. **La racha es hostil para nuevos usuarios** - La racha de trivia se rompe con UNA respuesta incorrecta. Un nuevo usuario que falla en su primera pregunta pierde todo el progreso. Esto genera frustracion, no engagement.\n\n6. **No hay onboarding estructurado** - El usuario llega y tiene que descubrir todo solo. No hay tutorial, no hay primera mission guiada, no hay \"primera victoria\" rapida.\n\n7. **El regalo diario es pobre** - 10 besitos no tienen ninguna representacion de progreso. No hay barra de \"manana recibiras 15 besitos si vuelves\", no hay streak de claimed.\n\n---\n\n## 2. Analisis por los 8 Impulsos Octalysis\n\n### Impulso 1: Significado Epico y Llamado \u2014 AUSENTE\n**Estado actual:** El usuario abre el bot, ve menus, juega. No hay narrativa de \"por que estoy aqui\".\n**Problema:** No hay chiamata alla aventura. El usuario no tiene razon epica para volver.\n\n**Que implementar:**\n- Mensaje de bienvenida narrativo: \"Diana ha notado tu presencia. Formas parte de algo que apenas comienza.\"\n- Primera mission como \"ritual de iniciacion\": 3 preguntas de trivia para \"clasificarte\" en un arquetipo\n- Notificaciones narrativas (no genericas): \"Diana se pregunta si vuelves...\", no \"You have a new message\"\n\n---\n\n### Impulso 2: Desarrollo y Logro \u2014 MUY DEBIL\n**Estado actual:** Solo besitos acumulados. No hay niveles, no hay progreso visible.\n**Problema:** El usuario no tiene meta a largo plazo. Juega una vez y no sabe que sigue.\n\n**Que implementar:**\n- Sistema de niveles basado en besitos acumulados (ej: 100 besitos = Nivel 1, 500 = Nivel 2)\n- Barra de progreso visible en el perfil: \"Nivel 2 - 340/500 besitos\"\n- Insignias por logros (primera victoria, 7 dias consecutivos, primera racha de 5)\n- Milestones con nombre epico: \"Guardian de la Comunidad\", \"Devoto de Diana\"\n\n---\n\n### Impulso 3: Empoderamiento Creativo \u2014 AUSENTE\n**Estado actual:** El usuario responde preguntas, no tiene opciones de personalizacion.\n**Problema:** Sin agencia, el usuario es pasivo. Esto reduce la retencion.\n\n**Que implementar:**\n- Perfil customizable (nombre visible, avatar emoji)\n- Quiz de arquetipos narrativos (que ya existe en StoryService) para influir en el contenido que ve\n- Eleccion de estrategia en trivia: \"modo seguro\" vs \"modo arriesgado\" (afecta recompensas)\n\n---\n\n### Impulso 4: Posesion y Propiedad \u2014 PRESENTE PERO SUBUTILIZADO\n**Estado actual:** Los besitos se acumulan pero no hay Coleccionables, logros visibles o items.\n**Problema:** Acumular puntos sin coleccionables es aburrido. Los puntos deben sentirse \"tuyos\" de forma tangible.\n\n**Que implementar:**\n- Tienda de coleccionables/insignias comprables con besitos (avatares, badges, titulos)\n- Inventario visible en el perfil\n- Regalo de besitos a otros usuarios (Ownership Transfer)\n\n---\n\n### Impulso 5: Influencia Social \u2014 CASI AUSENTE\n**Estado actual:** No hay nada social. Solo hay comparing con otros si los Custodios ven estadisticas.\n**Problema:** Sin social, no hay competencia gentil. La comunidad no se auto-reto.\n\n**Que implementar:**\n- Leaderboard segmentado por nivel (no global - eso desmoraliza al 90%)\n- Sistema de referidos: \"Invita a un amigo y ambos reciben 50 besitos\"\n- Misiones sociales: \"Ayuda a 3 nuevos miembros a reclamar su primer besito\"\n\n---\n\n### Impulso 6: Escasez e Impaciencia \u2014 SUBUTILIZADA\n**Estado actual:** Solo la tienda tiene stock, pero no hay urgencia para usarla.\n**Problema:** Sin urgencia, el usuario no tiene reason para volver HOY.\n\n**Que implementar:**\n- Ofertas por tiempo limitado con countdown visible (en el menu principal)\n- \"Solo hoy: 2x besitos en dados\"\n- Eventos sorpresa (VR) - ver siguiente punto\n\n---\n\n### Impulso 7: Impredictibilidad y Curiosedad (VR) \u2014 AUSENTE\n**Estado actual:** Todo es determinista. Sin sorpresas.\n**Problema:** Sin VR, no hay anticipacion dopaminergica. El usuario sabe exactamente que pasara.\n\n**Que implementar:**\n- VR: cada 5-20 interacciones (aleatorio), el bot otorga una recompensa sorpresa (besitos extra, badge, descuento)\n- \"Cajas misteriosas\" en la tienda: por 100 besitos, puedes abrir una caja con contenido aleatorio\n- Eventos sorpresa temporales en el menu: \"Algo esta pasando hoy... no sabes que\"\n- Broadcast con sorpresa: un mensaje diario a todos los usuarios con un \"easter egg\"\n\n---\n\n### Impulso 8: Perdida y Evitacion (Streak) \u2014 HOSTIL\n**Estado actual:** La racha de trivia se rompe con UNA respuesta incorrecta y pierde todo el descuento acumulado.\n**Problema:** Para un usuario nuevo, esto es devastador. Pierde todo el progreso acumulado y el descuento. Esto genera FOMO y ansiedad, no engagement sostenible.\n\n**Que implementar:**\n- Grace period: si falla una pregunta, no pierde TODO - mantiene el 50% del progreso\n- Recovery mechanic: streak roto = empezar de nuevo pero con +5 besitos de \"consuelo\"\n- Ventana de gracia: no exactamente 24h, sino 28-36h para reclamar el regalo diario\n- Racha de regalo diario (streak de claimed) diferente a la racha de trivia\n\n---\n\n## 3. Resumen de Impulsos Criticos para el Primer Dia\n\n| Impulso | Prioridad | Impacto en D1 Retention | Implementacion Urgente |\n|---------|-----------|-------------------------|------------------------|\n| Significado Epico | ALTA | Alto - genera identidad | Onboarding narrativo + arquetipos |\n| Desarrollo y Logro | ALTA | Alto - da meta | Niveles + insignias |\n| VR (Impredictibilidad) | ALTA | Muy alto - genera anticipacion | Recompensas sorpresa cada N acciones |\n| Perdida y Evitacion | MEDIA | Medio - puede ser negativo si hostil | Grace period en rachas |\n| Escasez | MEDIA | Medio - urgencia | Ofertas diarias limitadas |\n| Social | BAJA | Medio - retencion a mediano plazo | Referidos |\n\n---\n\n## 4. Recomendacion de Prioridad\n\n**Semana 1 (impacto rapido):**\n1. Onboarding narrativo con quiz de arquetipos (Significado Epico)\n2. Sistema de niveles simple con barra de progreso (Desarrollo)\n3. VR implementado como \"besito sorpresa\" cada 5-20 acciones del dia\n\n**Semana 2-3 (impacto sostenible):**\n4. Grace period en rachas de trivia (evitar frustracion)\n5. Insignias y coleccionables comprables\n6. Ofertas por tiempo limitado con countdown\n\n**Semana 4+ (comunidad):**\n7. Sistema de referidos\n8. Leaderboards segmentados\n9. Misiones sociales\n\n---\n\n## 5. Nota sobre VR y Adiccion\n\nLa Razon Variable (VR) es el impulso mas poderoso para retencion, pero debe implementarse con etica:\n- VR NO debe sentirse como un slot machine\n- La recompensa sorpresa no debe ser la unica razon para volver\n- Siempre debe haber un mecanismo de \"pausa\" si el usuario quiere desconectarse\n- Seguir la regla 70/30: 70% White Hat (Significado, Desarrollo, Creatividad), 30% Black Hat (Escasez, VR, Perdida)\n\nEl objetivo es que el usuario se sienta bien con su tiempo invertido, no enganchado.\n"}], "grading": null}, {"id": "eval-2-with_skill", "prompt": "Quiero implementar un sistema de loot boxes donde el usuario puede ganar items raros al abrir cajas. \u00bfEs \u00e9tico? \u00bfQu\u00e9 programa de reforzamiento es mejor? \u00bfC\u00f3mo lo implemento?", "eval_id": 2, "outputs": [{"name": "output.md", "type": "text", "content": "# Sistema de Loot Boxes en LucienBot: \u00c9tica, Reforzamiento e Implementaci\u00f3n\n\n---\n\n## 1. \u00bfEs \u00e9tico implementar loot boxes?\n\n**Respuesta corta**: S\u00ed, es \u00e9tico *si* se implementa con l\u00edmites estrictos y transparencia. El riesgo no est\u00e1 en la mec\u00e1nica en s\u00ed, sino en c\u00f3mo se dise\u00f1a.\n\n### Por qu\u00e9 las loot boxes generan controversy\n\nLas loot boxes son \u00e9ticamente problem\u00e1ticas cuando emulan el comportamiento de **slot machines**:\n- Probabilidades ocultas o manipuladas\n- Sin l\u00edmites de frecuencia\n- Sin transparencia de probabilidades\n- Combinadas con presi\u00f3n social (\"tu amigo sac\u00f3 un item raro\")\n- Orientadas a extraer dinero real sin valor tangible a cambio\n\n### Dark patterns a evitar\n\n| Anti-Patr\u00f3n | Por qu\u00e9 es probl\u00e9mico | Alternativa \u00e9tica |\n|------------|--------|----------------------|\n| Probabilidades ocultas | El usuario no sabe qu\u00e9 tan raro es realmente | Mostrar probabilidad exacta (ej: \"1.2%\") |\n| Sin l\u00edmite diario | Adicci\u00f3n tipo slot machine | M\u00e1ximo 3 loot boxes por d\u00eda |\n| VR sin tope | Adicci\u00f3n porque no sabes cu\u00e1ndo viene la siguiente | Tope de probabilidad al 35% |\n| Moneda real involved | Transforma en gambling | Solo besitos (moneda virtual del juego) |\n| FOMO agresivo | \"\u00daltima oportunidad\" presiona decisiones | Loot boxes siempre disponibles, no countdowns |\n\n### Cu\u00e1ndo es \u00e9tico\n\n- Usas **besitos** (moneda virtual), no dinero real\n- Las probabilidades son **p\u00fablicas y verificables**\n- Hay **l\u00edmites diarios** (m\u00e1ximo 3 por d\u00eda)\n- La probabilidad m\u00e1xima es **35%** (nunca m\u00e1s)\n- El usuario recibe **valor real** (besitos, badges, contenido)\n- Puede **desconectarse** sin perder ventaja significativa\n\n### En el contexto de Lucien\n\nLucien ya tiene mec\u00e1nicas de VR funcionando (streak bonuses en trivia, daily gift con espera de 24h). Las loot boxes ser\u00edan una extensi\u00f3n natural del **Impulso #7 (Impredictibilidad y Curiosidad)** del Framework Octalysis. La diferencia clave es que en Lucien la moneda es simb\u00f3lico besitos, no dinero real, lo que reduce dr\u00e1sticamente el riesgo de gambling.\n\n---\n\n## 2. \u00bfQu\u00e9 programa de reforzamiento es mejor?\n\n**Respuesta corta**: **Raz\u00f3n Variable (VR)** es el m\u00e1s efectivo para loot boxes, pero requiere l\u00edmites estrictos.\n\n### An\u00e1lisis de programas para loot boxes\n\n| Programa | Efecto en loot boxes | Veredicto |\n|----------|------|--------|\n| **Reforzamiento Continuo (CR)** | Cada apertura da recompensa \u2014 extinci\u00f3n r\u00e1pida, aburrido | No adecuado |\n| **Raz\u00f3n Fija (FR)** | Tras N aperturas das recompensa \u2014 patr\u00f3n predecible, pierde emoci\u00f3n | No adecuado |\n| **Raz\u00f3n Variable (VR)** | Tras N aleatorio (5-20) das recompensa \u2014 el m\u00e1s potente, resistente a extinci\u00f3n, sin pausa post-rec | El mejor |\n| **Intervalo Fijo (FI)** | Cada 24h puedes abrir \u2014 predecible, baja anticipaci\u00f3n | No optimal |\n| **Intervalo Variable (VI)** | Tiempo aleatorio hasta siguiente loot box \u2014 muy bajo engagement | No adecuado |\n\n### Por qu\u00e9 VR es el programa correcto\n\nEl sistema VR (Raz\u00f3n Variable) es el m\u00e1s poderoso documentado en psicolog\u00eda conductual. Sus propiedades son:\n\n1. **Tasa m\u00e1s alta de respuesta** \u2014 el usuario abre cajas frecuentemente\n2. **Resistente a extinci\u00f3n** \u2014 aunque las recompensas se vuelven raras, el comportamiento persiste\n3. **Sin pausa post-recompensa** \u2014 a diferencia de FR, no hay un \"baj\u00f3n\" despu\u00e9s de abrir una caja porque no puedes predecir cu\u00e1ndo viene la siguiente\n\nEsto es precisamente lo que hace divertida una loot box: la incertidumbre de \"cu\u00e1ndo ser\u00e1 la pr\u00f3xima\" mantiene el comportamiento.\n\n### Implementaci\u00f3n VR para loot boxes en Lucien\n\n```python\n# Cada N interacciones (aleatorio 5-20) = surprise loot box\nimport random\n\ndef should_spawn_loot_box(interactions_count: int) -> bool:\n    base_chance = 0.05  # 5% base\n    accumulated = min(base_chance + (interactions_count * 0.03), 0.35)\n    return random.random() < accumulated\n```\n\n- Rango de interacciones: 5-20 (aleatorio)\n- Probabilidad m\u00e1xima: 35% (nunca m\u00e1s)\n- L\u00edmite diario: 3 loot boxes m\u00e1ximo\n\n---\n\n## 3. \u00bfC\u00f3mo se implementa en LucienBot?\n\n### Arquitectura recomendada\n\n```\nhandlers/lootbox_handler.py \u2192 services/loot_box_service.py \u2192 models/loot_box.py\n```\n\n**Regla cr\u00edtica**: handlers solo enrutan eventos, SIN l\u00f3gica de negocio. Services hacen toda la l\u00f3gica.\n\n### Modelo de datos necesario\n\n```python\n# models/loot_box.py (nuevo)\nclass LootBox(Base):\n    __tablename__ = \"loot_boxes\"\n\n    id = Column(Integer, primary_key=True)\n    name = Column(String(100))  # \"Caja de Diana\"\n    description = Column(String(255))\n    cost_besitos = Column(Integer)  # 50 besitos para abrir\n    is_active = Column(Boolean, default=True)\n    daily_limit = Column(Integer, default=3)\n\nclass LootBoxItem(Base):\n    __tablename__ = \"loot_box_items\"\n\n    id = Column(Integer, primary_key=True)\n    loot_box_id = Column(Integer, ForeignKey(\"loot_boxes.id\"))\n    name = Column(String(100))  # \"Besitos raros\", \"Badge \u00fanico\"\n    item_type = Column(String(20))  # BESITOS, BADGE, PACKAGE, VIP_DAYS\n    weight = Column(Integer)  # Probabilidad relativa (mayor = m\u00e1s com\u00fan)\n    min_reward = Column(Integer)  # Rango min\n    max_reward = Column(Integer)  # Rango max\n\nclass UserLootBoxClaim(Base):\n    __tablename__ = \"user_loot_box_claims\"\n\n    id = Column(Integer, primary_key=True)\n    user_id = Column(Integer, ForeignKey(\"users.id\"))\n    loot_box_id = Column(Integer, ForeignKey(\"loot_boxes.id\"))\n    item_id = Column(Integer, ForeignKey(\"loot_box_items.id\"))\n    claimed_at = Column(DateTime, default=datetime.utcnow)\n```\n\n### LootBoxService (service layer)\n\n```python\n# services/loot_box_service.py\nclass LootBoxService:\n    def __init__(self, session: Session):\n        self.session = session\n\n    def get_loot_boxes(self) -> List[LootBox]:\n        \"\"\"Lista de cajas disponibles\"\"\"\n        return self.session.query(LootBox).filter_by(is_active=True).all()\n\n    def get_daily_claims(self, user_id: int, loot_box_id: int) -> int:\n        \"\"\"Cu\u00e1ntas veces abri\u00f3 hoy\"\"\"\n        today = date.today()\n        return self.session.query(UserLootBoxClaim).filter(\n            UserLootBoxClaim.user_id == user_id,\n            UserLootBoxClaim.loot_box_id == loot_box_id,\n            func.date(UserLootBoxClaim.claimed_at) == today\n        ).count()\n\n    def roll_loot_box(self, user_id: int, loot_box_id: int) -> dict:\n        \"\"\"Abre una loot box \u2014 retorna item y recompensa\"\"\"\n        # 1. Verificar l\u00edmite diario\n        daily_claims = self.get_daily_claims(user_id, loot_box_id)\n        loot_box = self.session.query(LootBox).get(loot_box_id)\n        if daily_claims >= loot_box.daily_limit:\n            return {\"error\": \"L\u00edmite diario alcanzado\", \"reset_at\": \"00:00\"}\n\n        # 2. Verificar besitos suficientes\n        with get_service(BesitoService) as besito_svc:\n            if not besito_svc.has_sufficient_balance(user_id, loot_box.cost_besitos):\n                return {\"error\": \"Besitos insuficientes\"}\n\n        # 3. D\u00e9bitar besitos\n        with get_service(BesitoService) as besito_svc:\n            besito_svc.debit_besitos(user_id, loot_box.cost_besitos, \"loot_box\", f\"Abrir {loot_box.name}\")\n\n        # 4. Roll de probabilidad (Weighted random)\n        items = self.session.query(LootBoxItem).filter_by(loot_box_id=loot_box_id).all()\n        weights = [item.weight for item in items]\n        chosen = random.choices(items, weights=weights, k=1)[0]\n\n        # 5. Generar recompensa\n        reward_amount = random.randint(chosen.min_reward, chosen.max_reward)\n\n        # 6. Entregar recompensa\n        with get_service(BesitoService) as besito_svc:\n            if chosen.item_type == \"BESITOS\":\n                besito_svc.credit_besitos(user_id, reward_amount, \"loot_box\", chosen.name)\n\n        # 7. Registrar claim\n        claim = UserLootBoxClaim(user_id=user_id, loot_box_id=loot_box_id, item_id=chosen.id)\n        self.session.add(claim)\n        self.session.commit()\n\n        return {\n            \"success\": True,\n            \"item_name\": chosen.name,\n            \"reward_amount\": reward_amount,\n            \"daily_remaining\": loot_box.daily_limit - daily_claims - 1\n        }\n```\n\n### Handler (thin, solo routing)\n\n```python\n# handlers/lootbox_handler.py\n@router.callback_query(F.data.startswith(\"lootbox:open:\"))\nasync def open_loot_box(callback: CallbackQuery, state: FSMContext):\n    loot_box_id = int(callback.data.split(\":\")[2])\n\n    with get_service(LootBoxService) as service:\n        result = service.roll_loot_box(callback.from_user.id, loot_box_id)\n\n    if \"error\" in result:\n        await callback.answer(result[\"error\"], show_alert=True)\n    else:\n        await callback.message.edit_text(\n            f\"\u00a1Abriste la caja y encontraste {result['item_name']}! \"\n            f\"+{result['reward_amount']} besitos. \"\n            f\"Te quedan {result['daily_remaining']} aperturas hoy\"\n        )\n    await callback.answer()\n\n@router.callback_query(F.data == \"lootbox:menu\")\nasync def show_loot_boxes(callback: CallbackQuery):\n    with get_service(LootBoxService) as service:\n        boxes = service.get_loot_boxes()\n\n    kb = InlineKeyboardMarkup(inline_keyboard=[\n        [InlineKeyboardButton(text=f\"{box.name} ({box.cost_besitos} besitos)\", callback_data=f\"lootbox:open:{box.id}\")]\n        for box in boxes\n    ])\n    await callback.message.edit_text(\"**Cajas de Diana**\\n\\nElige una caja para abrir:\", reply_markup=kb)\n    await callback.answer()\n```\n\n### Items sugeridos para las loot boxes\n\n| Item | Tipo | Rango de reward | Probabilidad (weight) |\n|------|------|---------|--------|\n| Besitos comunes | BESITOS | 5-15 | 50 |\n| Besitos raros | BESITOS | 20-50 | 30 |\n| Besitos \u00e9picos | BESITOS | 100-200 | 10 |\n| Badge \"Coleccionista\" | BADGE | 1 (\u00fanico) | 5 |\n| Acceso VIP 1 d\u00eda | VIP_DAYS | 1 | 3 |\n| Paquete de contenido | PACKAGE | 1 | 2 |\n\n### Integraci\u00f3n con impulsos Octalysis\n\n| Qu\u00e9 implementas | Impulso Octalysis | Notas |\n|----------------|--------------------|------|\n| Loot box con items raros | #7 Impredictibilidad | VR, m\u00e1ximo 35% probabilidad |\n| Badge de coleccionista | #4 Posesi\u00f3n y Propiedad | Coleccionable \u00fanico |\n| Besitos \u00e9picos | #2 Desarrollo y Logro | Progresi\u00f3n visible |\n| L\u00edmite diario 3 | #7 con control | Evita adicci\u00f3n |\n| Probabilidades p\u00fablicas | Dise\u00f1o \u00e9tico | Transparencia |\n\n---\n\n## 4. Recomendaciones finales\n\n### Para implementar de forma \u00e9tica\n\n1. **M\u00e1ximo 3 loot boxes por d\u00eda** por usuario \u2014 previene adicci\u00f3n\n2. **Probabilidad m\u00e1xima 35%** \u2014 no crear jackpot permanente\n3. **Solo besitos (moneda virtual)** \u2014 no dinero real\n4. **Probabilidades p\u00fablicas** \u2014 mostrar odds en la UI\n5. **Reset diario a las 00:00** \u2014 ventana predecible, no FOMO\n6. **Nunca combinar con presi\u00f3n social** (\"tu amigo sac\u00f3 esto\")\n7. **Incluir items \"garantizados\"** \u2014 al menos un item fijo para que el usuario siempre gane algo\n\n### Siguiente paso: lucien-gamification-implementation\n\nPara la implementaci\u00f3n t\u00e9cnica completa (FSM, migraci\u00f3n Alembic, UI con inline keyboards), consultar `lucien-gamification-implementation`. La estructura de archivos ser\u00eda:\n\n```\nservices/loot_box_service.py      # L\u00f3gica de negocio\nhandlers/lootbox_handler.py        # Routing (thin)\nmodels/loot_box.py                # Modelos SQLAlchemy\nmigrations/xxx_add_lootbox.py    # Migraci\u00f3n Alembic\n```\n\n---\n\n*Respuesta generada usando Framework Octalysis, programas de reforzamiento de Skinner, y \u00e9tica gamificada. Compatible con la arquitectura existente de LucienBot (handlers \u2192 services \u2192 models).*\n"}], "grading": null}, {"id": "eval-2-without_skill", "prompt": "Quiero implementar un sistema de loot boxes donde el usuario puede ganar items raros al abrir cajas. \u00bfEs \u00e9tico? \u00bfQu\u00e9 programa de reforzamiento es mejor? \u00bfC\u00f3mo lo implemento?", "eval_id": 2, "outputs": [{"name": "output.md", "type": "text", "content": "# Sistema de Loot Boxes para Lucien Bot: Ethics, Reforzamiento e Implementacion\n\n## 1. Analisis Etico\n\n### 1.1 Es etico implementar loot boxes?\n\n**Respuesta corta:** Depende criticamente de como se disen e implementen.\n\n**Analisis desde la perspectiva de Gamificacion Etica (Octalysis):**\n\nEl Framework Octalysis de Yu-Kai Chou identifica que los sistemas de recompensas aleatorias pueden ser:\n- **Eticos** cuando: la curva de valor es justa, hay transparencia total, no hay perdida financiera real, y el usuario tiene agencia real\n- **Manipulativos** cuando: explotan variabilidad emocional (variable ratio reinforcement), ocultan probabilidades reales, o usan deuda emocional para forzar repeticion\n\n### 1.2 Criterios de Etica para Lucien Bot\n\nDado que es un bot de Telegram con moneda virtual (besitos):\n\n**Principio 1: Moneda Virtual, No Real**\n- Los besitos son moneda virtual gratuita/ganable, no tienen valor monetario real\n- Esto mitiga concerns de gambling regulatorio significativamente\n- Sin embargo, el hecho de que besitos pueden comprarse con dinero real (a traves de la tienda) introduce un gray area\n\n**Principio 2: Transparencia Radical**\n- Mostrar probabilidades exactas de cada item\n- Permitir al usuario ver el historial de caja abierta\n- Sin \"fake\" percentages o rareza inflada artificialmente\n\n**Principio 3: Sin Presion Economica**\n- Nunca bloquear contenido por no abrir cajas\n- Ofrecer alternativas earn-free (grinding) para items\n- Permitir guardado de besitos indefinidamente\n\n**Principio 4: Valor Real del Item**\n- Items utiles en el ecosystem (no solo cosmetics \"brillantes\")\n- Items que mejoren la experiencia genuinamente\n- Transferability para dar valor de reventa\n\n### 1.3 Red Flags Eticos a Evitar\n\n- **Dark patterns:** \"Solo 3 cajas restantes hoy\", cuentas regresivas falsas\n- **Artificial scarcity:** Items que \"nunca mas estaran disponibles\"\n- **Pity systems ocultos:** No revelar que despues de N intentos garantizas rareza\n- **Priming emocional:** mensajes que manipulan emocion antes de abrir\n- **Conflicto de interes:** El bot gana mas cuanto mas abras\n\n### 1.4 Recomendacion Final de Etica\n\n**Si se implementa, seguir el modelo \"Honest Gacha\":**\n- Transparente con probabilidades\n- Items con valor real transferible\n- Siempre earnable por grinding (no solo comprable)\n- Sin timers artificiales o FOMO\n\n---\n\n## 2. Programa de Reforzamiento Optimo\n\n### 2.1 Comparacion de Programas de Reforzamiento\n\n| Programa | Descripcion | Engagement | Ethicalidad | Adecuacion Lucien |\n|----------|-------------|------------|-------------|-------------------|\n| **Fixed Ratio (FR)** | Recompensa cada N acciones | Muy alto | Media | - Requiere muchas jugadas |\n| **Variable Ratio (VR)** | Recompensa impredecible por accion | EXTREMO | Baja | - Modelo loot box estandar - peligroso |\n| **Fixed Interval (FI)** | Recompensa cada X tiempo | Medio | Alta | - Modelo daily gift - ya existe |\n| **Variable Interval (VI)** | Recompensa inesperada por tiempo | Alto | Alta | - Modelo mystery box - excelente |\n| **Continuous** | Recompensa cada accion | Bajo | N/A | - Sin variedad |\n\n### 2.2 Analisis Detallado\n\n#### Variable Interval (VI) - El Mas Etico y Efectivo\n\n**Por que es superior:**\n- Emocion de lo inesperado sin manipulacion\n- Produce engagement sostenido sin-addiction\n- No explota dopamine loops intensos\n- El usuario puede predecir \"algo viene\" pero no cuando\n\n**Implementacion en Lucien:**\n```\n- Cada 4-8 horas de actividad, posibilidad de loot box gratis\n- No\u5f3a\u5236\u6027, solo cuando el usuario decide jugar\n- Cooldown logico pero no timer agresivo\n```\n\n#### Variable Ratio (VR) - El Mas Adictivo (Usar con Precaucion)\n\n**Por que es problematico:**\n- El clasico slot machine pattern\n- Famoso por crear behavior addiction\n- Casinos y mobile games mas rentables\n- Pero: regulado en multiples paises\n\n**Si se usa, controles necesarios:**\n- Limite de apertura diaria (5-8 max)\n- Reset periodico de bad luck protection\n- Transparency total de probabilidades\n- Auto-exclusion para usuarios problemicos\n\n### 2.3 Programa Recomendado: Tiered VI + VR Controlado\n\n**Modelo hibrido para Lucien Bot:**\n\n```\nNivel 1: VIP Diarios (VI suave)\n- Cada 24 horas, VIP recibe una \"Caja del Destino\" gratuita\n- Solo disponible para suscriptores activos\n- Items: common/uncommon, 70%/30%\n\nNivel 2: Grinding VI (Contenido gratuito)\n- Cada 50 besitos ganados en trivia/dados = 1 caja gratis\n- Max 3 por semana para no VIP, ilimitadas para VIP\n- Items: common/uncommon/rare, 60%/30%/10%\n\nNivel 3: Compras Opcionales (VR Controlado)\n- Se puede comprar cajas con besitos\n- Limite: max 5 compras directas por semana\n- Probabilidades visibles\n- Pity system transparente (garantiza rare al 50avo intento)\n```\n\n### 2.4 Framework Octalisis Aplicado\n\n**Para engagement sostenible, implementar las 8 cores:**\n\n1. **Epic Meaning & Calling** - \"Las cajas contienen artifacts de la mitologia de Diana\"\n2. **Development & Accomplishment** - Progression visible de coleccion\n3. **Empowerment of Creativity** - Items combinables para crear setups unicos\n4. **Ownership & Possession** - Inventario personal transferable\n5. **Social Influence & Relatedness** - Leaderboard de who opened what\n6. **Scarcity & Impatience** - Ediciones limitadas reales (no fake)\n7. **Unpredictability & Curiosity** - La emocion VI\n8. **Loss & Avoidance** - \"Tu caja del destino expira en 24h si no la abres\"\n\n---\n\n## 3. Implementacion Tecnica en Lucien Bot\n\n### 3.1 Arquitectura de Modelos\n\n```python\n# models/loot_box.py\n\nclass LootBoxType(enum.Enum):\n    DESTINY_BOX = \"destiny_box\"        # VIP diario gratis\n    GRINDING_BOX = \"grinding_box\"      # Earned through gameplay\n    PREMIUM_BOX = \"premium_box\"        # Comprado con besitos\n\nclass LootRarity(enum.Enum):\n    COMMON = \"common\"      # 60%\n    UNCOMMON = \"uncommon\"  # 30%\n    RARE = \"rare\"          # 8%\n    LEGENDARY = \"legendary\" # 2%\n\nclass LootItemType(enum.Enum):\n    BADGE = \"badge\"           # Cosmetico\n    TITLE = \"title\"           # Titulo desbloqueable\n    FRAME = \"frame\"           # Marco de perfil\n    EFFECT = \"effect\"         # Efecto visual\n    BESITOS = \"besitos\"       # Besitos directos\n    PACKAGE_ACCESS = \"package_access\"  # Acceso anticipado\n    VIP_DAYS = \"vip_days\"     # Dias VIP gratis\n\nclass LootBox(Base):\n    __tablename__ = \"loot_boxes\"\n    \n    id = Column(Integer, primary_key=True)\n    name = Column(String, nullable=False)\n    box_type = Column(LootBoxType, nullable=False)\n    rarity_weights = Column(JSON)  # {\"common\": 60, \"uncommon\": 30, ...}\n    price_besitos = Column(Integer, nullable=True)  # None = no se compra\n    daily_limit = Column(Integer, default=1)\n    cooldown_hours = Column(Integer, default=24)\n    min_level_required = Column(Integer, default=0)\n    \n    created_at = Column(DateTime, default=datetime.utcnow)\n    is_active = Column(Boolean, default=True)\n\nclass LootItem(Base):\n    __tablename__ = \"loot_items\"\n    \n    id = Column(Integer, primary_key=True)\n    name = Column(String, nullable=False)\n    description = Column(String)\n    rarity = Column(LootRarity, nullable=False)\n    item_type = Column(LootItemType, nullable=False)\n    \n    # Para items con valor numerico\n    value_besitos = Column(Integer, nullable=True)\n    value_vip_days = Column(Integer, nullable=True)\n    \n    # Para items cosmicos\n    badge_icon = Column(String, nullable=True)\n    title_text = Column(String, nullable=True)\n    frame_image = Column(String, nullable=True)\n    effect_animation = Column(String, nullable=True)\n    \n    is_active = Column(Boolean, default=True)\n    created_at = Column(DateTime, default=datetime.utcnow)\n\nclass UserLootBoxOpen(Base):\n    __tablename__ = \"user_loot_box_opens\"\n    \n    id = Column(Integer, primary_key=True)\n    user_id = Column(Integer, ForeignKey(\"users.id\"), nullable=False)\n    loot_box_id = Column(Integer, ForeignKey(\"loot_boxes.id\"), nullable=False)\n    \n    item_id = Column(Integer, ForeignKey(\"loot_items.id\"), nullable=False)\n    rarity_obtained = Column(LootRarity, nullable=False)\n    \n    opened_at = Column(DateTime, default=datetime.utcnow)\n    source = Column(String)  # \"daily_vip\", \"grinding\", \"purchase\"\n\nclass UserLootItem(Base):\n    __tablename__ = \"user_loot_items\"\n    \n    id = Column(Integer, primary_key=True)\n    user_id = Column(Integer, ForeignKey(\"users.id\"), nullable=False)\n    item_id = Column(Integer, ForeignKey(\"loot_items.id\"), nullable=False)\n    \n    acquired_at = Column(DateTime, default=datetime.utcnow)\n    is_equipped = Column(Boolean, default=False)\n    is_transferable = Column(Boolean, default=True)  # False para items unicos\n```\n\n### 3.2 Logica de Servicio\n\n```python\n# services/loot_box_service.py\n\nclass LootBoxService:\n    \"\"\"Servicio para sistema de loot boxes eticos\"\"\"\n    \n    # Probabilidades base (ajustables por config)\n    BASE_RARITY_WEIGHTS = {\n        'common': 60,\n        'uncommon': 30,\n        'rare': 8,\n        'legendary': 2\n    }\n    \n    # Cooldowns\n    DESTINY_BOX_COOLDOWN_HOURS = 24\n    GRINDING_BOX_TRIGGERS = 50  # Besitos ganados para 1 box\n    PREMIUM_PITY_SYSTEM = 50    # Intentos para guarantee rare\n    \n    def __init__(self, db: Session = None):\n        self.db = db or SessionLocal()\n        self.besito_service = BesitoService(self.db)\n        self._owns_session = db is None\n    \n    def _get_db(self) -> Session:\n        if self._owns_session:\n            return SessionLocal()\n        return self.db\n    \n    def _roll_rarity(self, box_type: LootBoxType, \n                     bad_luck_protection: int = 0) -> LootRarity:\n        \"\"\"\n        Selecciona rareza usando weighted random con pity system.\n        \n        Args:\n            box_type: Tipo de caja (afecta probabilidades)\n            bad_luck_protection: Contador de intentos sin rare/legendary\n        \n        Returns:\n            LootRarity seleccionado\n        \"\"\"\n        weights = self.BASE_RARITY_WEIGHTS.copy()\n        \n        # Pity system: incrementa rare/legendary odds despues de N intentos\n        if bad_luck_protection >= 30:\n            weights['rare'] += 10\n            weights['legendary'] += 2\n        \n        if bad_luck_protection >= 50:\n            weights['rare'] += 20\n            weights['legendary'] += 5\n        \n        # Roll\n        roll = random.randint(1, 100)\n        cumulative = 0\n        \n        for rarity, weight in weights.items():\n            cumulative += weight\n            if roll <= cumulative:\n                return LootRarity[rarity.upper()]\n        \n        return LootRarity.COMMON  # Fallback\n    \n    def _select_item_by_rarity(self, rarity: LootRarity) -> Optional[LootItem]:\n        \"\"\"Selecciona item aleatorio de la rareza especificada\"\"\"\n        db = self._get_db()\n        \n        items = db.query(LootItem).filter(\n            LootItem.rarity == rarity,\n            LootItem.is_active == True\n        ).all()\n        \n        if not items:\n            logger.warning(f\"No items found for rarity {rarity}\")\n            return None\n        \n        return random.choice(items)\n    \n    def get_user_boxes_available(self, user_id: int) -> dict:\n        \"\"\"\n        Obtiene cajas disponibles para un usuario.\n        \n        Returns:\n            {\n                'destiny_box': {'available': True/False, 'cooldown_ends': datetime},\n                'grinding_progress': {'current': 45, 'needed': 50, 'boxes_earned': 3},\n                'premium_boxes': {'available': 5, 'price': 100}\n            }\n        \"\"\"\n        db = self._get_db()\n        \n        # Destiny Box status\n        last_destiny = db.query(UserLootBoxOpen).filter(\n            UserLootBoxOpen.user_id == user_id,\n            UserLootBoxOpen.source == 'daily_vip'\n        ).order_by(UserLootBoxOpen.opened_at.desc()).first()\n        \n        destiny_available = True\n        cooldown_ends = None\n        \n        if last_destiny:\n            elapsed = datetime.utcnow() - last_destiny.opened_at\n            if elapsed < timedelta(hours=self.DESTINY_BOX_COOLDOWN_HOURS):\n                destiny_available = False\n                cooldown_ends = last_destiny.opened_at + \\\n                    timedelta(hours=self.DESTINY_BOX_COOLDOWN_HOURS)\n        \n        # Grinding progress (besitos ganados esta semana)\n        week_start = datetime.utcnow() - timedelta(days=datetime.utcnow().weekday())\n        weekly_earned = self._get_weekly_besitos_earned(user_id, week_start)\n        grinding_progress = {\n            'current': weekly_earned % self.GRINDING_BOX_TRIGGERS,\n            'needed': self.GRINDING_BOX_TRIGGERS,\n            'boxes_earned': weekly_earned // self.GRINDING_BOX_TRIGGERS,\n            'max_boxes': 3 if not self._is_user_vip(user_id) else float('inf')\n        }\n        \n        # Premium boxes (besitos necesarios)\n        premium_box = self._get_premium_box_config()\n        \n        return {\n            'destiny_box': {\n                'available': destiny_available,\n                'cooldown_ends': cooldown_ends\n            },\n            'grinding_progress': grinding_progress,\n            'premium_boxes': {\n                'available': premium_box.daily_limit if premium_box else 0,\n                'price': premium_box.price_besitos if premium_box else 0\n            }\n        }\n    \n    def _get_weekly_besitos_earned(self, user_id: int, since: datetime) -> int:\n        \"\"\"Obtiene besitos ganados por el usuario desde cierta fecha\"\"\"\n        db = self._get_db()\n        \n        result = db.query(func.sum(BesitoTransaction.amount)).filter(\n            BesitoTransaction.user_id == user_id,\n            BesitoTransaction.type == TransactionType.CREDIT,\n            BesitoTransaction.created_at >= since\n        ).scalar()\n        \n        return result or 0\n    \n    def _is_user_vip(self, user_id: int) -> bool:\n        \"\"\"Verifica si usuario es VIP\"\"\"\n        vip_service = VIPService(self.db)\n        return vip_service.is_user_vip(user_id)\n    \n    def _get_premium_box_config(self) -> Optional[LootBox]:\n        \"\"\"Obtiene config de caja premium\"\"\"\n        db = self._get_db()\n        return db.query(LootBox).filter(\n            LootBox.box_type == LootBoxType.PREMIUM_BOX,\n            LootBox.is_active == True\n        ).first()\n    \n    def _get_bad_luck_protection(self, user_id: int, box_type: LootBoxType) -> int:\n        \"\"\"\n        Obtiene contador de pity system para el usuario y tipo de caja.\n        Cuenta intentos sin obtener rare o legendary.\n        \"\"\"\n        db = self._get_db()\n        \n        last_rare_or_legendary = db.query(UserLootBoxOpen).filter(\n            UserLootBoxOpen.user_id == user_id,\n            UserLootBoxOpen.loot_box_id == box_type.value,\n            UserLootBoxOpen.rarity_obtained.in_([LootRarity.RARE, LootRarity.LEGENDARY])\n        ).order_by(UserLootBoxOpen.opened_at.desc()).first()\n        \n        if not last_rare_or_legendary:\n            return 50  # Max pity\n        \n        count = db.query(UserLootBoxOpen).filter(\n            UserLootBoxOpen.user_id == user_id,\n            UserLootBoxOpen.loot_box_id == box_type.value,\n            UserLootBoxOpen.opened_at > last_rare_or_legendary.opened_at\n        ).count()\n        \n        return min(count, 50)  # Cap en 50\n    \n    def open_box(self, user_id: int, box_type: LootBoxType) -> dict:\n        \"\"\"\n        Abre una loot box para el usuario.\n        \n        Returns:\n            {\n                'success': True/False,\n                'item': LootItem,\n                'rarity': LootRarity,\n                'is_new': True/False,\n                'message': str\n            }\n        \"\"\"\n        validation = self._validate_box_opening(user_id, box_type)\n        if not validation['valid']:\n            return {\n                'success': False,\n                'error': validation['error'],\n                'message': validation['message']\n            }\n        \n        db = self._get_db()\n        \n        pity = self._get_bad_luck_protection(user_id, box_type)\n        rarity = self._roll_rarity(box_type, bad_luck_protection=pity)\n        item = self._select_item_by_rarity(rarity)\n        \n        if not item:\n            return {\n                'success': False,\n                'error': 'no_items',\n                'message': 'No hay items disponibles en este momento.'\n            }\n        \n        open_record = UserLootBoxOpen(\n            user_id=user_id,\n            loot_box_id=box_type.value,\n            item_id=item.id,\n            rarity_obtained=rarity,\n            source=self._get_source_string(box_type)\n        )\n        db.add(open_record)\n        \n        delivered = self._deliver_item_reward(user_id, item)\n        \n        db.commit()\n        \n        message = self._build_open_message(item, rarity, delivered)\n        \n        logger.info(\n            f\"loot_box_service - open_box - {user_id} - \"\n            f\"box:{box_type.value}, item:{item.name}, rarity:{rarity.value}\"\n        )\n        \n        return {\n            'success': True,\n            'item': item,\n            'rarity': rarity,\n            'is_new': self._is_item_new_for_user(user_id, item.id),\n            'delivered': delivered,\n            'message': message\n        }\n    \n    def _validate_box_opening(self, user_id: int, box_type: LootBoxType) -> dict:\n        \"\"\"Valida si el usuario puede abrir este tipo de caja\"\"\"\n        \n        if box_type == LootBoxType.DESTINY_BOX:\n            if not self._is_user_vip(user_id):\n                return {\n                    'valid': False,\n                    'error': 'not_vip',\n                    'message': 'Solo miembros VIP pueden abrir la Caja del Destino.'\n                }\n            \n            status = self.get_user_boxes_available(user_id)\n            if not status['destiny_box']['available']:\n                return {\n                    'valid': False,\n                    'error': 'cooldown',\n                    'message': f\"Tu caja estara disponible en {self._format_cooldown(status['destiny_box']['cooldown_ends'])}\"\n                }\n        \n        elif box_type == LootBoxType.GRINDING_BOX:\n            status = self.get_user_boxes_available(user_id)\n            grinding = status['grinding_progress']\n            \n            if grinding['boxes_earned'] >= grinding['max_boxes']:\n                return {\n                    'valid': False,\n                    'error': 'weekly_limit',\n                    'message': 'Has alcanzado tu limite semanal de cajas de grinding.'\n                }\n            \n            if grinding['current'] < grinding['needed']:\n                return {\n                    'valid': False,\n                    'error': 'not_enough_progress',\n                    'message': f\"Necesitas {grinding['needed'] - grinding['current']} besitos mas para abrir una caja.\"\n                }\n        \n        elif box_type == LootBoxType.PREMIUM_BOX:\n            premium = self._get_premium_box_config()\n            if not premium:\n                return {'valid': False, 'error': 'not_available', 'message': 'Caja premium no disponible.'}\n            \n            if not self.besito_service.has_sufficient_balance(user_id, premium.price_besitos):\n                return {\n                    'valid': False,\n                    'error': 'insufficient_balance',\n                    'message': f\"Necesitas {premium.price_besitos} besitos para abrir esta caja.\"\n                }\n        \n        return {'valid': True}\n    \n    def _deliver_item_reward(self, user_id: int, item: LootItem) -> dict:\n        \"\"\"Entrega la recompensa del item al usuario\"\"\"\n        delivered = {'type': None, 'amount': 0}\n        \n        if item.item_type == LootItemType.BESITOS and item.value_besitos:\n            self.besito_service.credit_besitos(\n                user_id=user_id,\n                amount=item.value_besitos,\n                source=TransactionSource.LOOT_BOX,\n                description=f\"Loot box reward: {item.name}\"\n            )\n            delivered = {'type': 'besitos', 'amount': item.value_besitos}\n        \n        elif item.item_type == LootItemType.VIP_DAYS and item.value_vip_days:\n            vip_service = VIPService(self.db)\n            vip_service.extend_vip(user_id, item.value_vip_days)\n            delivered = {'type': 'vip_days', 'amount': item.value_vip_days}\n        \n        return delivered\n    \n    def _build_open_message(self, item: LootItem, rarity: LootRarity, \n                            delivered: dict) -> str:\n        \"\"\"Construye el mensaje de resultado al abrir caja\"\"\"\n        \n        rarity_colors = {\n            'common': 'gris',\n            'uncommon': 'verde',\n            'rare': 'azul',\n            'legendary': 'dorado'\n        }\n        \n        rarity_icons = {\n            'common': '',\n            'uncommon': '',\n            'rare': '',\n            'legendary': ''\n        }\n        \n        header = self._select_template([\n            \"La oscuridad de la caja se desvanece...\",\n            \"Un destello de luz emerge desde el interior...\",\n            \"El destino ha hablado...\"\n        ])\n        \n        item_reveal = f\"{rarity_icons[rarity.value]} **{item.name}**\"\n        \n        if delivered['type'] == 'besitos':\n            reward_text = f\"Has ganado {delivered['amount']} besitos!\"\n        elif delivered['type'] == 'vip_days':\n            reward_text = f\"Has ganado {delivered['amount']} dias VIP!\"\n        else:\n            reward_text = f\"'{item.description}'\"\n        \n        footer = self._select_template([\n            \"El destino es caprichoso, pero nunca cruel.\",\n            \"Diana observa con aprobacion.\",\n            \"Lucien asiente en silencio.\"\n        ])\n        \n        return f\"{header}\\n\\n{item_reveal}\\n\\n{reward_text}\\n\\n_{footer}_\"\n    \n    def _is_item_new_for_user(self, user_id: int, item_id: int) -> bool:\n        \"\"\"Verifica si el usuario ya poseia este item\"\"\"\n        db = self._get_db()\n        existing = db.query(UserLootItem).filter(\n            UserLootItem.user_id == user_id,\n            UserLootItem.item_id == item_id\n        ).first()\n        return existing is None\n    \n    def _format_cooldown(self, cooldown_end: datetime) -> str:\n        \"\"\"Formatea el tiempo restante de cooldown\"\"\"\n        remaining = cooldown_end - datetime.utcnow()\n        hours = remaining.total_seconds() / 3600\n        if hours >= 1:\n            return f\"{int(hours)} horas\"\n        minutes = remaining.total_seconds() / 60\n        return f\"{int(minutes)} minutos\"\n    \n    def _get_source_string(self, box_type: LootBoxType) -> str:\n        \"\"\"Obtiene string de source para logging\"\"\"\n        mapping = {\n            LootBoxType.DESTINY_BOX: 'daily_vip',\n            LootBoxType.GRINDING_BOX: 'grinding',\n            LootBoxType.PREMIUM_BOX: 'purchase'\n        }\n        return mapping.get(box_type, 'unknown')\n```\n\n### 3.3 Handler FSM (simplificado)\n\n```python\n# handlers/loot_box_handler.py\n\nclass LootBoxHandler:\n    \"\"\"Handler para flujo de loot boxes - solo routing, sin logica\"\"\"\n    \n    MAIN_MENU_KEYBOARD = InlineKeyboardMarkup([\n        [InlineKeyboardButton(\"Destiny Box (VIP)\", callback_data=\"lb_destiny\")],\n        [InlineKeyboardButton(\"Grinding Box\", callback_data=\"lb_grinding\")],\n        [InlineKeyboardButton(\"Premium Box (100 besitos)\", callback_data=\"lb_premium\")],\n        [InlineKeyboardButton(\"Inventario\", callback_data=\"lb_inventory\")],\n        [InlineKeyboardButton(\"Volver al Menu\", callback_data=\"games_menu\")]\n    ])\n    \n    OPEN_KEYBOARD = InlineKeyboardMarkup([\n        [InlineKeyboardButton(\"Abrir Caja\", callback_data=\"lb_open\")],\n        [InlineKeyboardButton(\"Volver\", callback_data=\"lb_menu\")]\n    ])\n    \n    async def show_menu(self, update: Update, context: CallbackContext):\n        \"\"\"Muestra menu principal de loot boxes\"\"\"\n        user_id = update.effective_user.id\n        \n        status = self.loot_box_service.get_user_boxes_available(user_id)\n        \n        destiny_status = \"Disponible\" if status['destiny_box']['available'] else f\"Cooldown: {status['destiny_box']['cooldown_ends']}\"\n        \n        text = (\n            \"Loot Boxes de Lucien\\n\\n\"\n            f\"Destiny Box (VIP): {destiny_status}\\n\"\n            f\"Grinding Progress: {status['grinding_progress']['current']}/{status['grinding_progress']['needed']}\\n\"\n            f\"Premium Boxes: {status['premium_boxes']['available']} disponibles\\n\\n\"\n            \"Selecciona una caja para abrir.\"\n        )\n        \n        await update.message.reply_text(text, reply_markup=self.MAIN_MENU_KEYBOARD)\n    \n    async def handle_callback(self, update: Update, context: CallbackContext):\n        \"\"\"Maneja todos los callbacks de loot boxes\"\"\"\n        query = update.callback_query\n        data = query.data\n        \n        user_id = query.from_user.id\n        \n        if data == \"lb_menu\":\n            await self.show_menu(update, context)\n            \n        elif data == \"lb_destiny\":\n            await self._handle_destiny_box(query, user_id)\n            \n        elif data == \"lb_grinding\":\n            await self._handle_grinding_box(query, user_id)\n            \n        elif data == \"lb_premium\":\n            await self._handle_premium_box(query, user_id)\n            \n        elif data == \"lb_open\":\n            await self._handle_open(query, user_id, context)\n    \n    async def _handle_destiny_box(self, query, user_id):\n        \"\"\"Muestra preview de caja destiny\"\"\"\n        status = self.loot_box_service.get_user_boxes_available(user_id)\n        \n        if not status['destiny_box']['available']:\n            await query.answer(\"Caja en cooldown\", show_alert=True)\n            return\n        \n        text = (\n            \"Caja del Destino\\n\\n\"\n            \"Una caja especial reservada para los mas devotos de Diana.\\n\"\n            \"Contiene items de rareza Common a Legendary.\\n\\n\"\n            \"Solo disponible para miembros VIP.\"\n        )\n        \n        await query.message.edit_text(text, reply_markup=self.OPEN_KEYBOARD)\n    \n    async def _handle_grinding_box(self, query, user_id):\n        \"\"\"Muestra preview de caja grinding\"\"\"\n        status = self.loot_box_service.get_user_boxes_available(user_id)\n        progress = status['grinding_progress']\n        \n        text = (\n            \"Caja de Grinding\\n\\n\"\n            f\"Progreso: {progress['current']}/{progress['needed']} besitos\\n\"\n            f\"Cajas ganadas esta semana: {progress['boxes_earned']}/{progress['max_boxes']}\\n\\n\"\n            \"Cada 50 besitos ganados = 1 caja gratis.\\n\"\n            \"Los miembros VIP tienen cajas ilimitadas.\"\n        )\n        \n        await query.message.edit_text(text, reply_markup=self.OPEN_KEYBOARD)\n    \n    async def _handle_premium_box(self, query, user_id):\n        \"\"\"Muestra preview de caja premium\"\"\"\n        status = self.loot_box_service.get_user_boxes_available(user_id)\n        \n        text = (\n            \"Caja Premium\\n\\n\"\n            f\"Precio: {status['premium_boxes']['price']} besitos\\n\"\n            f\"Disponibles: {status['premium_boxes']['available']}\\n\\n\"\n            \"Mejores probabilidades que las cajas gratuitas.\\n\"\n            \"Garantia: Al abrir 50 cajas, al menos 1 sera Rare o Legendary.\"\n        )\n        \n        await query.message.edit_text(text, reply_markup=self.OPEN_KEYBOARD)\n    \n    async def _handle_open(self, query, user_id, context):\n        \"\"\"Procesa la apertura de caja\"\"\"\n        box_type = context.user_data.get('current_box_type', LootBoxType.PREMIUM_BOX)\n        \n        result = self.loot_box_service.open_box(user_id, box_type)\n        \n        if not result['success']:\n            await query.answer(result['message'], show_alert=True)\n            return\n        \n        await query.message.edit_text(\n            result['message'],\n            reply_markup=InlineKeyboardMarkup([\n                [InlineKeyboardButton(\"Volver al Menu\", callback_data=\"lb_menu\")]\n            ])\n        )\n        \n        if box_type == LootBoxType.PREMIUM_BOX:\n            premium = self.loot_box_service._get_premium_box_config()\n            self.loot_box_service.besito_service.debit_besitos(\n                user_id=user_id,\n                amount=premium.price_besitos,\n                source=TransactionSource.LOOT_BOX,\n                description=\"Apertura de caja premium\"\n            )\n```\n\n### 3.4 Items de Ejemplo\n\n```python\n# Data inicial para items de loot boxes\n\nLOOT_ITEMS_INITIAL = [\n    # COMMON (60%)\n    {\"name\": \"Sello de Visitante\", \"rarity\": \"common\", \"type\": \"badge\", \"description\": \"Un sello basico que indica tu presencia.\"},\n    {\"name\": \"Titulo: Novato\", \"rarity\": \"common\", \"type\": \"title\", \"description\": \"Un titulo modesto para principiantes.\"},\n    {\"name\": \"Marco Basico\", \"rarity\": \"common\", \"type\": \"frame\", \"description\": \"Un marco simple pero elegante.\"},\n    {\"name\": \"10 Besitos\", \"rarity\": \"common\", \"type\": \"besitos\", \"value\": 10},\n    \n    # UNCOMMON (30%)\n    {\"name\": \"Sello de Constancia\", \"rarity\": \"uncommon\", \"type\": \"badge\", \"description\": \"Representa tu dedicacion al salon.\"},\n    {\"name\": \"Titulo: Devoto\", \"rarity\": \"uncommon\", \"type\": \"title\", \"description\": \"Un titulo que honra tu devocion.\"},\n    {\"name\": \"Marco plateado\", \"rarity\": \"uncommon\", \"type\": \"frame\", \"description\": \"Un brillo sutil pero distintivo.\"},\n    {\"name\": \"25 Besitos\", \"rarity\": \"uncommon\", \"type\": \"besitos\", \"value\": 25},\n    \n    # RARE (8%)\n    {\"name\": \"Insignia de la Luna\", \"rarity\": \"rare\", \"type\": \"badge\", \"description\": \"Solo aquellos que buscan la luz la encuentran.\"},\n    {\"name\": \"Titulo: Discipulo\", \"rarity\": \"rare\", \"type\": \"title\", \"description\": \"Has demostrado tu compromiso.\"},\n    {\"name\": \"Marco dorado\", \"rarity\": \"rare\", \"type\": \"frame\", \"description\": \"El oro habla por si mismo.\"},\n    {\"name\": \"Efecto: Destello\", \"rarity\": \"rare\", \"type\": \"effect\", \"description\": \"Un destello magico en tus mensajes.\"},\n    {\"name\": \"100 Besitos\", \"rarity\": \"rare\", \"type\": \"besitos\", \"value\": 100},\n    \n    # LEGENDARY (2%)\n    {\"name\": \"Corona de Lucien\", \"rarity\": \"legendary\", \"type\": \"badge\", \"description\": \"La corona del maestro de ceremonias.\"},\n    {\"name\": \"Titulo: El Elegido\", \"rarity\": \"legendary\", \"type\": \"title\", \"description\": \"Un titulo reservado para pocos.\"},\n    {\"name\": \"3 Dias VIP\", \"rarity\": \"legendary\", \"type\": \"vip_days\", \"value\": 3},\n    {\"name\": \"Acceso Anticipado\", \"rarity\": \"legendary\", \"type\": \"package_access\", \"description\": \"Acceso a contenido antes que nadie.\"},\n]\n```\n\n---\n\n## 4. Resumen de Recomendaciones\n\n### Etica\n- Usar modelo \"Honest Gacha\" con probabilidades publicas\n- Siempre earnable via grinding, no solo comprable\n- Sin timers agresivos o FOMO artificial\n- Items con valor real (transferibles cuando sea posible)\n\n### Reforzamiento\n- VI (Variable Interval) para cajas diarias gratuitas\n- Grinding boxes basadas en besitos ganados\n- VR controlado con pity system transparente para compras\n- Hibrido: VI + VR limitado = engagement sostenible sin addiction\n\n### Implementacion\n- Nuevos modelos: LootBox, LootItem, UserLootBoxOpen, UserLootItem\n- Servicio: LootBoxService con logica de weighted random y pity system\n- Handler: LootBoxHandler que solo enruta eventos\n- Sin logica de negocio en handlers\n- Max 50 lineas por funcion\n- Logging en cada accion importante\n"}], "grading": null}], "previous_feedback": {}, "previous_outputs": {}, "benchmark": {"metadata": {"skill_name": "lucien-gamification-design", "skill_path": "<path/to/skill>", "executor_model": "<model-name>", "analyzer_model": "<model-name>", "timestamp": "2026-05-06T05:08:34Z", "evals_run": [], "runs_per_configuration": 3}, "runs": [], "run_summary": {"delta": {"pass_rate": "+0.00", "time_seconds": "+0.0", "tokens": "+0"}}, "notes": []}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

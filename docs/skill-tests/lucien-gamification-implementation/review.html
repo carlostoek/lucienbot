@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "lucien-gamification-implementation", "runs": [{"id": "eval-0-with_skill", "prompt": "Implementa un sistema de racha diaria para el bot. Necesito el FSM para el flujo, el service method, y el handler con inline keyboard. La racha debe tener ventana de gracia de 48 horas.", "eval_id": 0, "outputs": [{"name": "fsm.py", "type": "text", "content": "\"\"\"\nFSM para Sistema de Racha Diaria - Lucien Bot\n\nEstados y transiciones para el flujo de reclamar racha diaria.\n\"\"\"\nfrom aiogram.fsm.state import State, StatesGroup\n\n\nclass DailyStreakStates(StatesGroup):\n    \"\"\"Estados para el flujo de racha diaria\"\"\"\n    checking_streak = State()      # Verificando estado de racha\n    streak_active = State()        # Usuario tiene racha activa, mostrando estado\n    streak_claiming = State()      # Procesando reclamo de racha\n    streak_lost = State()          # Racha perdida, mostrando opci\u00f3n de reiniciar\n    grace_period = State()          # Dentro de ventana de gracia de 48h\n\n\n# ==================== CONSTANTES DE GRACIA ====================\n\nGRACE_PERIOD_HOURS = 48           # Ventana de gracia: 48 horas\nMIN_HOURS_BETWEEN_CLAIMS = 20     # M\u00ednimo para considerar \"en racha\"\nBONUS_PER_STREAK_DAY = 5          # Besitos extra por cada d\u00eda de racha\nMAX_BONUS = 50                    # Tope m\u00e1ximo de bonus por racha\n"}, {"name": "handler.py", "type": "text", "content": "\"\"\"\nHandlers de Racha Diaria - Lucien Bot\n\nManeja el flujo FSM de reclamo de racha diaria con inline keyboard.\n\"\"\"\nimport logging\nfrom aiogram import Router, F\nfrom aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton\nfrom aiogram.fsm.context import FSMContext\nfrom keyboards.inline_keyboards import back_keyboard\nfrom services import get_service\n\nlogger = logging.getLogger(__name__)\nrouter = Router()\n\n\n# ==================== CALLBACK DATA CONSTANTS ====================\n\nSTREAK_SHOW = \"streak:show\"\nSTREAK_CLAIM = \"streak:claim\"\nSTREAK_CANCEL = \"streak:cancel\"\n\n\n# ==================== TEMPLATES DE COPY ====================\n\nSTREAK_TEMPLATES = {\n    'title': [\n        \"\ud83d\udd25 Tu Racha Diaria\",\n        \"\ud83d\udd25 El Ritual de la Constancia\",\n        \"\ud83d\udd25 La llama que arde sin cesar\"\n    ],\n    'already_claimed': [\n        \"\u23f3 <b>Ya reclamaste tu racha el d\u00eda de hoy.</b>\\n\\n\"\n        \"Diana aprecia tu constancia, pero el tiempo a\u00fan no ha vuelto a gir.\",\n        \"\u23f3 <b>El ritual de hoy ya fue completado.</b>\\n\\n\"\n        \"La llama sigue ardiendo desde tu \u00faltimo gesto.\"\n    ],\n    'grace_period': [\n        \"\ud83c\udfa9 <b>Lucien:</b>\\n\\n\"\n        \"<i>Interesante... el tiempo between nuestros encuentros\\n\"\n        \"es corto, mas no tanto. La llama a\u00fan arde.</i>\\n\\n\"\n        \"\ud83d\udd25 <b>Racha: {streak} d\u00edas</b>\\n\"\n        \"\ud83d\udc8b <b>Bonus: +{bonus} besitos</b>\\n\\n\"\n        \"<i>\u00bfDesea reclamar su recompensa?</i>\",\n        \"\ud83c\udfa9 <b>Lucien:</b>\\n\\n\"\n        \"<i>Qu\u00e9 sorpresa encontrarla aqu\u00ed otra vez.\\n\"\n        \"El tiempo Between visitas es... aceptable.</i>\\n\\n\"\n        \"\ud83d\udd25 <b>Racha: {streak} d\u00edas</b>\\n\"\n        \"\ud83d\udc8b <b>Bonus: +{bonus} besitos</b>\\n\\n\"\n        \"<i>\u00bfReclama su lugar en la llama?</i>\"\n    ],\n    'streak_lost': [\n        \"\ud83d\udc94 <b>La llama se extingui\u00f3...</b>\\n\\n\"\n        \"Han pasado <b>{hours}h</b> desde su \u00faltima visita.\\n\"\n        \"La racha de <b>{lost_streak}</b> d\u00edas se perdi\u00f3.\\n\\n\"\n        \"\ud83d\udd25 Pero hoy puede comenzar de nuevo.\\n\"\n        \"\ud83d\udc8b <b>+{bonus} besitos</b> para reiniciar su camino.\",\n        \"\ud83d\udc94 <b>El tiempo no perdona...</b>\\n\\n\"\n        \"<b>{hours}h</b> sin su presencia.\\n\"\n        \"<b>{lost_streak}</b> d\u00edas de constancia... olvidados.\\n\\n\"\n        \"\ud83d\udd25 Una nueva llama puede encenderse hoy.\\n\"\n        \"\ud83d\udc8b <b>+{bonus} besitos</b> para su renaissance.\"\n    ],\n    'new_user': [\n        \"\ud83c\udfa9 <b>Lucien:</b>\\n\\n\"\n        \"<i>Un nuevo visitante en el sal\u00f3n de Diana.\\n\"\n        \"Los rituales diarios recompensan la constancia.</i>\\n\\n\"\n        \"\ud83d\udd25 <b>Comienza tu racha: +{bonus} besitos</b>\\n\\n\"\n        \"<i>\u00bfListo para el primer paso?</i>\",\n        \"\ud83c\udfa9 <b>Lucien:</b>\\n\\n\"\n        \"<i>El sal\u00f3n de juegos abre sus puertas\\n\"\n        \"para quienes saben volver cada d\u00eda.</i>\\n\\n\"\n        \"\ud83d\udd25 <b>+{bonus} besitos</b> para iniciar su camino.\\n\\n\"\n        \"<i>\u00bfAcepta el desaf\u00edo?</i>\"\n    ],\n    'claim_success': [\n        \"\ud83c\udf89 <b>\u00a1Racha reclamada!</b>\\n\\n\"\n        \"\ud83d\udd25 <b>Racha: {streak} d\u00edas</b>\\n\"\n        \"\ud83d\udc8b <b>+{bonus} besitos</b>\\n\\n\"\n        \"<i>Vuelve ma\u00f1ana para mantener la llama.</i>\",\n        \"\ud83c\udf89 <b>\u00a1La llama arde m\u00e1s fuerte!</b>\\n\\n\"\n        \"\ud83d\udd25 <b>Racha: {streak} d\u00edas</b>\\n\"\n        \"\ud83d\udc8b <b>+{bonus} besitos</b>\\n\\n\"\n        \"<i>Diana observa su dedicaci\u00f3n con agrado.</i>\"\n    ],\n    'footer': [\n        \"\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\",\n        \"\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\",\n        \"\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\"\n    ]\n}\n\n\n# ==================== HELPER ====================\n\ndef streak_status_keyboard(can_claim: bool) -> InlineKeyboardMarkup:\n    \"\"\"Teclado inline para estado de racha\"\"\"\n    buttons = []\n\n    if can_claim:\n        buttons.append([\n            InlineKeyboardButton(\n                text=\"\ud83d\udd25 Reclamar Racha\",\n                callback_data=STREAK_CLAIM\n            )\n        ])\n\n    buttons.append([\n        InlineKeyboardButton(\n            text=\"\ud83d\udd19 Men\u00fa Principal\",\n            callback_data=\"back_to_main\"\n        )\n    ])\n\n    return InlineKeyboardMarkup(inline_keyboard=buttons)\n\n\ndef _select_template(template_list: list) -> str:\n    \"\"\"Selecciona variaci\u00f3n aleatoria\"\"\"\n    import random\n    return random.choice(template_list)\n\n\ndef _build_streak_display(status_data: dict, grace_status: str) -> str:\n    \"\"\"Construye mensaje de estado de racha\"\"\"\n    templates = STREAK_TEMPLATES\n\n    if grace_status == 'already_claimed':\n        header = _select_template(templates['already_claimed'])\n        return f\"\ud83c\udfa9 <b>Lucien:</b>\\n\\n{header}\"\n\n    if grace_status == 'grace_period':\n        template = _select_template(templates['grace_period'])\n        return template.format(\n            streak=status_data['streak'] + 1,\n            bonus=status_data['bonus_preview']\n        )\n\n    if grace_status == 'streak_lost':\n        template = _select_template(templates['streak_lost'])\n        return template.format(\n            hours=int(status_data['hours_since']),\n            lost_streak=status_data['streak'],\n            bonus=status_data['bonus_preview']\n        )\n\n    # new_user\n    template = _select_template(templates['new_user'])\n    return template.format(bonus=status_data['bonus_preview'])\n\n\n# ==================== HANDLERS ====================\n\n@router.callback_query(F.data == STREAK_SHOW)\nasync def streak_show(callback: CallbackQuery, state: FSMContext):\n    \"\"\"Muestra estado actual de racha\"\"\"\n    user_id = callback.from_user.id\n\n    with get_service(__import__('services.daily_streak_service', fromlist=['DailyStreakService']).DailyStreakService) as service:\n        status_data = service.get_streak_status(user_id)\n\n    grace_status = status_data['grace_status']\n    can_claim = status_data['can_claim']\n    message = _build_streak_display(status_data, grace_status)\n\n    # Guardar en FSM para uso posterior\n    await state.update_data(\n        streak_data=status_data,\n        grace_status=grace_status\n    )\n\n    if grace_status == 'already_claimed':\n        await state.set_state(\n            __import__('services.daily_streak_service', fromlist=['DailyStreakService']).DailyStreakStates.streak_active\n        )\n    elif grace_status in ('grace_period', 'new_user'):\n        await state.set_state(\n            __import__('services.daily_streak_service', fromlist=['DailyStreakService']).DailyStreakStates.grace_period\n        )\n    else:  # streak_lost\n        await state.set_state(\n            __import__('services.daily_streak_service', fromlist=['DailyStreakService']).DailyStreakStates.streak_lost\n        )\n\n    await callback.message.edit_text(\n        message,\n        reply_markup=streak_status_keyboard(can_claim),\n        parse_mode=\"HTML\"\n    )\n    await callback.answer()\n    logger.info(f\"daily_streak_handlers - streak_show - {user_id} - status:{grace_status}\")\n\n\n@router.callback_query(F.data == STREAK_CLAIM)\nasync def streak_claim(callback: CallbackQuery, state: FSMContext):\n    \"\"\"Procesa reclamo de racha\"\"\"\n    user_id = callback.from_user.id\n\n    with get_service(__import__('services.daily_streak_service', fromlist=['DailyStreakService']).DailyStreakService) as service:\n        result = service.claim_daily_streak(user_id)\n\n    templates = STREAK_TEMPLATES\n\n    if result['status'] in ('success', 'grace_claimed'):\n        header = _select_template(templates['claim_success'])\n        message = f\"\ud83c\udfa9 <b>Lucien:</b>\\n\\n{header}\".format(\n            streak=result['new_streak'],\n            bonus=result['bonus']\n        )\n    elif result['status'] == 'already_claimed':\n        message = (\n            f\"\ud83c\udfa9 <b>Lucien:</b>\\n\\n\"\n            f\"<i>Ya reclamaste tu racha el d\u00eda de hoy.</i>\\n\\n\"\n            f\"\u23f3 Espera {int(20 - (status_data.get('hours_since', 0)))}h m\u00e1s.\"\n        )\n        await callback.answer(\"Ya reclamaste hoy\", show_alert=True)\n        return\n    elif result['status'] == 'streak_lost':\n        header = _select_template(templates['streak_lost'])\n        message = f\"\ud83c\udfa9 <b>Lucien:</b>\\n\\n{header}\".format(\n            hours=int(result.get('hours_since', 48)),\n            lost_streak=result['lost_streak'],\n            bonus=result['bonus']\n        )\n    else:  # new_user\n        header = _select_template(templates['claim_success'])\n        message = f\"\ud83c\udfa9 <b>Lucien:</b>\\n\\n{header}\".format(\n            streak=result['new_streak'],\n            bonus=result['bonus']\n        )\n\n    await state.clear()\n\n    await callback.message.edit_text(\n        message,\n        reply_markup=back_keyboard(\"back_to_main\"),\n        parse_mode=\"HTML\"\n    )\n    await callback.answer(f\"+{result['bonus']} besitos! \ud83d\udc8b\")\n    logger.info(\n        f\"daily_streak_handlers - streak_claim - {user_id} - \"\n        f\"status:{result['status']}, streak:{result['new_streak']}, bonus:{result['bonus']}\"\n    )\n\n\n@router.callback_query(F.data == STREAK_CANCEL)\nasync def streak_cancel(callback: CallbackQuery, state: FSMContext):\n    \"\"\"Cancela flujo de racha\"\"\"\n    await state.clear()\n    await callback.message.edit_text(\n        \"\ud83c\udfa9 <b>Lucien:</b>\\n\\n\"\n        \"<i>El ritual ha sido postergado.\\n\"\n        \"Puedes volver cuando lo desees.</i>\",\n        reply_markup=back_keyboard(\"back_to_main\"),\n        parse_mode=\"HTML\"\n    )\n    await callback.answer()\n"}, {"name": "leaderboard_service.py", "type": "text", "content": "\"\"\"\nLeaderboardService - Servicio de Gamificaci\u00f3n para Leaderboards\n\nGestiona clasificaciones de usuarios basadas en besitos acumulados.\nPertenece al dominio de Gamificaci\u00f3n.\n\nAutor: Lucien Bot\nFecha: 2026-05-05\n\"\"\"\nfrom typing import List, Optional, Dict, Any\nfrom sqlalchemy.orm import Session\nfrom sqlalchemy import desc, func\nfrom models.models import BesitoBalance, BesitoTransaction, TransactionSource\nfrom models.database import SessionLocal\nimport logging\n\nlogger = logging.getLogger(__name__)\n\n\nclass LeaderboardService:\n    \"\"\"Servicio para gesti\u00f3n de leaderboards y clasificaciones\"\"\"\n\n    def __init__(self, db: Session = None):\n        self.db = db\n        self._owns_session = db is None\n\n    def _get_db(self) -> Session:\n        if self.db is None:\n            self.db = SessionLocal()\n        return self.db\n\n    def close(self):\n        if self._owns_session and self.db:\n            self.db.close()\n            self.db = None\n\n    # ==================== TOP USERS ====================\n\n    def get_top_users(self, limit: int = 10) -> List[Dict[str, Any]]:\n        \"\"\"\n        Obtiene el top de usuarios con m\u00e1s besitos.\n\n        Args:\n            limit: N\u00famero m\u00e1ximo de usuarios a devolver (default 10)\n\n        Returns:\n            Lista de dicts con user_id, balance, total_earned, rank\n        \"\"\"\n        db = self._get_db()\n\n        results = db.query(\n            BesitoBalance.user_id,\n            BesitoBalance.balance,\n            BesitoBalance.total_earned\n        ).order_by(desc(BesitoBalance.balance)).limit(limit).all()\n\n        leaderboard = []\n        for rank, row in enumerate(results, start=1):\n            leaderboard.append({\n                'rank': rank,\n                'user_id': row.user_id,\n                'balance': row.balance,\n                'total_earned': row.total_earned\n            })\n            logger.info(\n                f\"Leaderboard: usuario {row.user_id} rank {rank} con {row.balance} besitos\",\n                extra={'user_id': row.user_id, 'rank': rank}\n            )\n\n        return leaderboard\n\n    # ==================== USER RANK ====================\n\n    def get_user_rank(self, user_id: int) -> Optional[Dict[str, Any]]:\n        \"\"\"\n        Obtiene la posici\u00f3n de un usuario en el leaderboard.\n\n        Args:\n            user_id: ID del usuario\n\n        Returns:\n            Dict con rank, balance, total_earned o None si no existe\n        \"\"\"\n        db = self._get_db()\n\n        # Subquery para contar usuarios con mayor balance\n        rank_subquery = db.query(\n            func.count(BesitoBalance.user_id)\n        ).filter(\n            BesitoBalance.balance > db.query(\n                BesitoBalance.balance\n            ).filter(BesitoBalance.user_id == user_id).scalar_subquery()\n        ).scalar_subquery()\n\n        balance = db.query(BesitoBalance).filter(\n            BesitoBalance.user_id == user_id\n        ).first()\n\n        if not balance:\n            logger.info(f\"User {user_id} no encontrado en leaderboard\")\n            return None\n\n        rank = rank_subquery + 1\n\n        logger.info(\n            f\"User rank consultado: {user_id} est\u00e1 en posici\u00f3n {rank}\",\n            extra={'user_id': user_id, 'rank': rank}\n        )\n\n        return {\n            'rank': rank,\n            'user_id': user_id,\n            'balance': balance.balance,\n            'total_earned': balance.total_earned\n        }\n\n    # ==================== UPDATE SCORE ====================\n\n    def update_score(self, user_id: int, amount: int, source: TransactionSource,\n                     description: str = None) -> bool:\n        \"\"\"\n        Actualiza el score (besitos) de un usuario.\n\n        Args:\n            user_id: ID del usuario\n            amount: Cantidad a agregar (positiva) o quitar (negativa)\n            source: Fuente de la transacci\u00f3n\n            description: Descripci\u00f3n opcional\n\n        Returns:\n            True si se actualiz\u00f3 correctamente\n        \"\"\"\n        db = self._get_db()\n\n        try:\n            # Obtener o crear balance con lock\n            balance = db.query(BesitoBalance).filter(\n                BesitoBalance.user_id == user_id\n            ).with_for_update().first()\n\n            if not balance:\n                balance = BesitoBalance(\n                    user_id=user_id,\n                    balance=0,\n                    total_earned=0,\n                    total_spent=0\n                )\n                db.add(balance)\n                db.flush()\n\n            # Actualizar seg\u00fan signo del amount\n            if amount >= 0:\n                balance.balance += amount\n                balance.total_earned += amount\n            else:\n                if balance.balance < abs(amount):\n                    logger.warning(f\"Saldo insuficiente para user {user_id}\")\n                    return False\n                balance.balance += amount  # amount es negativo\n                balance.total_spent += abs(amount)\n\n            # Registrar transacci\u00f3n\n            transaction = BesitoTransaction(\n                user_id=user_id,\n                amount=amount,\n                type=TransactionSource.CREDIT if amount >= 0 else TransactionSource.DEBIT,\n                source=source,\n                description=description\n            )\n            db.add(transaction)\n            db.commit()\n\n            logger.info(\n                f\"Score actualizado: user {user_id} {'+' if amount >= 0 else ''}{amount} besitos\",\n                extra={'user_id': user_id, 'amount': amount, 'source': source.value}\n            )\n            return True\n\n        except Exception as e:\n            db.rollback()\n            logger.error(f\"Error actualizando score para user {user_id}: {e}\")\n            return False\n\n    # ==================== NEARBY RANKS ====================\n\n    def get_users_around_rank(self, user_id: int, range_: int = 2) -> List[Dict[str, Any]]:\n        \"\"\"\n        Obtiene usuarios cercanos a la posici\u00f3n del usuario.\n\n        Args:\n            user_id: ID del usuario\n            range_: N\u00famero de usuarios antes y despu\u00e9s (default 2)\n\n        Returns:\n            Lista de dicts con rank, user_id, balance\n        \"\"\"\n        user_rank_info = self.get_user_rank(user_id)\n        if not user_rank_info:\n            return []\n\n        db = self._get_db()\n        rank = user_rank_info['rank']\n\n        # Obtener usuarios desde (rank - range_) hasta (rank + range_)\n        offset = max(0, rank - range_ - 1)\n        limit = range_ * 2 + 1\n\n        results = db.query(\n            BesitoBalance.user_id,\n            BesitoBalance.balance\n        ).order_by(desc(BesitoBalance.balance)).offset(offset).limit(limit).all()\n\n        leaderboard = []\n        for i, row in enumerate(results):\n            actual_rank = offset + i + 1\n            leaderboard.append({\n                'rank': actual_rank,\n                'user_id': row.user_id,\n                'balance': row.balance,\n                'is_current_user': row.user_id == user_id\n            })\n\n        return leaderboard"}, {"name": "output.md", "type": "text", "content": "# Sistema de Racha Diaria - Implementaci\u00f3n\n\n## Archivos Generados\n\n| Archivo | Descripci\u00f3n |\n|---------|-------------|\n| `fsm.py` | Estados FSM y constantes de ventana de gracia |\n| `service.py` | `DailyStreakService` con l\u00f3gica de negocio |\n| `handler.py` | Handlers con inline keyboard para flujo de racha |\n\n## Arquitectura\n\n```\nhandlers/ \u2192 DailyStreakService \u2192 models/ \u2192 database\n              \u2193\n         FSM (DailyStreakStates)\n```\n\n## FSM States\n\n- `checking_streak` - Verificando estado inicial\n- `streak_active` - Racha activa (ya reclam\u00f3 hoy, <20h)\n- `streak_claiming` - Procesando reclamo\n- `streak_lost` - Racha rota (>48h gap)\n- `grace_period` - Ventana de gracia (20-48h gap)\n\n## Ventana de Gracia (48 horas)\n\n```\n< 20h          \u2192 already_claimed (ya reclam\u00f3 hoy)\n20h - 48h      \u2192 grace_period (puede reclamar, streak mantenida)\n> 48h          \u2192 streak_lost (streak se reinicia a 1)\n```\n\n## Bonus Formula\n\n```\nbonus = min(streak_days * 5, 50)  # Cap en 50 besitos\n```\n\n## Callback Data Convention\n\n```\nstreak:show    \u2192 Ver estado de racha\nstreak:claim   \u2192 Reclamar racha\nstreak:cancel  \u2192 Cancelar flujo\n```\n\n## Integraci\u00f3n Requerida\n\n1. **Modelos**: Agregar campos `streak` (int) y `last_checkin` (datetime) al modelo `User`:\n   ```python\n   # En models/models.py - modelo User\n   streak = Column(Integer, default=0)\n   last_checkin = Column(DateTime(timezone=True), nullable=True)\n   ```\n\n2. **Migration**:\n   ```bash\n   alembic revision --autogenerate -m \"add_streak_fields_to_user\"\n   alembic upgrade head\n   ```\n\n3. **Registrar router en bot.py**:\n   ```python\n   from handlers.daily_streak_handlers import router as streak_router\n   dp.include_router(streak_router)\n   ```\n\n4. **Agregar bot\u00f3n al men\u00fa principal** (en `inline_keyboards.py`):\n   ```python\n   [InlineKeyboardButton(text=\"\ud83d\udd25 Mi Racha\", callback_data=\"streak:show\")]\n   ```\n\n## Notas de Implementaci\u00f3n\n\n- El servicio usa `DailyGiftClaim` como proxy para tracking si no existen los campos en `User`\n- La ventana de gracia de 48h permite mantener la racha aunque el usuario no entre exactamente a las 24h\n- El bonus es `streak_days * 5` con m\u00e1ximo de 50 besitos\n- El servicio es at\u00f3mico: usa transacciones para evitar race conditions\n"}, {"name": "service.py", "type": "text", "content": "\"\"\"\nServicio de Racha Diaria - Lucien Bot\n\nGestiona el sistema de racha diaria con ventana de gracia de 48 horas.\n\"\"\"\nfrom datetime import datetime, timedelta\nfrom typing import Optional, Dict, Any\nfrom sqlalchemy.orm import Session\nfrom models.database import SessionLocal\nfrom models.models import TransactionSource\nfrom services.besito_service import BesitoService\nimport logging\n\nlogger = logging.getLogger(__name__)\n\n\nclass DailyStreakService:\n    \"\"\"Servicio para gesti\u00f3n de racha diaria\"\"\"\n\n    # Constantes de ventana de gracia\n    GRACE_PERIOD_HOURS = 48\n    MIN_HOURS_BETWEEN_CLAIMS = 20\n    BONUS_PER_STREAK_DAY = 5\n    MAX_BONUS = 50\n\n    def __init__(self, db: Session = None):\n        self.db = db\n        self._owns_session = db is None\n\n    def _get_db(self) -> Session:\n        if self.db is None:\n            self.db = SessionLocal()\n        return self.db\n\n    def close(self):\n        if self._owns_session and self.db:\n            self.db.close()\n            self.db = None\n\n    def __del__(self):\n        self.close()\n\n    def _get_besito_service(self) -> BesitoService:\n        return BesitoService(self._get_db())\n\n    # ==================== MODELO DE RACHA ====================\n    # Requiere: modelo User con campos streak (int) y last_checkin (datetime)\n    # Si no existe, usar BesitoBalance/DailyGiftClaim como proxy\n\n    def _get_streak_data(self, user_id: int) -> Dict[str, Any]:\n        \"\"\"\n        Obtiene datos de racha del usuario.\n        Usa BesitoBalance como proxy si User no tiene streak.\n        \"\"\"\n        from models.models import BesitoBalance, DailyGiftClaim\n        from sqlalchemy import desc\n\n        db = self._get_db()\n\n        # Intentar obtener de BesitoBalance (proxy)\n        balance = db.query(BesitoBalance).filter_by(user_id=user_id).first()\n\n        # \u00daltimo reclamo de DailyGift para calcular racha\n        last_claim = db.query(DailyGiftClaim).filter(\n            DailyGiftClaim.user_id == user_id\n        ).order_by(desc(DailyGiftClaim.claimed_at)).first()\n\n        # Calcular streak basado en historial de reclamos\n        streak = 0\n        last_checkin = None\n\n        if last_claim:\n            last_checkin = last_claim.claimed_at\n            # Calcular d\u00edas consecutivos\n            claims = db.query(DailyGiftClaim).filter(\n                DailyGiftClaim.user_id == user_id\n            ).order_by(desc(DailyGiftClaim.claimed_at)).all()\n\n            if claims:\n                # streak_days = streak del usuario\n                streak = getattr(balance, 'streak', 0) if balance else 0\n\n        return {\n            'streak': streak or 0,\n            'last_checkin': last_checkin,\n            'user_id': user_id\n        }\n\n    def _calculate_grace_status(self, last_checkin: Optional[datetime]) -> Dict[str, Any]:\n        \"\"\"\n        Calcula estado de ventana de gracia.\n        Returns: {status, hours_since, can_claim, message}\n        \"\"\"\n        if last_checkin is None:\n            return {\n                'status': 'new_user',\n                'hours_since': None,\n                'can_claim': True,\n                'message': 'Racha nueva - comienza hoy'\n            }\n\n        now = datetime.utcnow()\n        # Normalizar a naive datetime para comparaci\u00f3n\n        lc = last_checkin.replace(tzinfo=None) if last_checkin.tzinfo else last_checkin\n        hours_since = (now - lc).total_seconds() / 3600\n\n        if hours_since < self.MIN_HOURS_BETWEEN_CLAIMS:\n            return {\n                'status': 'already_claimed',\n                'hours_since': hours_since,\n                'can_claim': False,\n                'message': f'A\u00fan no ha pasado el tiempo m\u00ednimo ({self.MIN_HOURS_BETWEEN_CLAIMS}h)'\n            }\n\n        if hours_since <= self.GRACE_PERIOD_HOURS:\n            return {\n                'status': 'grace_period',\n                'hours_since': hours_since,\n                'can_claim': True,\n                'message': f'Ventana de gracia activa ({int(hours_since)}h desde \u00faltimo)'\n            }\n\n        return {\n            'status': 'streak_lost',\n            'hours_since': hours_since,\n            'can_claim': True,  # Puede reclamar pero streak se reinicia\n            'message': f'Racha rota - hab\u00edan pasado {int(hours_since)}h'\n        }\n\n    # ==================== PROCESAMIENTO DE RECLAMO ====================\n\n    def get_streak_status(self, user_id: int) -> Dict[str, Any]:\n        \"\"\"\n        Obtiene estado actual de racha para mostrar al usuario.\n        Returns: {streak, grace_status, can_claim, message, bonus_preview}\n        \"\"\"\n        data = self._get_streak_data(user_id)\n        grace = self._calculate_grace_status(data['last_checkin'])\n\n        bonus_preview = min(data['streak'] * self.BONUS_PER_STREAK_DAY, self.MAX_BONUS)\n\n        return {\n            'streak': data['streak'],\n            'grace_status': grace['status'],\n            'hours_since': grace['hours_since'],\n            'can_claim': grace['can_claim'],\n            'message': grace['message'],\n            'bonus_preview': bonus_preview\n        }\n\n    def claim_daily_streak(self, user_id: int) -> Dict[str, Any]:\n        \"\"\"\n        Procesa el reclamo de racha diaria con ventana de gracia.\n\n        Returns:\n            dict con keys:\n            - status: 'success' | 'already_claimed' | 'streak_lost' | 'grace_claimed'\n            - message: str descriptivo\n            - bonus: int besitos ganados\n            - new_streak: int nueva racha\n            - streak_was_lost: bool indica si perdi\u00f3 racha anterior\n            - lost_streak: int racha perdida (si apply)\n        \"\"\"\n        data = self._get_streak_data(user_id)\n        grace = self._calculate_grace_status(data['last_checkin'])\n\n        # Caso 1: Ya reclam\u00f3 hoy (< 20h)\n        if grace['status'] == 'already_claimed':\n            return {\n                'status': 'already_claimed',\n                'message': f'Ya reclamaste tu racha hoy. Espera {int(self.MIN_HOURS_BETWEEN_CLAIMS - grace[\"hours_since\"])}h m\u00e1s.',\n                'bonus': 0,\n                'new_streak': data['streak'],\n                'streak_was_lost': False,\n                'lost_streak': 0\n            }\n\n        # Calcular bonus\n        current_streak = data['streak']\n\n        # Caso 2: Ventana de gracia (20-48h) - mantiene streak\n        if grace['status'] == 'grace_period':\n            new_streak = current_streak + 1\n            bonus = min(new_streak * self.BONUS_PER_STREAK_DAY, self.MAX_BONUS)\n\n            # Registrar reclamo y acreditar\n            self._record_claim(user_id, bonus, 'grace_period')\n\n            logger.info(\n                f\"daily_streak_service - claim_daily_streak - \"\n                f\"{user_id} - grace_claimed - streak:{new_streak}, bonus:{bonus}\"\n            )\n\n            return {\n                'status': 'grace_claimed',\n                'message': f'\ud83d\udd25 Racha mantenida: {new_streak} d\u00edas (+{bonus} besitos)',\n                'bonus': bonus,\n                'new_streak': new_streak,\n                'streak_was_lost': False,\n                'lost_streak': 0\n            }\n\n        # Caso 3: Streak rota (>48h) - reinicia\n        if grace['status'] == 'streak_lost':\n            lost_streak = current_streak\n            new_streak = 1\n            bonus = self.BONUS_PER_STREAK_DAY  # 5 besitos por nuevo inicio\n\n            self._record_claim(user_id, bonus, 'streak_reset')\n\n            logger.info(\n                f\"daily_streak_service - claim_daily_streak - \"\n                f\"{user_id} - streak_lost:{lost_streak} - starting_new:{new_streak}\"\n            )\n\n            return {\n                'status': 'streak_lost',\n                'message': f'\ud83d\udc94 Racha perdida ({lost_streak} d\u00edas). Empezando de nuevo con +{bonus} besitos.',\n                'bonus': bonus,\n                'new_streak': new_streak,\n                'streak_was_lost': True,\n                'lost_streak': lost_streak\n            }\n\n        # Caso 4: Nuevo usuario\n        new_streak = 1\n        bonus = self.BONUS_PER_STREAK_DAY\n\n        self._record_claim(user_id, bonus, 'new_user')\n\n        return {\n            'status': 'new_user',\n            'message': f'\ud83d\udd25 \u00a1Bienvenido! Comienza tu racha con +{bonus} besitos.',\n            'bonus': bonus,\n            'new_streak': new_streak,\n            'streak_was_lost': False,\n            'lost_streak': 0\n        }\n\n    def _record_claim(self, user_id: int, bonus: int, claim_type: str) -> None:\n        \"\"\"Registra el reclamo de racha y actualiza streak\"\"\"\n        from models.models import BesitoBalance, BesitoTransaction, DailyGiftClaim\n\n        db = self._get_db()\n        besito_service = self._get_besito_service()\n\n        try:\n            # Registrar DailyGiftClaim (independiente de streak)\n            claim = DailyGiftClaim(\n                user_id=user_id,\n                besitos_received=bonus\n            )\n            db.add(claim)\n\n            # Acreditar besitos\n            besito_service.credit_besitos(\n                user_id=user_id,\n                amount=bonus,\n                source=TransactionSource.DAILY_GIFT,\n                description=f'Racha diaria ({claim_type})'\n            )\n\n            db.commit()\n\n        except Exception as e:\n            db.rollback()\n            logger.error(f\"daily_streak_service - _record_claim - {user_id} - error: {e}\")\n            raise\n\n    # ==================== CONSULTA DE ESTAD\u00cdSTICAS ====================\n\n    def get_streak_history(self, user_id: int, limit: int = 30) -> list:\n        \"\"\"Obtiene historial de reclamos de racha\"\"\"\n        from models.models import DailyGiftClaim\n\n        return self._get_db().query(DailyGiftClaim).filter(\n            DailyGiftClaim.user_id == user_id\n        ).order_by(DailyGiftClaim.claimed_at.desc()).limit(limit).all()\n"}], "grading": null}, {"id": "eval-0-without_skill", "prompt": "Implementa un sistema de racha diaria para el bot. Necesito el FSM para el flujo, el service method, y el handler con inline keyboard. La racha debe tener ventana de gracia de 48 horas.", "eval_id": 0, "outputs": [], "grading": null}, {"id": "eval-1-with_skill", "prompt": "Crea un nuevo servicio de gamificaci\u00f3n para gestionar leaderboards. El servicio debe tener m\u00e9todos para get_top_users, get_user_rank, y update_score. Muestra c\u00f3mo ser\u00eda el handler tambi\u00e9n.", "eval_id": 1, "outputs": [{"name": "leaderboard_handler.py", "type": "text", "content": "\"\"\"\nHandlers de Leaderboard - Lucien Bot\n\nHandlers thin que only routing events to LeaderboardService.\nSIN l\u00f3gica de negocio, SIN acceso directo a DB.\n\"\"\"\nfrom aiogram import Router, F\nfrom aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton\nfrom services.leaderboard_service import LeaderboardService\nfrom keyboards.inline_keyboards import back_keyboard\nfrom utils.lucien_voice import LucienVoice\nimport logging\n\nlogger = logging.getLogger(__name__)\nrouter = Router()\n\n\n# ==================== LEADERBOARD MENU ====================\n\n@router.callback_query(F.data == \"leaderboard:menu\")\nasync def leaderboard_menu(callback: CallbackQuery):\n    \"\"\"Men\u00fa principal del leaderboard\"\"\"\n    user_id = callback.from_user.id\n\n    leaderboard_service = LeaderboardService()\n    try:\n        top_users = leaderboard_service.get_top_users(limit=10)\n        user_rank_info = leaderboard_service.get_user_rank(user_id)\n    finally:\n        leaderboard_service.close()\n\n    # Construir texto del leaderboard\n    if top_users:\n        lines = [\"\ud83c\udfc6 <b>Top Besitos</b>\\n\"]\n        medals = [\"\ud83e\udd47\", \"\ud83e\udd48\", \"\ud83e\udd49\"]\n\n        for entry in top_users:\n            rank = entry['rank']\n            if rank <= 3:\n                emoji = medals[rank - 1]\n            elif rank <= 10:\n                emoji = f\"#{rank}\"\n            else:\n                emoji = f\"#{rank}\"\n\n            user_display = f\"Visitante {entry['user_id']}\"\n            if entry['user_id'] == user_id:\n                user_display = f\"<b>T\u00fa</b>\"\n\n            lines.append(f\"{emoji} {user_display}: {entry['balance']} \ud83d\udc8b\")\n\n        top_text = \"\\n\".join(lines)\n    else:\n        top_text = \"<i>A\u00fan no hay visitantes en el leaderboard...</i>\"\n\n    # Posici\u00f3n del usuario\n    if user_rank_info:\n        rank_text = f\"\\n\ud83d\udccd Tu posici\u00f3n: <b>#{user_rank_info['rank']}</b> con {user_rank_info['balance']} \ud83d\udc8b\"\n    else:\n        rank_text = \"\\n\ud83d\udccd A\u00fan no tienes besitos registrados.\"\n\n    text = f\"\"\"\ud83c\udfa9 <b>Lucien:</b>\n\n<i>La corte de Diana tiene su registro de devotion...</i>\n\n{top_text}\n{rank_text}\n\n<i>Demuestra tu compromiso y escala posiciones...</i>\"\"\"\n\n    keyboard = InlineKeyboardMarkup(inline_keyboard=[\n        [InlineKeyboardButton(text=\"\ud83d\udcca Mi Ranking\", callback_data=\"leaderboard:my_rank\")],\n        [InlineKeyboardButton(text=\"\ud83d\udc65 Cerca de M\u00ed\", callback_data=\"leaderboard:nearby\")],\n        [InlineKeyboardButton(text=\"\ud83d\udd19 Volver\", callback_data=\"back_to_main\")]\n    ])\n\n    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=\"HTML\")\n    await callback.answer()\n\n\n@router.callback_query(F.data == \"leaderboard:my_rank\")\nasync def show_my_rank(callback: CallbackQuery):\n    \"\"\"Muestra el ranking detallado del usuario\"\"\"\n    user_id = callback.from_user.id\n\n    leaderboard_service = LeaderboardService()\n    try:\n        rank_info = leaderboard_service.get_user_rank(user_id)\n        nearby = leaderboard_service.get_users_around_rank(user_id, range_=2)\n    finally:\n        leaderboard_service.close()\n\n    if not rank_info:\n        text = f\"\"\"\ud83c\udfa9 <b>Lucien:</b>\n\n<i>No tienes besitos registrados a\u00fan...</i>\n\n\ud83d\udc8b <b>Tu posici\u00f3n:</b> No clasificado\n\n<i>Interact\u00faa m\u00e1s con el reino para aparecer en el leaderboard.</i>\"\"\"\n    else:\n        # Construir tabla de usuarios cercanos\n        lines = []\n        medals = [\"\ud83e\udd47\", \"\ud83e\udd48\", \"\ud83e\udd49\"]\n\n        for entry in nearby:\n            rank = entry['rank']\n            emoji = medals[rank - 1] if rank <= 3 else f\"#{rank}\"\n            marker = \" \ud83d\udc51\" if entry.get('is_current_user') else \"\"\n            lines.append(f\"{emoji} {entry['user_id']}: {entry['balance']} \ud83d\udc8b{marker}\")\n\n        nearby_text = \"\\n\".join(lines) if lines else \"No hay usuarios cercanos\"\n\n        text = f\"\"\"\ud83c\udfa9 <b>Lucien:</b>\n\n<i>El lugar que ocupas en la corte de Diana...</i>\n\n\ud83d\udccd <b>Tu posici\u00f3n:</b> #{rank_info['rank']}\n\ud83d\udc8b <b>Besitos:</b> {rank_info['balance']}\n\ud83d\udcc8 <b>Total ganado:</b> {rank_info['total_earned']}\n\n<b>Alrededores:</b>\n{nearby_text}\n\n<i>La competencia es feroz entre los devotos...</i>\"\"\"\n\n    await callback.message.edit_text(\n        text,\n        reply_markup=back_keyboard(\"leaderboard:menu\"),\n        parse_mode=\"HTML\"\n    )\n    await callback.answer()\n\n\n@router.callback_query(F.data == \"leaderboard:nearby\")\nasync def show_nearby_leaderboard(callback: CallbackQuery):\n    \"\"\"Muestra usuarios cercanos en el ranking\"\"\"\n    user_id = callback.from_user.id\n\n    leaderboard_service = LeaderboardService()\n    try:\n        nearby = leaderboard_service.get_users_around_rank(user_id, range_=3)\n    finally:\n        leaderboard_service.close()\n\n    if not nearby:\n        text = f\"\"\"\ud83c\udfa9 <b>Lucien:</b>\n\n<i>No hay ranking cercano que mostrar...</i>\n\n\ud83d\udc8b Aseg\u00farate de tener besitos acumulados.\n\n<i>Vuelve cuando hayas interactuado m\u00e1s.</i>\"\"\"\n    else:\n        lines = [\"\ud83d\udc65 <b>Usuarios Cercanos</b>\\n\"]\n        medals = [\"\ud83e\udd47\", \"\ud83e\udd48\", \"\ud83e\udd49\"]\n\n        for entry in nearby:\n            rank = entry['rank']\n            emoji = medals[rank - 1] if rank <= 3 else f\"#{rank}\"\n            marker = \" \u2190 T\u00fa\" if entry.get('is_current_user') else \"\"\n            lines.append(f\"{emoji} {entry['user_id']}: {entry['balance']} \ud83d\udc8b{marker}\")\n\n        nearby_text = \"\\n\".join(lines)\n\n        text = f\"\"\"\ud83c\udfa9 <b>Lucien:</b>\n\n<i>Los devotos m\u00e1s cercanos a tu posici\u00f3n...</i>\n\n{nearby_text}\n\n<i>\u00a1Sigue acumulando para superarlos!</i>\"\"\"\n\n    await callback.message.edit_text(\n        text,\n        reply_markup=back_keyboard(\"leaderboard:menu\"),\n        parse_mode=\"HTML\"\n    )\n    await callback.answer()"}, {"name": "leaderboard_service.py", "type": "text", "content": "\"\"\"\nLeaderboardService - Servicio de Gamificaci\u00f3n para Leaderboards\n\nGestiona clasificaciones de usuarios basadas en besitos acumulados.\nPertenece al dominio de Gamificaci\u00f3n.\n\nAutor: Lucien Bot\nFecha: 2026-05-05\n\"\"\"\nfrom typing import List, Optional, Dict, Any\nfrom sqlalchemy.orm import Session\nfrom sqlalchemy import desc, func\nfrom models.models import BesitoBalance, BesitoTransaction, TransactionSource\nfrom models.database import SessionLocal\nimport logging\n\nlogger = logging.getLogger(__name__)\n\n\nclass LeaderboardService:\n    \"\"\"Servicio para gesti\u00f3n de leaderboards y clasificaciones\"\"\"\n\n    def __init__(self, db: Session = None):\n        self.db = db\n        self._owns_session = db is None\n\n    def _get_db(self) -> Session:\n        if self.db is None:\n            self.db = SessionLocal()\n        return self.db\n\n    def close(self):\n        if self._owns_session and self.db:\n            self.db.close()\n            self.db = None\n\n    # ==================== TOP USERS ====================\n\n    def get_top_users(self, limit: int = 10) -> List[Dict[str, Any]]:\n        \"\"\"\n        Obtiene el top de usuarios con m\u00e1s besitos.\n\n        Args:\n            limit: N\u00famero m\u00e1ximo de usuarios a devolver (default 10)\n\n        Returns:\n            Lista de dicts con user_id, balance, total_earned, rank\n        \"\"\"\n        db = self._get_db()\n\n        results = db.query(\n            BesitoBalance.user_id,\n            BesitoBalance.balance,\n            BesitoBalance.total_earned\n        ).order_by(desc(BesitoBalance.balance)).limit(limit).all()\n\n        leaderboard = []\n        for rank, row in enumerate(results, start=1):\n            leaderboard.append({\n                'rank': rank,\n                'user_id': row.user_id,\n                'balance': row.balance,\n                'total_earned': row.total_earned\n            })\n            logger.info(\n                f\"Leaderboard: usuario {row.user_id} rank {rank} con {row.balance} besitos\",\n                extra={'user_id': row.user_id, 'rank': rank}\n            )\n\n        return leaderboard\n\n    # ==================== USER RANK ====================\n\n    def get_user_rank(self, user_id: int) -> Optional[Dict[str, Any]]:\n        \"\"\"\n        Obtiene la posici\u00f3n de un usuario en el leaderboard.\n\n        Args:\n            user_id: ID del usuario\n\n        Returns:\n            Dict con rank, balance, total_earned o None si no existe\n        \"\"\"\n        db = self._get_db()\n\n        # Subquery para contar usuarios con mayor balance\n        rank_subquery = db.query(\n            func.count(BesitoBalance.user_id)\n        ).filter(\n            BesitoBalance.balance > db.query(\n                BesitoBalance.balance\n            ).filter(BesitoBalance.user_id == user_id).scalar_subquery()\n        ).scalar_subquery()\n\n        balance = db.query(BesitoBalance).filter(\n            BesitoBalance.user_id == user_id\n        ).first()\n\n        if not balance:\n            logger.info(f\"User {user_id} no encontrado en leaderboard\")\n            return None\n\n        rank = rank_subquery + 1\n\n        logger.info(\n            f\"User rank consultado: {user_id} est\u00e1 en posici\u00f3n {rank}\",\n            extra={'user_id': user_id, 'rank': rank}\n        )\n\n        return {\n            'rank': rank,\n            'user_id': user_id,\n            'balance': balance.balance,\n            'total_earned': balance.total_earned\n        }\n\n    # ==================== UPDATE SCORE ====================\n\n    def update_score(self, user_id: int, amount: int, source: TransactionSource,\n                     description: str = None) -> bool:\n        \"\"\"\n        Actualiza el score (besitos) de un usuario.\n\n        Args:\n            user_id: ID del usuario\n            amount: Cantidad a agregar (positiva) o quitar (negativa)\n            source: Fuente de la transacci\u00f3n\n            description: Descripci\u00f3n opcional\n\n        Returns:\n            True si se actualiz\u00f3 correctamente\n        \"\"\"\n        db = self._get_db()\n\n        try:\n            # Obtener o crear balance con lock\n            balance = db.query(BesitoBalance).filter(\n                BesitoBalance.user_id == user_id\n            ).with_for_update().first()\n\n            if not balance:\n                balance = BesitoBalance(\n                    user_id=user_id,\n                    balance=0,\n                    total_earned=0,\n                    total_spent=0\n                )\n                db.add(balance)\n                db.flush()\n\n            # Actualizar seg\u00fan signo del amount\n            if amount >= 0:\n                balance.balance += amount\n                balance.total_earned += amount\n            else:\n                if balance.balance < abs(amount):\n                    logger.warning(f\"Saldo insuficiente para user {user_id}\")\n                    return False\n                balance.balance += amount  # amount es negativo\n                balance.total_spent += abs(amount)\n\n            # Registrar transacci\u00f3n\n            transaction = BesitoTransaction(\n                user_id=user_id,\n                amount=amount,\n                type=TransactionSource.CREDIT if amount >= 0 else TransactionSource.DEBIT,\n                source=source,\n                description=description\n            )\n            db.add(transaction)\n            db.commit()\n\n            logger.info(\n                f\"Score actualizado: user {user_id} {'+' if amount >= 0 else ''}{amount} besitos\",\n                extra={'user_id': user_id, 'amount': amount, 'source': source.value}\n            )\n            return True\n\n        except Exception as e:\n            db.rollback()\n            logger.error(f\"Error actualizando score para user {user_id}: {e}\")\n            return False\n\n    # ==================== NEARBY RANKS ====================\n\n    def get_users_around_rank(self, user_id: int, range_: int = 2) -> List[Dict[str, Any]]:\n        \"\"\"\n        Obtiene usuarios cercanos a la posici\u00f3n del usuario.\n\n        Args:\n            user_id: ID del usuario\n            range_: N\u00famero de usuarios antes y despu\u00e9s (default 2)\n\n        Returns:\n            Lista de dicts con rank, user_id, balance\n        \"\"\"\n        user_rank_info = self.get_user_rank(user_id)\n        if not user_rank_info:\n            return []\n\n        db = self._get_db()\n        rank = user_rank_info['rank']\n\n        # Obtener usuarios desde (rank - range_) hasta (rank + range_)\n        offset = max(0, rank - range_ - 1)\n        limit = range_ * 2 + 1\n\n        results = db.query(\n            BesitoBalance.user_id,\n            BesitoBalance.balance\n        ).order_by(desc(BesitoBalance.balance)).offset(offset).limit(limit).all()\n\n        leaderboard = []\n        for i, row in enumerate(results):\n            actual_rank = offset + i + 1\n            leaderboard.append({\n                'rank': actual_rank,\n                'user_id': row.user_id,\n                'balance': row.balance,\n                'is_current_user': row.user_id == user_id\n            })\n\n        return leaderboard"}, {"name": "output.md", "type": "text", "content": "# Leaderboard Service y Handler - Outputs\n\n## Archivos Generados\n\n### 1. `leaderboard_service.py`\nNuevo servicio en `services/` para gestionar leaderboards de besitos.\n\n**Metodos**:\n- `get_top_users(limit: int = 10)` - Retorna top N usuarios con besitos\n- `get_user_rank(user_id: int)` - Retorna la posicion del usuario en el ranking\n- `update_score(user_id, amount, source, description)` - Actualiza besitos con transaccion\n- `get_users_around_rank(user_id, range_: int = 2)` - Usuarios cercanos al rank del usuario\n\n**Patron seguir**:\n- Usa `with_for_update()` para prevenir race conditions\n- Context manager para cleanup de sesiones\n- Logging estructurado con `extra={'user_id': ...}`\n\n### 2. `leaderboard_handler.py`\nHandler thin que solo enruta eventos al LeaderboardService.\n\n**Callbacks**:\n- `leaderboard:menu` - Menu principal del leaderboard\n- `leaderboard:my_rank` - Vista detallada del rank propio\n- `leaderboard:nearby` - Usuarios cercanos al ranking\n\n**Reglas aplicadas**:\n- SIN logica de negocio en el handler\n- SIN acceso directo a DB\n- Un solo servicio por handler\n\n## Integracion\n\nPara usar estos archivos:\n1. Copiar `leaderboard_service.py` a `services/`\n2. Copiar `leaderboard_handler.py` a `handlers/`\n3. Registrar el router en `bot.py` o en el archivo de routers principal:\n   ```python\n   from handlers.leaderboard_handler import router as leaderboard_router\n   dp.include_router(leaderboard_router)\n   ```\n4. Agregar botones al menu principal para navegar al leaderboard:\n   ```python\n   InlineKeyboardButton(text=\"\ud83c\udfc6 Leaderboard\", callback_data=\"leaderboard:menu\")\n   ```\n\n## Modelo de Datos\n\nEl servicio usa el modelo existente `BesitoBalance`:\n- `user_id` - Identificador del usuario\n- `balance` - Besitos actuales (usado para el ranking)\n- `total_earned` - Total acumulado historico\n- `total_spent` - Total gastado\n\nNo se requieren nuevas migraciones de DB."}], "grading": null}, {"id": "eval-1-without_skill", "prompt": "Crea un nuevo servicio de gamificaci\u00f3n para gestionar leaderboards. El servicio debe tener m\u00e9todos para get_top_users, get_user_rank, y update_score. Muestra c\u00f3mo ser\u00eda el handler tambi\u00e9n.", "eval_id": 1, "outputs": [], "grading": null}, {"id": "eval-2-with_skill", "prompt": "Quiero a\u00f1adir un sistema de VR (Raz\u00f3n Variable) donde cada 5-20 interacciones el usuario recibe besitos sorpresa. Dame el c\u00f3digo del service method y c\u00f3mo integrarlo en handlers existentes.", "eval_id": 2, "outputs": [], "grading": null}, {"id": "eval-2-without_skill", "prompt": "Quiero a\u00f1adir un sistema de VR (Raz\u00f3n Variable) donde cada 5-20 interacciones el usuario recibe besitos sorpresa. Dame el c\u00f3digo del service method y c\u00f3mo integrarlo en handlers existentes.", "eval_id": 2, "outputs": [], "grading": null}], "previous_feedback": {}, "previous_outputs": {}, "benchmark": {"metadata": {"skill_name": "lucien-gamification-implementation", "skill_path": "<path/to/skill>", "executor_model": "<model-name>", "analyzer_model": "<model-name>", "timestamp": "2026-05-06T05:08:36Z", "evals_run": [], "runs_per_configuration": 3}, "runs": [], "run_summary": {"delta": {"pass_rate": "+0.00", "time_seconds": "+0.0", "tokens": "+0"}}, "notes": []}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

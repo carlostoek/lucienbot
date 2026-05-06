@@ -1,0 +1,23 @@
+{
+  "skill_name": "lucien-gamification-implementation",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Implementa un sistema de racha diaria para el bot. Necesito el FSM para el flujo, el service method, y el handler con inline keyboard. La racha debe tener ventana de gracia de 48 horas.",
+      "expected_output": "El modelo debe generar código con FSM (StatesGroup), service method con lógica de streak (ventana 48h), handler thin que llame al service, e inline keyboard para reclamar. Debe cruzar con lucien-gamification-design para entender el propósito (#8 Pérdida).",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "Crea un nuevo servicio de gamificación para gestionar leaderboards. El servicio debe tener métodos para get_top_users, get_user_rank, y update_score. Muestra cómo sería el handler también.",
+      "expected_output": "El modelo debe generar código de servicio con context manager, métodos CRUD para leaderboard, y handler thin. Debe seguir las reglas de arquitectura (handlers=thin, sin lógica de negocio), usar naming conventions correctas, y cruzar con lucien-gamification-design para el propósito (#5 Influencia Social).",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Quiero añadir un sistema de VR (Razón Variable) donde cada 5-20 interacciones el usuario recibe besitos sorpresa. Dame el código del service method y cómo integrarlo en handlers existentes.",
+      "expected_output": "El modelo debe generar código de VR con probabilidad acumulativa (base 5%, +3% por interacción, cap 35%), servicio con credit_besitos, e integración en handler via FSM state. Debe cruzar con lucien-gamification-design para entender la teoría (es el programa más potente de Skinner).",
+      "files": []
+    }
+  ]
+}

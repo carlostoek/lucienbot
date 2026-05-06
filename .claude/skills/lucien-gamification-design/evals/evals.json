@@ -1,0 +1,23 @@
+{
+  "skill_name": "lucien-gamification-design",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Quiero diseñar un sistema de referidos para que los usuarios invites a sus amigos. Dame recomendaciones sobre qué tipo de impulso Octalysis usar, qué programa de reforzamiento es mejor, y cómo evitar dark patterns.",
+      "expected_output": "El modelo debe identificar el impulso (#5 Influencia Social), recomendar programa de reforzamiento (FR fijo para hitos de referido), discutir ética gamificada (dark patterns de referidos), y cruzar con lucien-gamification-implementation para saber qué existe ya.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "Los usuarios no están regresando después del primer día. ¿Qué está pasando? ¿Qué impulsos Octalysis debería usar para mejorar retención?",
+      "expected_output": "El modelo debe analizar problema de retención day 1, identificar qué impulsos faltan (Desarrollo/Logro, Posesión), recomendar mecánica de onboarding con Reforzamiento Continuo, y cruzar con lucien-gamification-implementation para saber qué existe técnicamente.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Quiero implementar un sistema de loot boxes donde el usuario puede ganar items raros al abrir cajas. ¿Es ético? ¿Qué programa de reforzamiento es mejor? ¿Cómo lo implemento?",
+      "expected_output": "El modelo debe identificar VR (Razón Variable) como programa, discutir ética (riesgo de adicción tipo slot machine), recomendar límites éticos (3 al día, probabilidades max 35%), y cruzar con lucien-gamification-implementation para implementación técnica.",
+      "files": []
+    }
+  ]
+}
