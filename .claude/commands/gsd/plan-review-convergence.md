@@ -24,10 +24,10 @@ Replaces gsd-plan-phase's internal gsd-plan-checker with external AI reviewers (
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/plan-review-convergence.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/revision-loop.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/gates.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/agent-contracts.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/plan-review-convergence.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/revision-loop.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/gates.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/agent-contracts.md
 </execution_context>
 
 <runtime_note>
@@ -53,6 +53,6 @@ Phase number: extracted from $ARGUMENTS (required)
 </context>
 
 <process>
-Execute the plan-review-convergence workflow from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/plan-review-convergence.md end-to-end.
+Execute the plan-review-convergence workflow from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/plan-review-convergence.md end-to-end.
 Preserve all workflow gates (pre-flight, revision loop, stall detection, escalation).
 </process>

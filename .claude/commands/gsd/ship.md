@@ -17,7 +17,7 @@ Closes the plan → execute → verify → ship loop.
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/ship.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/ship.md
 </execution_context>
 
-Execute the ship workflow from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/ship.md end-to-end.
+Execute the ship workflow from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/ship.md end-to-end.

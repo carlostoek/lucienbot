@@ -6,8 +6,8 @@ offers mid-conversation research when useful, then routes crystallized outputs t
 <required_reading>
 Read all files referenced by the invoking prompt's execution_context before starting.
 
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/questioning.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/domain-probes.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/questioning.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/domain-probes.md
 </required_reading>
 
 <available_agent_types>

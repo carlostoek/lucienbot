@@ -19,7 +19,7 @@ Output: MILESTONE_SUMMARY written to `.planning/reports/`, presented inline, opt
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/milestone-summary.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/milestone-summary.md
 </execution_context>
 
 <context>
@@ -37,7 +37,7 @@ Output: MILESTONE_SUMMARY written to `.planning/reports/`, presented inline, opt
 </context>
 
 <process>
-Read and execute the milestone-summary workflow from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/milestone-summary.md end-to-end.
+Read and execute the milestone-summary workflow from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/milestone-summary.md end-to-end.
 </process>
 
 <success_criteria>

@@ -11,10 +11,10 @@ Supports two modes:
 <required_reading>
 Read all files referenced by the invoking prompt's execution_context before starting.
 
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/sketch-theme-system.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/sketch-variant-patterns.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/sketch-interactivity.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/sketch-tooling.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/sketch-theme-system.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/sketch-variant-patterns.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/sketch-interactivity.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/sketch-tooling.md
 </required_reading>
 
 <process>

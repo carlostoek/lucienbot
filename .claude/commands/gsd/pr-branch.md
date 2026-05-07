@@ -17,9 +17,9 @@ changes that are irrelevant to code review.
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/pr-branch.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/pr-branch.md
 </execution_context>
 
 <process>
-Execute the pr-branch workflow from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/pr-branch.md end-to-end.
+Execute the pr-branch workflow from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/pr-branch.md end-to-end.
 </process>

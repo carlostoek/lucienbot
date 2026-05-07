@@ -20,8 +20,8 @@ Requirements: Claude Code v2.1.91+, claude.ai account, GitHub repository.
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/ultraplan-phase.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ui-brand.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/ultraplan-phase.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <context>

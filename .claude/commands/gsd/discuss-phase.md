@@ -50,10 +50,10 @@ DISCUSS_MODE=$(gsd-sdk query config-get workflow.discuss_mode 2>/dev/null || ech
 ```
 
 If `DISCUSS_MODE` is `"assumptions"`:
-Read and execute `/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/discuss-phase-assumptions.md` end-to-end.
+Read and execute `/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/discuss-phase-assumptions.md` end-to-end.
 
 If `DISCUSS_MODE` is `"discuss"` (or unset, or any other value):
-Read and execute `/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/discuss-phase.md` end-to-end.
+Read and execute `/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/discuss-phase.md` end-to-end.
 
 **MANDATORY:** Read the appropriate workflow file BEFORE taking any action. The objective and success_criteria sections in this command file are summaries — the workflow file contains the complete step-by-step process with all required behaviors, config checks, and interaction patterns. Do not improvise from the summary.
 

@@ -20,8 +20,8 @@ Flow: Validate → Research UI → Verify UI-SPEC → Done
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/ui-phase.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ui-brand.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/ui-phase.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <context>
@@ -29,6 +29,6 @@ Phase number: $ARGUMENTS — optional, auto-detects next unplanned phase if omit
 </context>
 
 <process>
-Execute @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/ui-phase.md end-to-end.
+Execute @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/ui-phase.md end-to-end.
 Preserve all workflow gates.
 </process>

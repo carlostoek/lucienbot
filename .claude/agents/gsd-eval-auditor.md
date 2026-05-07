@@ -33,7 +33,7 @@ Every planned eval dimension must resolve to COVERED, PARTIAL (WARNING), or MISS
 </adversarial_stance>
 
 <required_reading>
-Read `/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ai-evals.md` before auditing. This is your scoring framework.
+Read `/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ai-evals.md` before auditing. This is your scoring framework.
 </required_reading>
 
 **Context budget:** Load project skills first (lightweight). Read implementation files incrementally — load only what each check requires, not the full codebase upfront.

@@ -20,7 +20,7 @@ and optionally applies labels or closes non-compliant submissions.
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/inbox.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/inbox.md
 </execution_context>
 
 <context>
@@ -33,6 +33,6 @@ and optionally applies labels or closes non-compliant submissions.
 </context>
 
 <process>
-Execute the inbox workflow from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/inbox.md end-to-end.
+Execute the inbox workflow from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/inbox.md end-to-end.
 Parse flags from arguments and pass to workflow.
 </process>

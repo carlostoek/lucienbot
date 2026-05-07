@@ -17,7 +17,7 @@ Turn domain rubric ingredients into measurable, tooled evaluation criteria. Writ
 </role>
 
 <required_reading>
-Read `/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ai-evals.md` before planning. This is your evaluation framework.
+Read `/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ai-evals.md` before planning. This is your evaluation framework.
 </required_reading>
 
 <input>

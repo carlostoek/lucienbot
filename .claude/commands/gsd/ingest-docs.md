@@ -27,10 +27,10 @@ Auto-synthesizes most conflicts using the precedence rule `ADR > SPEC > PRD > DO
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/ingest-docs.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ui-brand.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/gate-prompts.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/doc-conflict-engine.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/ingest-docs.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ui-brand.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/gate-prompts.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/doc-conflict-engine.md
 </execution_context>
 
 <context>

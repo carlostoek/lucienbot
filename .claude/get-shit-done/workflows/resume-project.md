@@ -11,7 +11,7 @@ Instantly restore full project context so "Where were we?" has an immediate, com
 </purpose>
 
 <required_reading>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/continuation-format.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/continuation-format.md
 </required_reading>
 
 <process>

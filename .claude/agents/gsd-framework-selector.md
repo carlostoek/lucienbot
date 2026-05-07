@@ -11,7 +11,7 @@ Run a ≤6-question interview, score frameworks, return a ranked recommendation 
 </role>
 
 <required_reading>
-Read `/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ai-frameworks.md` before asking questions. This is your decision matrix.
+Read `/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ai-frameworks.md` before asking questions. This is your decision matrix.
 </required_reading>
 
 <project_context>

@@ -19,7 +19,7 @@ planning via /gsd-plan-phase --reviews.
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/review.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/review.md
 </execution_context>
 
 <context>
@@ -36,5 +36,5 @@ Phase number: extracted from $ARGUMENTS (required)
 </context>
 
 <process>
-Execute the review workflow from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/review.md end-to-end.
+Execute the review workflow from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/review.md end-to-end.
 </process>

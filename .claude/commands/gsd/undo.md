@@ -20,9 +20,9 @@ Three modes:
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/undo.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ui-brand.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/gate-prompts.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/undo.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ui-brand.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/gate-prompts.md
 </execution_context>
 
 <context>
@@ -30,5 +30,5 @@ $ARGUMENTS
 </context>
 
 <process>
-Execute the undo workflow from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/undo.md end-to-end.
+Execute the undo workflow from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/undo.md end-to-end.
 </process>

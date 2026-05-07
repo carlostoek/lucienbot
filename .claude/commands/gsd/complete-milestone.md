@@ -19,8 +19,8 @@ Output: Milestone archived (roadmap + requirements), PROJECT.md evolved, git tag
 <execution_context>
 **Load these files NOW (before proceeding):**
 
-- @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/complete-milestone.md (main workflow)
-- @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/templates/milestone-archive.md (archive template)
+- @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/complete-milestone.md (main workflow)
+- @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/templates/milestone-archive.md (archive template)
   </execution_context>
 
 <context>

@@ -5,11 +5,11 @@ Create executable phase prompts (PLAN.md files) for a roadmap phase with integra
 <required_reading>
 Read all files referenced by the invoking prompt's execution_context before starting.
 
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ui-brand.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/revision-loop.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/gate-prompts.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/agent-contracts.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/gates.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ui-brand.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/revision-loop.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/gate-prompts.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/agent-contracts.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/gates.md
 </required_reading>
 
 <available_agent_types>
@@ -40,7 +40,7 @@ CONTEXT_WINDOW=$(gsd-sdk query config-get context_window 2>/dev/null || echo "20
 TDD_MODE=$(gsd-sdk query config-get workflow.tdd_mode 2>/dev/null || echo "false")
 ```
 
-When `TDD_MODE` is `true`, the planner agent is instructed to apply `type: tdd` to eligible tasks using heuristics from `references/tdd.md`. The planner's `<required_reading>` is extended to include `@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/tdd.md` so gate enforcement rules are available during planning.
+When `TDD_MODE` is `true`, the planner agent is instructed to apply `type: tdd` to eligible tasks using heuristics from `references/tdd.md`. The planner's `<required_reading>` is extended to include `@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/tdd.md` so gate enforcement rules are available during planning.
 
 When `CONTEXT_WINDOW >= 500000`, the planner prompt includes the 3 most recent prior phase CONTEXT.md and SUMMARY.md files PLUS any phases explicitly listed in the current phase's `Depends on:` field in ROADMAP.md. Explicit dependencies always load regardless of recency (e.g., Phase 7 declaring `Depends on: Phase 2` always sees Phase 2's context). Bounded recency keeps the planner's context budget focused on recent work.
 
@@ -474,7 +474,7 @@ grep -l "## Validation Architecture" "${PHASE_DIR}"/*-RESEARCH.md 2>/dev/null ||
 ```
 
 **If found:**
-1. Read template: `/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/templates/VALIDATION.md`
+1. Read template: `/home/ubuntu/repos/lucienbot/.claude/get-shit-done/templates/VALIDATION.md`
 2. Write to `${PHASE_DIR}/${PADDED_PHASE}-VALIDATION.md` (use Write tool)
 3. Fill frontmatter: `{N}` → phase number, `{phase-slug}` → slug, `{date}` → current date
 4. Verify:
@@ -806,7 +806,7 @@ ${AGENT_SKILLS_PLANNER}
 
 ${TDD_MODE === 'true' ? `
 <tdd_mode_active>
-**TDD Mode is ENABLED.** Apply TDD heuristics from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/tdd.md to all eligible tasks:
+**TDD Mode is ENABLED.** Apply TDD heuristics from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/tdd.md to all eligible tasks:
 - Business logic with defined I/O → type: tdd
 - API endpoints with request/response contracts → type: tdd
 - Data transformations, validation, algorithms → type: tdd
@@ -1496,7 +1496,7 @@ one place before execution begins.
 ```bash
 POST_PLANNING_GAPS=$(gsd-sdk query config-get workflow.post_planning_gaps --default true 2>/dev/null || echo true)
 if [ "$POST_PLANNING_GAPS" = "true" ]; then
-  node "/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/bin/gsd-tools.cjs" gap-analysis --phase-dir "${PHASE_DIR}"
+  node "/home/ubuntu/repos/lucienbot/.claude/get-shit-done/bin/gsd-tools.cjs" gap-analysis --phase-dir "${PHASE_DIR}"
 fi
 ```
 

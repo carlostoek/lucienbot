@@ -29,10 +29,10 @@ Mode routing:
 </routing>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/new-workspace.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/list-workspaces.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/remove-workspace.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ui-brand.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/new-workspace.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/list-workspaces.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/remove-workspace.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <context>

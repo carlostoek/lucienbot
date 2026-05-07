@@ -29,13 +29,13 @@ Does not require `/gsd-new-project` — auto-creates `.planning/sketches/` if ne
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/sketch.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/sketch-wrap-up.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ui-brand.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/sketch-theme-system.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/sketch-interactivity.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/sketch-tooling.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/sketch-variant-patterns.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/sketch.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/sketch-wrap-up.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ui-brand.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/sketch-theme-system.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/sketch-interactivity.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/sketch-tooling.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/sketch-variant-patterns.md
 </execution_context>
 
 <runtime_note>
@@ -52,8 +52,8 @@ Design idea: $ARGUMENTS
 
 <process>
 Parse the first token of $ARGUMENTS:
-- If it is `--wrap-up`: strip the flag, execute the sketch-wrap-up workflow from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/sketch-wrap-up.md end-to-end.
-- Otherwise: execute the sketch workflow from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/sketch.md end-to-end.
+- If it is `--wrap-up`: strip the flag, execute the sketch-wrap-up workflow from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/sketch-wrap-up.md end-to-end.
+- Otherwise: execute the sketch workflow from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/sketch.md end-to-end.
 
 Preserve all workflow gates (intake, decomposition, target stack research, variant evaluation, MANIFEST updates, commit patterns).
 </process>

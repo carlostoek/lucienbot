@@ -28,10 +28,10 @@ Three modes:
 </flags>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/progress.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/next.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/do.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ui-brand.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/progress.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/next.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/do.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <process>

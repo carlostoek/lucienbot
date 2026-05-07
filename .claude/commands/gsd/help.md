@@ -15,10 +15,10 @@ Output ONLY the reference content below. Do NOT add:
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/help.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/help.md
 </execution_context>
 
 <process>
-Output the complete GSD command reference from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/help.md.
+Output the complete GSD command reference from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/help.md.
 Display the reference content directly — no additions or modifications.
 </process>

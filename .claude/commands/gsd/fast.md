@@ -22,9 +22,9 @@ you could describe in one sentence and execute in under 2 minutes.
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/fast.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/fast.md
 </execution_context>
 
 <process>
-Execute the fast workflow from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/fast.md end-to-end.
+Execute the fast workflow from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/fast.md end-to-end.
 </process>

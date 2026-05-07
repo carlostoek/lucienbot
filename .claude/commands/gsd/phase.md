@@ -31,10 +31,10 @@ Mode routing:
 </routing>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/add-phase.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/insert-phase.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/remove-phase.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/edit-phase.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/add-phase.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/insert-phase.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/remove-phase.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/edit-phase.md
 </execution_context>
 
 <context>

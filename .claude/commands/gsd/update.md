@@ -25,7 +25,7 @@ Routes to the update workflow which handles:
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/update.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/update.md
 </execution_context>
 
 <flags>
@@ -38,7 +38,7 @@ Routes to the update workflow which handles:
 Parse the first token of $ARGUMENTS:
 - If it is `--sync`: strip the flag, execute the sync-skills workflow (passing remaining args for --from/--to/--dry-run/--apply).
 - If it is `--reapply`: strip the flag, execute the reapply-patches workflow.
-- Otherwise: **Follow the update workflow** from `@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/update.md`.
+- Otherwise: **Follow the update workflow** from `@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/update.md`.
 
 The update workflow handles all logic including:
 1. Installed version detection (local/global)
@@ -52,6 +52,6 @@ The update workflow handles all logic including:
 </process>
 
 <execution_context_extended>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/sync-skills.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/reapply-patches.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/sync-skills.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/reapply-patches.md
 </execution_context_extended>

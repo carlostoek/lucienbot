@@ -226,7 +226,7 @@ Scan the output for suspicious patterns:
 
 ## Output: UI-SPEC.md
 
-Use template from `/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/templates/UI-SPEC.md`.
+Use template from `/home/ubuntu/repos/lucienbot/.claude/get-shit-done/templates/UI-SPEC.md`.
 
 Write to: `$PHASE_DIR/$PADDED_PHASE-UI-SPEC.md`
 
@@ -285,7 +285,7 @@ Batch questions into a single interaction where possible.
 
 ## Step 5: Compile UI-SPEC.md
 
-Read template: `/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/templates/UI-SPEC.md`
+Read template: `/home/ubuntu/repos/lucienbot/.claude/get-shit-done/templates/UI-SPEC.md`
 
 Fill all sections. Write to `$PHASE_DIR/$PADDED_PHASE-UI-SPEC.md`.
 

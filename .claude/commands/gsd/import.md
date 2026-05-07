@@ -22,10 +22,10 @@ Future: `--prd` mode for PRD extraction is planned for a follow-up PR.
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/import.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ui-brand.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/gate-prompts.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/doc-conflict-engine.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/import.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ui-brand.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/gate-prompts.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/doc-conflict-engine.md
 </execution_context>
 
 <context>

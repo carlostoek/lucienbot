@@ -272,7 +272,29 @@ Plans:
 
 ---
 
+## Phase 16: Expansión de Trivias
+
+**Description:** Sistema ampliado de trivia con modo libre (sin promo) y modo promo con protección comprable con besitos. Incluye límites diarios separados, bonus VR, y configuración de costos de protección.
+
+**Reference:** .planning/PLAN-trivia-protection.md
+
+**Status:** 🔨 Not planned yet
+
+**Depends on:** Phase 14 (Minijuegos)
+
+**Success criteria:**
+1. Menú muestra trivia libre siempre y promo solo con promo activa
+2. Límites diarios son independientes entre modos (libre vs promo)
+3. Protección offered al fallar en modo promo con besitos suficientes
+4. Protección costing depends on streak tier (configurable)
+5. Protection debita besitos y mantiene streak cuando se acepta
+6. VR bonus every 3-6 questions en modo libre (+10 besitos)
+7. Admin puede configurar protection_tiers en wizard de promo
+
+---
+
 *Roadmap created: 2026-03-30 from codebase analysis and git history*
 *Updated: 2026-04-06 — Phase 14 Minijuegos added*
 *Updated: 2026-04-08 — Phase 15 Sistema de Mochila added*
 *Updated: 2026-04-08 — Phase 15 COMPLETE*
+*Updated: 2026-05-07 — Phase 16 Expansión de Trivias added*

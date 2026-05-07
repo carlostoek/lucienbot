@@ -25,9 +25,9 @@ Flags:
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/audit-fix.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/audit-fix.md
 </execution_context>
 
 <process>
-Execute the audit-fix workflow from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/audit-fix.md end-to-end.
+Execute the audit-fix workflow from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/audit-fix.md end-to-end.
 </process>

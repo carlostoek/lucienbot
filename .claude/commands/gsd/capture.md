@@ -36,12 +36,12 @@ Mode routing:
 </routing>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/add-todo.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/note.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/add-backlog.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/plant-seed.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/check-todos.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ui-brand.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/add-todo.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/note.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/add-backlog.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/plant-seed.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/check-todos.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <context>

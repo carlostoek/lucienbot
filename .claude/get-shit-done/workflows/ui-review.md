@@ -3,7 +3,7 @@ Retroactive 6-pillar visual audit of implemented frontend code. Standalone comma
 </purpose>
 
 <required_reading>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ui-brand.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ui-brand.md
 </required_reading>
 
 <available_agent_types>
@@ -73,7 +73,7 @@ Build file list for auditor:
 Build prompt:
 
 ```markdown
-Read /data/data/com.termux/files/home/repos/lucien_bot/.claude/agents/gsd-ui-auditor.md for instructions.
+Read /home/ubuntu/repos/lucienbot/.claude/agents/gsd-ui-auditor.md for instructions.
 
 <objective>
 Conduct 6-pillar visual audit of Phase {phase_number}: {phase_name}

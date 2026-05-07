@@ -8,7 +8,7 @@
 ## Dispatch
 
 ```
-Read @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/discuss-phase-power.md
+Read @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/discuss-phase-power.md
 ```
 
 Execute it end-to-end. Do not continue with the standard interactive steps.

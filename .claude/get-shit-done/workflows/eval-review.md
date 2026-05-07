@@ -5,7 +5,7 @@ Use after /gsd-execute-phase to verify that the evaluation strategy from AI-SPEC
 </purpose>
 
 <required_reading>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ai-evals.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ai-evals.md
 </required_reading>
 
 <process>
@@ -78,7 +78,7 @@ Build file list for auditor:
 Build prompt:
 
 ```markdown
-Read /data/data/com.termux/files/home/repos/lucien_bot/.claude/agents/gsd-eval-auditor.md for instructions.
+Read /home/ubuntu/repos/lucienbot/.claude/agents/gsd-eval-auditor.md for instructions.
 
 <objective>
 Conduct evaluation coverage audit of Phase {phase_number}: {phase_name}

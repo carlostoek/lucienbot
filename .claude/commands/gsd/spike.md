@@ -29,9 +29,9 @@ Does not require `/gsd-new-project` — auto-creates `.planning/spikes/` if need
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/spike.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/spike-wrap-up.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ui-brand.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/spike.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/spike-wrap-up.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <runtime_note>
@@ -49,8 +49,8 @@ Idea: $ARGUMENTS
 
 <process>
 Parse the first token of $ARGUMENTS:
-- If it is `--wrap-up`: strip the flag, execute the spike-wrap-up workflow from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/spike-wrap-up.md.
-- Otherwise: pass all of $ARGUMENTS as the idea to the spike workflow from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/spike.md end-to-end.
+- If it is `--wrap-up`: strip the flag, execute the spike-wrap-up workflow from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/spike-wrap-up.md.
+- Otherwise: pass all of $ARGUMENTS as the idea to the spike workflow from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/spike.md end-to-end.
 
 Preserve all workflow gates (prior spike check, decomposition, research, risk ordering, observability assessment, verification, MANIFEST updates, commit patterns).
 </process>

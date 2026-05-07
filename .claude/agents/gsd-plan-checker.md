@@ -43,7 +43,7 @@ Issues without a severity classification are not valid output.
 </adversarial_stance>
 
 <required_reading>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/gates.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/gates.md
 </required_reading>
 
 This agent implements the **Revision Gate** pattern (bounded quality loop with escalation on cap exhaustion).
@@ -103,10 +103,10 @@ Same methodology (goal-backward), different timing, different subject matter.
 <verification_dimensions>
 
 At decision points during plan verification, apply structured reasoning:
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/thinking-models-planning.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/thinking-models-planning.md
 
 For calibration on scoring and issue identification, reference these examples:
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/few-shot-examples/plan-checker.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/few-shot-examples/plan-checker.md
 
 ## Dimension 1: Requirement Coverage
 

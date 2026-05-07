@@ -12,7 +12,7 @@ Scan all phases for pending, skipped, blocked, and human_needed UAT items. Cross
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/audit-uat.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/audit-uat.md
 </execution_context>
 
 <context>

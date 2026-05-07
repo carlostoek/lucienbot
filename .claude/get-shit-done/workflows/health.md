@@ -208,13 +208,13 @@ When `--repair` is active, detect and clean up:
 
 ```bash
 # Check for stale task directories (older than 24 hours)
-TASKS_DIR="/data/data/com.termux/files/home/repos/lucien_bot/.claude/tasks"
+TASKS_DIR="/home/ubuntu/repos/lucienbot/.claude/tasks"
 if [ -d "$TASKS_DIR" ]; then
   STALE_COUNT=$( (find "$TASKS_DIR" -maxdepth 1 -type d -mtime +1 2>/dev/null || true) | wc -l )
   if [ "$STALE_COUNT" -gt 0 ]; then
-    echo "⚠️  Found $STALE_COUNT stale task directories in /data/data/com.termux/files/home/repos/lucien_bot/.claude/tasks/"
+    echo "⚠️  Found $STALE_COUNT stale task directories in /home/ubuntu/repos/lucienbot/.claude/tasks/"
     echo "   These are leftover from crashed subagent sessions."
-    echo "   Run: rm -rf /data/data/com.termux/files/home/repos/lucien_bot/.claude/tasks/*  (safe — only affects dead sessions)"
+    echo "   Run: rm -rf /home/ubuntu/repos/lucienbot/.claude/tasks/*  (safe — only affects dead sessions)"
   fi
 fi
 ```

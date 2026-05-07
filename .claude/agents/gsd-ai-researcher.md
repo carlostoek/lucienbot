@@ -40,7 +40,7 @@ works via Bash and produces equivalent output.
 </documentation_lookup>
 
 <required_reading>
-Read `/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/references/ai-frameworks.md` for framework profiles and known pitfalls before fetching docs.
+Read `/home/ubuntu/repos/lucienbot/.claude/get-shit-done/references/ai-frameworks.md` for framework profiles and known pitfalls before fetching docs.
 </required_reading>
 
 <input>

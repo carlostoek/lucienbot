@@ -28,8 +28,8 @@ Clarify phase requirements through structured Socratic questioning with quantita
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/spec-phase.md
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/templates/spec.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/spec-phase.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/templates/spec.md
 </execution_context>
 
 <runtime_note>
@@ -47,7 +47,7 @@ Context files are resolved in-workflow using `init phase-op`.
 </context>
 
 <process>
-Execute the spec-phase workflow from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/spec-phase.md end-to-end.
+Execute the spec-phase workflow from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/spec-phase.md end-to-end.
 
 **MANDATORY:** Read the workflow file BEFORE taking any action. The workflow contains the complete step-by-step process including the Socratic interview loop, ambiguity scoring gate, and SPEC.md generation. Do not improvise from the objective summary above.
 </process>

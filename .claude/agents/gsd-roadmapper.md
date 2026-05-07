@@ -374,11 +374,11 @@ This annotation is consumed by downstream workflows (`new-project`, `progress`) 
 | 2. Name | 0/2 | Not started | - |
 ```
 
-Reference full template: `/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/templates/roadmap.md`
+Reference full template: `/home/ubuntu/repos/lucienbot/.claude/get-shit-done/templates/roadmap.md`
 
 ## STATE.md Structure
 
-Use template from `/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/templates/state.md`.
+Use template from `/home/ubuntu/repos/lucienbot/.claude/get-shit-done/templates/state.md`.
 
 Key sections:
 - Project Reference (core value, current focus)

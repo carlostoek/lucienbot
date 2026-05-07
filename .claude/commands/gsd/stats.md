@@ -10,9 +10,9 @@ Display comprehensive project statistics including phase progress, plan executio
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/stats.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/stats.md
 </execution_context>
 
 <process>
-Execute the stats workflow from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/stats.md end-to-end.
+Execute the stats workflow from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/stats.md end-to-end.
 </process>

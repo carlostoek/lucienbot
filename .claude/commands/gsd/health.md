@@ -21,10 +21,10 @@ Validate `.planning/` directory integrity and report actionable issues. Checks f
 </objective>
 
 <execution_context>
-@/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/health.md
+@/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/health.md
 </execution_context>
 
 <process>
-Execute the health workflow from @/data/data/com.termux/files/home/repos/lucien_bot/.claude/get-shit-done/workflows/health.md end-to-end.
+Execute the health workflow from @/home/ubuntu/repos/lucienbot/.claude/get-shit-done/workflows/health.md end-to-end.
 Parse `--repair` and `--context` flags from arguments and pass to workflow.
 </process>
