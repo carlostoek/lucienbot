@@ -4,6 +4,7 @@ Handlers de Minijuegos - Lucien Bot
 Maneja los flujos de usuario para dados y trivia.
 """
 import logging
+import random
 from datetime import datetime, timezone
 
 from aiogram import Router, F
@@ -214,10 +215,11 @@ async def trivia_answer(callback: CallbackQuery, state: FSMContext):
         await state.clear()
         keyboard = game_menu_keyboard()
 
-        service = GameService()
-        header = service._select_template(service.STREAK_TEMPLATES['continue_wrong_header'])
-        lost = service._select_template(service.STREAK_TEMPLATES['continue_wrong_lost'])
-        footer = service._select_template(service.STREAK_TEMPLATES['continue_wrong_footer'])
+        # streak_continue_wrong: only uses _select_template which doesn't need DB
+        # Use class method directly to avoid creating DB session
+        header = random.choice(service.STREAK_TEMPLATES['continue_wrong_header'])
+        lost = random.choice(service.STREAK_TEMPLATES['continue_wrong_lost'])
+        footer = random.choice(service.STREAK_TEMPLATES['continue_wrong_footer'])
 
         message = (
             f"{header}\n\n"
@@ -662,11 +664,12 @@ async def streak_retire(callback: CallbackQuery, state: FSMContext):
     await state.clear()
 
     if discount and discount.get('code'):
-        service_instance = GameService()
-        header = service_instance._select_template(service_instance.STREAK_TEMPLATES['retire_success_header'])
-        code_t = service_instance._select_template(service_instance.STREAK_TEMPLATES['retire_success_code'])
-        promo_t = service_instance._select_template(service_instance.STREAK_TEMPLATES['retire_success_promo'])
-        footer = service_instance._select_template(service_instance.STREAK_TEMPLATES['retire_success_footer'])
+        # streak_retire: only uses _select_template which doesn't need DB
+        # Use class-level templates directly to avoid creating DB session
+        header = random.choice(GameService.STREAK_TEMPLATES['retire_success_header'])
+        code_t = random.choice(GameService.STREAK_TEMPLATES['retire_success_code'])
+        promo_t = random.choice(GameService.STREAK_TEMPLATES['retire_success_promo'])
+        footer = random.choice(GameService.STREAK_TEMPLATES['retire_success_footer'])
 
         message = (
             f"{header}\n\n"
@@ -676,7 +679,7 @@ async def streak_retire(callback: CallbackQuery, state: FSMContext):
         )
         keyboard = discount_claim_keyboard(discount['code'])
     else:
-        message = service_instance._select_template(service_instance.STREAK_TEMPLATES['retire_no_codes'])
+        message = random.choice(GameService.STREAK_TEMPLATES['retire_no_codes'])
         keyboard = game_menu_keyboard()
 
     await callback.message.edit_text(message, reply_markup=keyboard)
@@ -708,10 +711,10 @@ async def streak_exit(callback: CallbackQuery, state: FSMContext):
 
     await state.clear()
 
-    service = GameService()
-    header = service._select_template(service.STREAK_TEMPLATES['exit_header'])
-    discount_t = service._select_template(service.STREAK_TEMPLATES['exit_discount_waiting'])
-    footer = service._select_template(service.STREAK_TEMPLATES['exit_footer'])
+    # streak_exit: only uses _select_template which doesn't need DB
+    header = random.choice(GameService.STREAK_TEMPLATES['exit_header'])
+    discount_t = random.choice(GameService.STREAK_TEMPLATES['exit_discount_waiting'])
+    footer = random.choice(GameService.STREAK_TEMPLATES['exit_footer'])
 
     message = (
         f"{header}\n\n"
@@ -777,12 +780,12 @@ async def streak_continue(callback: CallbackQuery, state: FSMContext):
     next_discount = data.get('next_tier_discount', 0)
     next_streak_val = next_streak + 5
 
-    service = GameService()
-    header = service._select_template(service.STREAK_TEMPLATES['continue_header'])
-    progress = service._select_template(service.STREAK_TEMPLATES['continue_progress'])
-    next_obj = service._select_template(service.STREAK_TEMPLATES['continue_next_objective'])
-    warning = service._select_template(service.STREAK_TEMPLATES['continue_warning'])
-    question_t = service._select_template(service.STREAK_TEMPLATES['continue_prompt_question'])
+    # streak_continue: only uses _select_template which doesn't need DB
+    header = random.choice(GameService.STREAK_TEMPLATES['continue_header'])
+    progress = random.choice(GameService.STREAK_TEMPLATES['continue_progress'])
+    next_obj = random.choice(GameService.STREAK_TEMPLATES['continue_next_objective'])
+    warning = random.choice(GameService.STREAK_TEMPLATES['continue_warning'])
+    question_t = random.choice(GameService.STREAK_TEMPLATES['continue_prompt_question'])
 
     message = (
         f"{header}\n\n"

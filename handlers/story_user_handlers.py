@@ -153,7 +153,8 @@ async def continue_story(callback: CallbackQuery):
 async def show_node(callback: CallbackQuery, node_id: int):
     """Muestra un nodo de historia al usuario - Voz de Lucien"""
     with get_service(StoryService) as story_service:
-            vip_service = VIPService()
+        vip_service = VIPService()
+        try:
             user_id = callback.from_user.id
 
             node = story_service.get_node(node_id)
@@ -229,6 +230,8 @@ async def show_node(callback: CallbackQuery, node_id: int):
             keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
             await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
             await callback.answer()
+        finally:
+            vip_service.close()
 
 
 @router.callback_query(F.data.startswith("story_node_"))
@@ -253,7 +256,8 @@ async def make_choice(callback: CallbackQuery):
         return
 
     with get_service(StoryService) as story_service:
-            vip_service = VIPService()
+        vip_service = VIPService()
+        try:
             user_id = callback.from_user.id
 
             choice = story_service.get_choice(choice_id)
@@ -291,6 +295,8 @@ async def make_choice(callback: CallbackQuery):
 
                 await callback.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
                 await callback.answer()
+        finally:
+            vip_service.close()
 
 
         # ==================== CUESTIONARIO DE ARQUETIPO ====================
