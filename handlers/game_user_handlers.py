@@ -6,7 +6,7 @@ Maneja los flujos de usuario para dados y trivia.
 import logging
 
 from aiogram import Router
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup
 from keyboards.inline_keyboards import (
     game_menu_keyboard,
     dice_play_keyboard,
@@ -128,6 +128,60 @@ async def game_trivia(callback: CallbackQuery):
     )
     await callback.answer()
     logger.info(f"game_user_handlers - game_trivia - {user_id} - shown")
+
+
+@router.callback_query(lambda c: c.data == "game_trivia_discount")
+async def game_trivia_discount(callback: CallbackQuery):
+    """Muestra entrada de Trivia Descuentos y transiciona al flujo de trivia discount"""
+    user_id = callback.from_user.id
+
+    with get_service(GameService) as service:
+        can_play, played_today, limit, limit_msg = service.can_play_trivia_discount(user_id)
+        data = service.get_trivia_discount_entry_data(user_id)
+
+    if not can_play:
+        text = (
+            f"🎰 <b>{data['title']}</b>\n\n"
+            f"<i>{limit_msg}</i>\n\n"
+            f"🔄 <i>Regresa mañana para nuevas oportunidades.</i>"
+        )
+        buttons = [[InlineKeyboardButton(text="🔙 Volver", callback_data="game_menu")]]
+        await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+        await callback.answer()
+        logger.info(f"game_user_handlers - game_trivia_discount - {user_id} - cannot play")
+        return
+
+    # Construir info de tiers
+    tier_lines = []
+    for tier in data.get('tier_info', []):
+        pct = tier['discount_percentage']
+        threshold = tier['streak_threshold']
+        available = tier['available_codes']
+        tier_lines.append(
+            f"   🏷️ {pct}% descuento — {threshold} aciertos — {available} códigos"
+        )
+    tiers_text = "\n".join(tier_lines) if tier_lines else ""
+
+    streak_text = ""
+    if data['current_streak'] > 0:
+        streak_text = f"\n🔥 <b>Racha actual:</b> {data['current_streak']}"
+
+    text = (
+        f"🎰 <b>{data['title']}</b>{streak_text}\n\n"
+        f"<i>{data['intro']}</i>\n\n"
+        f"📊 <b>Oportunidades:</b> {data['remaining']} de {data['limit']}\n\n"
+        f"🏆 <b>Tiers de descuento:</b>\n{tiers_text}\n\n"
+        f"<i>¿Desea probar su suerte?</i>"
+    )
+
+    buttons = [
+        [InlineKeyboardButton(text="🎮 Jugar Trivia", callback_data="trivia_discount_menu")],
+        [InlineKeyboardButton(text="🔙 Volver", callback_data="game_menu")]
+    ]
+
+    await callback.message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+    await callback.answer()
+    logger.info(f"game_user_handlers - game_trivia_discount - {user_id} - shown")
 
 
 @router.callback_query(lambda c: c.data.startswith("trivia_answer_"))

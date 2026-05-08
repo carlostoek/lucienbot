@@ -1096,3 +1096,169 @@ class GameRecord(Base):
     result = Column(String(50), nullable=False)
     payout = Column(Integer, default=0)
     played_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+# ============================================================
+# FASE 16: SISTEMA DE DESCUENTOS TRIVIA
+# ============================================================
+
+class DiscountCodeStatus(str, enum.Enum):
+    """Estados de un codigo de descuento"""
+    AVAILABLE = "available"
+    CLAIMED = "claimed"
+    USED = "used"
+    CANCELLED = "cancelled"
+    EXPIRED = "expired"
+
+
+class GameResult(str, enum.Enum):
+    """Resultado de una partida de trivia"""
+    WON = "won"
+    LOST = "lost"
+    ABANDONED = "abandoned"
+    EXPIRED = "expired"
+
+
+class Difficulty(str, enum.Enum):
+    """Dificultad de pregunta"""
+    EASY = "easy"
+    MEDIUM = "medium"
+    HARD = "hard"
+
+
+class TriviaPromotionConfig(Base):
+    """Configuracion de promocion trivia para descuentos"""
+    __tablename__ = "trivia_promotion_configs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    is_active = Column(Boolean, default=True)
+    start_date = Column(DateTime(timezone=True), nullable=True)
+    end_date = Column(DateTime(timezone=True), nullable=True)
+    duration_days = Column(Integer, default=7)
+    auto_reset = Column(Boolean, default=True)
+    question_set_id = Column(Integer, ForeignKey("question_sets.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relaciones
+    tiers = relationship("Tier", back_populates="promotion_config", cascade="all, delete-orphan")
+    question_set = relationship("QuestionSet", back_populates="promotion_configs")
+
+
+class Tier(Base):
+    """Nivel de descuento con pool de codigos independiente"""
+    __tablename__ = "tiers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    promotion_config_id = Column(Integer, ForeignKey("trivia_promotion_configs.id"), nullable=False)
+    tier_number = Column(Integer, nullable=False)
+    streak_threshold = Column(Integer, nullable=False)
+    discount_percentage = Column(Integer, nullable=False)
+    max_codes = Column(Integer, nullable=False)
+    codes_generated = Column(Integer, default=0)
+
+    # Relaciones
+    promotion_config = relationship("TriviaPromotionConfig", back_populates="tiers")
+    discount_codes = relationship("DiscountCode", back_populates="tier")
+
+
+class DiscountCode(Base):
+    """Codigo de descuento individual"""
+    __tablename__ = "discount_codes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String(32), unique=True, index=True, nullable=False)
+    tier_id = Column(Integer, ForeignKey("tiers.id"), nullable=False)
+    user_id = Column(BigInteger, nullable=True)
+    status = Column(Enum(DiscountCodeStatus), default=DiscountCodeStatus.AVAILABLE)
+    generated_at = Column(DateTime(timezone=True), server_default=func.now())
+    claimed_at = Column(DateTime(timezone=True), nullable=True)
+    used_at = Column(DateTime(timezone=True), nullable=True)
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relaciones
+    tier = relationship("Tier", back_populates="discount_codes")
+
+
+class UserStreak(Base):
+    """Racha activa por usuario"""
+    __tablename__ = "user_streaks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(BigInteger, nullable=False, index=True)
+    promotion_config_id = Column(Integer, ForeignKey("trivia_promotion_configs.id"), nullable=True)
+    current_streak = Column(Integer, default=0)
+    active_tier_id = Column(Integer, ForeignKey("tiers.id"), nullable=True)
+    active_code_id = Column(Integer, ForeignKey("discount_codes.id"), nullable=True)
+    streak_started_at = Column(DateTime(timezone=True), nullable=True)
+    last_answered_at = Column(DateTime(timezone=True), nullable=True)
+    is_active = Column(Boolean, default=True)
+
+
+class TriviaGameRecord(Base):
+    """Registro de partida trivia (separado de GameRecord para besitos)"""
+    __tablename__ = "trivia_game_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(BigInteger, nullable=False, index=True)
+    promotion_config_id = Column(Integer, ForeignKey("trivia_promotion_configs.id"), nullable=True)
+    discount_code_id = Column(Integer, ForeignKey("discount_codes.id"), nullable=True)
+    game_type = Column(String(32), nullable=False)  # 'trivia_discount', 'trivia_vip'
+    questions_answered = Column(Integer, default=0)
+    correct_answers = Column(Integer, default=0)
+    final_streak = Column(Integer, default=0)
+    result = Column(Enum(GameResult), nullable=False)
+    played_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relaciones
+    promotion_config = relationship("TriviaPromotionConfig")
+    discount_code = relationship("DiscountCode")
+
+
+class QuestionSet(Base):
+    """Grupo de preguntas con tematica"""
+    __tablename__ = "question_sets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    file_path = Column(String(255), nullable=True)
+    is_override = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relaciones
+    questions = relationship("Question", back_populates="question_set", cascade="all, delete-orphan")
+    promotion_configs = relationship("TriviaPromotionConfig", back_populates="question_set")
+
+
+class Question(Base):
+    """Pregunta individual de trivia"""
+    __tablename__ = "questions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    question_set_id = Column(Integer, ForeignKey("question_sets.id"), nullable=False)
+    question_text = Column(Text, nullable=False)
+    option_a = Column(String(255), nullable=False)
+    option_b = Column(String(255), nullable=False)
+    option_c = Column(String(255), nullable=False)
+    option_d = Column(String(255), nullable=False)
+    correct_option = Column(String(1), nullable=False)  # 'A', 'B', 'C', 'D'
+    difficulty = Column(Enum(Difficulty), default=Difficulty.MEDIUM)
+    category = Column(String(50), nullable=True)
+
+    # Relaciones
+    question_set = relationship("QuestionSet", back_populates="questions")
+
+
+class TriviaConfig(Base):
+    """Configuracion global de trivia (singleton)"""
+    __tablename__ = "trivia_config"
+
+    id = Column(Integer, primary_key=True, index=True)
+    free_daily_limit = Column(Integer, default=7)
+    vip_daily_limit = Column(Integer, default=15)
+    vip_exclusive_daily_limit = Column(Integer, default=5)
+    streak_timeout_minutes = Column(Integer, default=2)

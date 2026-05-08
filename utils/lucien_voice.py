@@ -1014,5 +1014,126 @@ pero las puertas siempre están abiertas para quienes buscan.</i>
         return messages.get(reward_type, messages['rewards'])
 
 
+# ==================== TRIVIA DESCUENTOS ====================
+
+    @staticmethod
+    def trivia_discount_menu(promotion_name: str, streak: int, remaining: int, tier_info: list) -> str:
+        """Entry menu for trivia discount"""
+        tiers_text = "\n".join([f"  {t['threshold']} respuestas → {t['discount']}% de descuento" for t in tier_info])
+        return f"""🎩 <b>Lucien:</b>
+
+<i>Ah, buscaforjar una oportunidad en el Gabinete de Diana...</i>
+
+🏷️ <b>Promoción:</b> {promotion_name}
+
+<i>La trivia descuento permite ganarreducciones exclusivas
+mediante un juego de conocimiento.</i>
+
+🔥 <b>Racha actual:</b> {streak}
+📊 <b>Intentos restantes hoy:</b> {remaining}
+
+<i>Los umbrales de descuento son:</i>
+{tiers_text}
+
+<i>¿Desea comenzar?</i>"""
+
+    @staticmethod
+    def trivia_discount_question(question_num: int, streak: int, question_text: str) -> str:
+        """Question display"""
+        return f"""🎩 <b>Lucien:</b>
+
+<i>Pregunta {question_num}...</i>
+
+🔥 <b>Racha:</b> {streak}
+
+❓ <b>{question_text}</b>
+
+<i>Seleccione la respuesta correcta.</i>"""
+
+    @staticmethod
+    def trivia_discount_correct(new_streak: int, tier_reached: bool, tier_info: dict = None) -> str:
+        """Correct answer response"""
+        tier_msg = ""
+        if tier_reached and tier_info:
+            tier_msg = f"\n✨ <b>¡Nuevo umbral alcanzado!</b>\n{tier_info['discount']}% de descuento disponible."
+        return f"""🎩 <b>Lucien:</b>
+
+<i>Excelente... Diana observa que conoce sus secretos.</i>
+
+✅ <b>Respuesta correcta</b>
+
+🔥 <b>Nueva racha:</b> {new_streak}{tier_msg}
+
+<i>¿Desea continuar o asegurar su descuento?</i>"""
+
+    @staticmethod
+    def trivia_discount_wrong(correct_answer: str) -> str:
+        """Wrong answer response"""
+        return f"""🎩 <b>Lucien:</b>
+
+<i>Hmm... no era la respuesta que Diana esperaba.</i>
+
+❌ <b>Respuesta incorrecta</b>
+
+✅ <b>Respuesta correcta:</b> {correct_answer}
+
+<i>El descuento adquirido permanece, pero la trivia ha terminado.</i>"""
+
+    @staticmethod
+    def trivia_discount_threshold_reached(discount_percentage: int) -> str:
+        """Threshold reached - player choice"""
+        return f"""🎩 <b>Lucien:</b>
+
+<i>Ha alcanzado un umbral de descuento.</i>
+
+🏆 <b>Descuento asegurado:</b> {discount_percentage}%
+
+<i>¿Qué desea hacer?</i>
+
+• <b>Continuar</b> — buscar un descuento mayor
+• <b>asegurar</b> — reclamar este descuento ahora
+• <b>Abandonar</b> — salir con el descuento actual"""
+
+    @staticmethod
+    def trivia_discount_code_claimed(code: str, discount_percentage: int) -> str:
+        """Code claimed successfully"""
+        return f"""🎩 <b>Lucien:</b>
+
+<i>El descuento ha sido forjado y entregado.</i>
+
+✨ <b>Descuento reclamado:</b> {discount_percentage}%
+
+🔖 <b>Código:</b> <code>{code}</code>
+
+<i>Use este código antes de que expire.
+El Gabinete de Oportunidades de Diana recuerda sus favores.</i>"""
+
+    @staticmethod
+    def trivia_discount_game_over(final_streak: int, code_invalidated: bool) -> str:
+        """Game over (wrong answer or abandon)"""
+        invalid_msg = "\n⚠️ <b>El código generado ha sido invalidado.</b>" if code_invalidated else ""
+        return f"""🎩 <b>Lucien:</b>
+
+<i>La trivia ha concluido.</i>
+
+🏁 <b>Racha final:</b> {final_streak}{invalid_msg}
+
+<i>El Gabinete de Oportunidades cierra sus puertas por ahora.
+Regrese mañana para una nueva sesión.</i>"""
+
+    @staticmethod
+    def trivia_discount_limit_reached() -> str:
+        """Daily limit reached"""
+        return f"""🎩 <b>Lucien:</b>
+
+<i>El Gabinete de Oportunidades ha cerrado por hoy.</i>
+
+⏰ <b>Límite diario alcanzado</b>
+
+<i>Ha agotado sus intentos de trivia por hoy.
+Diana permite que el destino descanse...
+pero mañana podrá tentar a la fortuna nuevamente.</i>"""
+
+
 # Import para evitar dependencia circular
 from models.models import ChannelType

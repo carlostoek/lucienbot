@@ -426,6 +426,7 @@ def game_menu_keyboard(is_vip: bool = False) -> InlineKeyboardMarkup:
     buttons = [
         [InlineKeyboardButton(text="🎲 Lanzar los dados del destino", callback_data="game_dice")],
         [InlineKeyboardButton(text="❓ El examen de Diana", callback_data="game_trivia")],
+        [InlineKeyboardButton(text="🎯 Trivia Descuentos", callback_data="game_trivia_discount")],
         [InlineKeyboardButton(text="🔙 Volver", callback_data="back_to_main")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
@@ -475,5 +476,48 @@ def trivia_vip_result_keyboard(back_callback: str = "vip_area") -> InlineKeyboar
     buttons = [
         [InlineKeyboardButton(text="🔄 Intentarlo de nuevo", callback_data="game_trivia_vip")],
         [InlineKeyboardButton(text="🔙 Volver a El Diván", callback_data=back_callback)]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+# ==================== TRIVIA DESCUENTOS ====================
+
+def trivia_discount_question_keyboard(question_idx: int, question_id: int) -> InlineKeyboardMarkup:
+    """4-option keyboard for trivia discount questions"""
+    buttons = [
+        [InlineKeyboardButton(text="A", callback_data=f"td_answer_A_{question_idx}_{question_id}")],
+        [InlineKeyboardButton(text="B", callback_data=f"td_answer_B_{question_idx}_{question_id}")],
+        [InlineKeyboardButton(text="C", callback_data=f"td_answer_C_{question_idx}_{question_id}")],
+        [InlineKeyboardButton(text="D", callback_data=f"td_answer_D_{question_idx}_{question_id}")],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def trivia_discount_streak_choice_keyboard(discount_percentage: int) -> InlineKeyboardMarkup:
+    """Continue / Retire / Abandon keyboard"""
+    buttons = [
+        [InlineKeyboardButton(text="🔥 Continuar buscando más", callback_data="td_continue")],
+        [InlineKeyboardButton(text="✨ Asegurar descuento", callback_data="td_secure")],
+        [InlineKeyboardButton(text="❌ Abandonar", callback_data="td_abandon")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def trivia_discount_result_keyboard() -> InlineKeyboardMarkup:
+    """Result keyboard with copy code option"""
+    buttons = [
+        [InlineKeyboardButton(text="📋 Copiar código", callback_data="td_copy_code")],
+        [InlineKeyboardButton(text="🔙 Volver al menú", callback_data="game_menu")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def admin_trivia_menu_keyboard() -> InlineKeyboardMarkup:
+    """Admin trivia management menu"""
+    buttons = [
+        [InlineKeyboardButton(text="📊 Ver estadísticas", callback_data="admin_trivia_stats")],
+        [InlineKeyboardButton(text="🔧 Gestionar preguntas", callback_data="admin_trivia_questions")],
+        [InlineKeyboardButton(text="⚙️ Configurar umbral", callback_data="admin_trivia_threshold")],
+        [InlineKeyboardButton(text="🔙 Volver al sanctum", callback_data="back_to_admin")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)

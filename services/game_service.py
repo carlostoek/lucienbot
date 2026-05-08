@@ -8,14 +8,16 @@ import logging
 import random
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional, Tuple, Dict, Any, List
 
 from sqlalchemy.orm import Session
-from models.models import GameRecord, TransactionSource
+from models.models import GameRecord, TransactionSource, TriviaConfig, TriviaPromotionConfig, Question, UserStreak, DiscountCode, DiscountCodeStatus, Tier, TriviaGameRecord
 from models.database import SessionLocal
+from services.question_set_service import QuestionSetService
 from services.besito_service import BesitoService
 from services.user_service import UserService
 from services.vip_service import VIPService
+from services.trivia_discount_service import TriviaDiscountService
 
 logger = logging.getLogger(__name__)
 
@@ -1000,6 +1002,402 @@ class GameService:
         if parts.get('encouragement'):
             lines.extend(['', parts['encouragement']])
         return '\n'.join(lines)
+
+    # ==================== TRIVIA DISCOUNT ENTRY ====================
+
+    def get_trivia_discount_entry_data(self, user_id: int) -> dict:
+        """
+        Obtiene datos para la entrada del juego trivia discount.
+        Verifica límites diarios, racha actual y disponibilidad de tiers.
+
+        Returns:
+            dict con: title, intro, remaining, limit, current_streak,
+                     can_play, tier_info (lista de dicts por tier)
+        """
+        # Obtener configuración global de límites
+        config = self.db.query(TriviaConfig).first()
+        if not config:
+            # Valores por defecto si no existe config
+            free_limit = 7
+            vip_limit = 15
+            exclusive_limit = 5
+        else:
+            free_limit = config.free_daily_limit
+            vip_limit = config.vip_daily_limit
+            exclusive_limit = config.vip_exclusive_daily_limit
+
+        # Determinar límite según tipo de usuario
+        is_vip = self.is_user_vip(user_id)
+        if is_vip:
+            daily_limit = vip_limit
+        else:
+            daily_limit = free_limit
+
+        # Contar jugadas de hoy (trivia_discount)
+        today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        played_today = self.db.query(TriviaGameRecord).filter(
+            TriviaGameRecord.user_id == user_id,
+            TriviaGameRecord.game_type == 'trivia_discount',
+            TriviaGameRecord.played_at >= today
+        ).count()
+
+        remaining = max(0, daily_limit - played_today)
+
+        # Obtener racha actual del usuario
+        user_streak = self.db.query(UserStreak).filter(
+            UserStreak.user_id == user_id,
+            UserStreak.is_active == True
+        ).first()
+        current_streak = user_streak.current_streak if user_streak else 0
+
+        # Obtener promoción activa
+        promotion = self.get_active_trivia_promotion()
+        can_play = remaining > 0 and promotion is not None
+
+        # Construir info de tiers
+        tier_info = []
+        if promotion:
+            for tier in sorted(promotion.tiers, key=lambda t: t.tier_number):
+                available_codes = self._count_available_codes_for_tier(tier.id)
+                tier_info.append({
+                    'tier_number': tier.tier_number,
+                    'discount_percentage': tier.discount_percentage,
+                    'streak_threshold': tier.streak_threshold,
+                    'available_codes': available_codes
+                })
+
+        logger.info(
+            f"game_service - get_trivia_discount_entry_data - "
+            f"user_id:{user_id}, remaining:{remaining}, streak:{current_streak}"
+        )
+
+        return {
+            'title': "🎰 Trivia del Destino",
+            'intro': "Diana ha preparado un juego donde el conocimiento revela descuentos...",
+            'remaining': remaining,
+            'limit': daily_limit,
+            'current_streak': current_streak,
+            'can_play': can_play,
+            'tier_info': tier_info
+        }
+
+    def can_play_trivia_discount(self, user_id: int) -> Tuple[bool, int, int, str]:
+        """
+        Verifica si usuario puede jugar trivia discount.
+
+        Returns: (can_play, played_today, limit, message)
+        """
+        config = self.db.query(TriviaConfig).first()
+        if not config:
+            free_limit = 7
+            vip_limit = 15
+        else:
+            free_limit = config.free_daily_limit
+            vip_limit = config.vip_daily_limit
+
+        is_vip = self.is_user_vip(user_id)
+        daily_limit = vip_limit if is_vip else free_limit
+
+        today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        played_today = self.db.query(TriviaGameRecord).filter(
+            TriviaGameRecord.user_id == user_id,
+            TriviaGameRecord.game_type == 'trivia_discount',
+            TriviaGameRecord.played_at >= today
+        ).count()
+
+        if played_today >= daily_limit:
+            return False, played_today, daily_limit, (
+                "Ha alcanzado su límite diario de trivias."
+            )
+
+        # Verificar si hay promoción activa
+        promotion = self.get_active_trivia_promotion()
+        if not promotion:
+            return False, played_today, daily_limit, (
+                "No hay promoción activa en este momento."
+            )
+
+        return True, played_today, daily_limit, None
+
+    def get_active_trivia_promotion(self) -> Optional[TriviaPromotionConfig]:
+        """Obtiene la promoción trivia activa actual (si existe)."""
+        now = datetime.utcnow()
+        promotion = self.db.query(TriviaPromotionConfig).filter(
+            TriviaPromotionConfig.is_active == True
+        ).first()
+
+        if not promotion:
+            return None
+
+        # Verificar fechas si están definidas
+        if promotion.start_date and now < promotion.start_date:
+            return None
+        if promotion.end_date and now > promotion.end_date:
+            return None
+
+        return promotion
+
+    # ==================== TRIVIA DISCOUNT GAMEPLAY ====================
+
+    def _count_available_codes_for_tier(self, tier_id: int) -> int:
+        """Cuenta códigos disponibles en un tier."""
+        return self.db.query(DiscountCode).filter(
+            DiscountCode.tier_id == tier_id,
+            DiscountCode.status == DiscountCodeStatus.AVAILABLE
+        ).count()
+
+    def load_questions_for_promotion(self, promotion_id: int) -> List[Question]:
+        """
+        Carga preguntas para una promoción usando QuestionSetService.
+
+        Args:
+            promotion_id: ID de la promoción
+
+        Returns:
+            Lista de Question del question_set asociado
+        """
+        promotion = self.db.query(TriviaPromotionConfig).filter(
+            TriviaPromotionConfig.id == promotion_id
+        ).first()
+
+        if not promotion or not promotion.question_set_id:
+            logger.warning(
+                f"game_service - load_questions_for_promotion - "
+                f"promotion_id:{promotion_id} not found or no question_set_id"
+            )
+            return []
+
+        question_set_service = QuestionSetService(self.db)
+        questions = question_set_service.get_questions_for_set(promotion.question_set_id)
+
+        logger.info(
+            f"game_service - load_questions_for_promotion - "
+            f"promotion_id:{promotion_id}, questions:{len(questions)}"
+        )
+
+        return questions
+
+    def get_random_trivia_question(self) -> Tuple[Optional[Question], int]:
+        """
+        Obtiene una pregunta aleatoria de la promoción activa.
+
+        Returns:
+            Tuple de (Question o None, índice)
+        """
+        promotion = self.get_active_trivia_promotion()
+        if not promotion:
+            return None, -1
+
+        questions = self.load_questions_for_promotion(promotion.id)
+        if not questions:
+            return None, -1
+
+        idx = random.randint(0, len(questions) - 1)
+        return questions[idx], idx
+
+    def check_trivia_discount_answer(self, question: Question, answer: str) -> bool:
+        """
+        Verifica si la respuesta es correcta.
+
+        Args:
+            question: Question a verificar
+            answer: Respuesta del usuario (A, B, C, D)
+
+        Returns:
+            True si es correcta
+        """
+        if not question:
+            return False
+        return question.correct_option.upper() == answer.upper()
+
+    def process_trivia_answer(
+        self,
+        user_id: int,
+        question_id: int,
+        answer: str
+    ) -> dict:
+        """
+        Procesa respuesta de trivia discount.
+
+        Args:
+            user_id: ID del usuario
+            question_id: ID de la pregunta
+            answer: Respuesta del usuario (A, B, C, D)
+
+        Returns:
+            dict con: correct, new_streak, tier_reached, tier_info, game_over
+        """
+        # Obtener pregunta
+        question = self.db.query(Question).filter(Question.id == question_id).first()
+        if not question:
+            return {
+                'correct': False,
+                'new_streak': 0,
+                'tier_reached': None,
+                'tier_info': [],
+                'game_over': True,
+                'error': 'Pregunta no encontrada'
+            }
+
+        # Verificar respuesta
+        is_correct = self.check_trivia_discount_answer(question, answer)
+
+        # Obtener racha actual del usuario
+        user_streak = self.db.query(UserStreak).filter(
+            UserStreak.user_id == user_id,
+            UserStreak.is_active == True
+        ).first()
+
+        previous_streak = user_streak.current_streak if user_streak else 0
+
+        # Obtener promoción activa
+        promotion = self.get_active_trivia_promotion()
+
+        # Procesar según respuesta
+        if is_correct:
+            new_streak = previous_streak + 1
+
+            # Verificar si se alcanzó nuevo tier
+            tier_reached = None
+            if promotion:
+                for tier in sorted(promotion.tiers, key=lambda t: t.streak_threshold):
+                    if new_streak >= tier.streak_threshold:
+                        # Verificar si el tier tiene códigos disponibles
+                        available = self._count_available_codes_for_tier(tier.id)
+                        if available > 0:
+                            tier_reached = tier
+
+            # Actualizar racha
+            if user_streak:
+                user_streak.current_streak = new_streak
+                user_streak.last_answered_at = datetime.utcnow()
+                if tier_reached:
+                    user_streak.active_tier_id = tier_reached.id
+            else:
+                user_streak = UserStreak(
+                    user_id=user_id,
+                    promotion_config_id=promotion.id if promotion else None,
+                    current_streak=new_streak,
+                    last_answered_at=datetime.utcnow(),
+                    streak_started_at=datetime.utcnow()
+                )
+                if tier_reached:
+                    user_streak.active_tier_id = tier_reached.id
+                self.db.add(user_streak)
+
+            self.db.commit()
+
+        else:
+            # Respuesta incorrecta: resetear racha y cancelar código
+            new_streak = 0
+
+            if user_streak:
+                # Cancelar código activo si existe
+                if user_streak.active_code_id:
+                    code = self.db.query(DiscountCode).filter(
+                        DiscountCode.id == user_streak.active_code_id
+                    ).first()
+                    if code:
+                        code.status = DiscountCodeStatus.CANCELLED
+
+                user_streak.current_streak = 0
+                user_streak.active_tier_id = None
+                user_streak.active_code_id = None
+                user_streak.last_answered_at = datetime.utcnow()
+
+            self.db.commit()
+
+        # Construir info de tiers para respuesta
+        tier_info = []
+        if promotion:
+            for tier in sorted(promotion.tiers, key=lambda t: t.tier_number):
+                available_codes = self._count_available_codes_for_tier(tier.id)
+                tier_info.append({
+                    'tier_number': tier.tier_number,
+                    'discount_percentage': tier.discount_percentage,
+                    'streak_threshold': tier.streak_threshold,
+                    'available_codes': available_codes
+                })
+
+        # Determinar si el juego terminó (límite alcanzado o sin promoción)
+        can_play, _, _, _ = self.can_play_trivia_discount(user_id)
+        game_over = not can_play
+
+        logger.info(
+            f"game_service - process_trivia_answer - "
+            f"user_id:{user_id}, correct:{is_correct}, new_streak:{new_streak}, "
+            f"tier_reached:{tier_reached.tier_number if tier_reached else None}"
+        )
+
+        return {
+            'correct': is_correct,
+            'new_streak': new_streak,
+            'tier_reached': {
+                'tier_number': tier_reached.tier_number,
+                'discount_percentage': tier_reached.discount_percentage,
+                'streak_threshold': tier_reached.streak_threshold
+            } if tier_reached else None,
+            'tier_info': tier_info,
+            'game_over': game_over
+        }
+
+    def claim_discount_code(self, user_id: int, discount_percentage: int) -> Optional[str]:
+        """
+        Reclama un código de descuento para el usuario basado en el porcentaje.
+        Genera el código y lo marca como claimable.
+
+        Returns:
+            Código generado o None si no hay disponibles
+        """
+        # Buscar tier con el descuento especificado
+        promotion = self.get_active_trivia_promotion()
+        if not promotion:
+            return None
+
+        tier = None
+        for t in promotion.tiers:
+            if t.discount_percentage == discount_percentage:
+                tier = t
+                break
+
+        if not tier:
+            return None
+
+        # Usar TriviaDiscountService para generar código atómico
+        td_service = TriviaDiscountService(self.db)
+        code = td_service.generate_code(tier.id, user_id)
+
+        if code:
+            td_service.claim_code(code.id)
+            logger.info(
+                f"game_service - claim_discount_code - "
+                f"user_id:{user_id}, discount:{discount_percentage}%, code:{code.code}"
+            )
+
+        return code.code if code else None
+
+    def get_active_discount_code(self, user_id: int) -> Optional[dict]:
+        """
+        Obtiene el código de descuento activo del usuario.
+
+        Returns:
+            dict con {code, discount_percentage, expires_at} o None
+        """
+        td_service = TriviaDiscountService(self.db)
+        code = td_service.get_user_active_code(user_id)
+
+        if not code:
+            return None
+
+        # Obtener descuento del tier
+        tier = code.tier
+        discount = tier.discount_percentage if tier else 0
+
+        return {
+            'code': code.code,
+            'discount_percentage': discount,
+            'expires_at': code.expires_at
+        }
 
     def __del__(self):
         """Cierra la sesión"""

@@ -16,11 +16,12 @@ from aiogram.types import BotCommandScopeAllPrivateChats
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.date import DateTrigger
 from models.database import SessionLocal
-from models.models import ChannelType
+from models.models import ChannelType, TriviaConfig, UserStreak
 from services.backup_service import BackupService
 from services.channel_service import ChannelService
 from services.vip_service import VIPService
 from services.user_service import UserService
+from services.trivia_discount_service import TriviaDiscountService
 from utils.lucien_voice import LucienVoice
 from keyboards.inline_keyboards import social_links_keyboard
 import logging
@@ -216,6 +217,91 @@ async def _process_expired_subscriptions():
         db.close()
 
 
+async def _invalidate_streak_timeout(user_id: int):
+    """Job handler para invalidar racha por timeout.
+
+    Se ejecuta cuando el timeout de la racha expira.
+    Verifica si la racha sigue activa y si el tiempo de inactividad
+    excede el limite configurado.
+    """
+    db = SessionLocal()
+    try:
+        service = TriviaDiscountService(db)
+        streak = service.get_user_streak(user_id)
+
+        if not streak or not streak.is_active:
+            return
+
+        config = service.get_trivia_config()
+        timeout_minutes = config.streak_timeout_minutes if config else 2
+
+        if streak.last_answered_at:
+            elapsed = datetime.now(timezone.utc) - streak.last_answered_at
+            if elapsed.total_seconds() > timeout_minutes * 60:
+                # Cancelar codigo activo si existe
+                if streak.active_code_id:
+                    service.cancel_code(streak.active_code_id)
+
+                # Invalidar racha
+                service.invalidate_streak(user_id)
+                logger.info(f"Streak timeout: user={user_id}, "
+                            f"streak_invalidada tras {elapsed.total_seconds():.0f}s sin actividad")
+            else:
+                logger.debug(f"Streak timeout check: user={user_id}, "
+                             f"sin timeout aun ({elapsed.total_seconds():.0f}s < {timeout_minutes * 60}s)")
+        else:
+            # Sin last_answered_at - invalidar inmediatamente
+            if streak.active_code_id:
+                service.cancel_code(streak.active_code_id)
+            service.invalidate_streak(user_id)
+            logger.info(f"Streak timeout: user={user_id}, invalidada por falta de last_answered_at")
+
+    except Exception as e:
+        logger.error(f"Error en streak timeout job para user={user_id}: {e}")
+    finally:
+        db.close()
+
+
+async def _check_expired_streaks():
+    """Job handler que verifica periodicamente streaks expirados.
+
+    Corre cada 30 segundos y revisa todas las rachas activas,
+    invalidando las que hayan superado el timeout de inactividad.
+    """
+    db = SessionLocal()
+    try:
+        service = TriviaDiscountService(db)
+        config = service.get_trivia_config()
+        timeout_minutes = config.streak_timeout_minutes if config else 2
+        timeout_seconds = timeout_minutes * 60
+
+        now = datetime.now(timezone.utc)
+        cutoff = now - timedelta(seconds=timeout_seconds)
+
+        expired_streaks = db.query(UserStreak).filter(
+            UserStreak.is_active == True,
+            UserStreak.last_answered_at != None,
+            UserStreak.last_answered_at < cutoff
+        ).all()
+
+        for streak in expired_streaks:
+            try:
+                if streak.active_code_id:
+                    service.cancel_code(streak.active_code_id)
+                service.invalidate_streak(streak.user_id)
+                elapsed = (now - streak.last_answered_at).total_seconds()
+                logger.info(f"Expired streak invalidated: user={streak.user_id}, "
+                            f"streak={streak.current_streak}, elapsed={elapsed:.0f}s")
+            except Exception as e:
+                logger.error(f"Error invalidando streak user={streak.user_id}: {e}")
+                db.rollback()
+
+    except Exception as e:
+        logger.error(f"Error en _check_expired_streaks: {e}")
+    finally:
+        db.close()
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # SchedulerService — solo maneja el ciclo de vida de APScheduler
 # ─────────────────────────────────────────────────────────────────────────────
@@ -290,6 +376,13 @@ class SchedulerService:
             name="Daily database backup",
             replace_existing=True,
         )
+        self._scheduler.add_job(
+            _check_expired_streaks,
+            trigger=IntervalTrigger(seconds=30),
+            id="check_expired_streaks",
+            name="Check expired trivia streaks",
+            replace_existing=True,
+        )
 
         self._scheduler.start()
         self.running = True
@@ -311,6 +404,32 @@ class SchedulerService:
             kwargs={"user_id": user_id, "channel_id": channel_id},
         )
         logger.info(f"Scheduled free welcome job: user={user_id}, channel={channel_id}, run_at={run_date}")
+
+    def schedule_streak_timeout(self, user_id: int, streak_id: int):
+        """Programa la invalidacion de racha por timeout.
+
+        Usa DateTrigger para un job one-shot que se ejecuta streak_timeout_minutes
+        despues de que el usuario inicia una racha.
+        """
+        db = SessionLocal()
+        try:
+            config_service = TriviaDiscountService(db)
+            config = config_service.get_trivia_config()
+            timeout_minutes = config.streak_timeout_minutes if config else 2
+        finally:
+            db.close()
+
+        job_id = f"streak_timeout_{user_id}_{streak_id}"
+        run_date = datetime.now(timezone.utc) + timedelta(minutes=timeout_minutes)
+        self._scheduler.add_job(
+            _invalidate_streak_timeout,
+            trigger=DateTrigger(run_date=run_date),
+            id=job_id,
+            replace_existing=True,
+            kwargs={"user_id": user_id},
+        )
+        logger.info(f"Scheduled streak timeout job: user={user_id}, streak={streak_id}, "
+                    f"run_at={run_date} (timeout={timeout_minutes}min)")
 
     async def stop(self):
         """Detiene el scheduler."""
