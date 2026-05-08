@@ -1,23 +1,63 @@
 # Phase 16: Expansión de Trivias - Research
 
 **Researched:** 2026-05-08
-**Domain:** Trivia Question Management (CRUD operations, categorization, admin interface)
-**Confidence:** HIGH
+**Domain:** Trivia Discount System (gambling-style trivia with progressive discount tiers)
+**Confidence:** HIGH (verified against SPEC.md, existing trivia codebase, and trivia-timeout worktree)
+
+## User Constraints (from CONTEXT.md)
+
+### Locked Decisions
+- TriviaDiscountService, GameService (expanded), TriviaAdminService architecture
+- Streak-based tier system with independent code pools per tier
+- 2-minute streak timeout with APScheduler
+- FSM player flow: idle → waiting_answer → (streak_choice | game_over) → waiting_retire → idle
+- Admin wizard with specific steps defined in SPEC.md section 5.2
+
+### Claude's Discretion
+- File structure (follow existing patterns)
+- FSM storage (MemoryStorage or RedisStorage)
+- Specific implementation patterns for models, services, handlers
+
+### Deferred Ideas
+- Trivia VIP (separate spec later)
+- Besitos/rewards system (already exists)
+- Narrative/stories (already exists)
+
+---
+
+## Phase Requirements
+
+| ID | Description | Research Support |
+|----|-------------|------------------|
+| REQ-16-01 | Gambling-style trivia with streak thresholds | game_service.py trivia pattern + SPEC.md section 2.1 |
+| REQ-16-02 | Discount tiers with independent code pools | TriviaPromotionConfig model from worktree, SPEC.md section 3.2 |
+| REQ-16-03 | Player choice: retire with code or continue gambling | SPEC.md section 2.1 flow diagram |
+| REQ-16-04 | 2-minute streak timeout invalidates code | SPEC.md section 4.5, APScheduler pattern |
+| REQ-16-05 | Admin 17-step promotion creation wizard | PromotionWizardStates pattern in promotion_admin_handlers.py |
+| REQ-16-06 | Daily limits by user type (free/VIP) | TriviaConfig singleton pattern, existing GameService limits |
+| REQ-16-07 | Tier pool independence (atomic code generation) | SELECT FOR UPDATE pattern from StoreService |
+
+---
 
 ## Summary
 
-Phase 16 implements administrative management of trivia questions for Lucien Bot. Currently, trivia questions are stored in a static JSON file (`docs/preguntas.json`) with 675+ questions across general knowledge categories. A parallel worktree (`trivia-timeout`) has already implemented a `QuestionSet` model and service pattern for themed question sets stored in the database, but the main codebase still lacks full CRUD operations for individual questions. This research identifies what exists, what's missing, and recommends a path forward for Custodios to manage trivia questions directly.
+Phase 16 implements a **gambling-style trivia** where players build streaks of correct answers to unlock progressively higher discount tiers. Each tier has its own independent pool of codes — when a tier is exhausted, it's no longer offered. Players can retire and claim their discount or continue gambling for higher tiers. Wrong answer = streak reset + code invalidated. 2-minute timeout = code expired.
 
-**Primary recommendation:** Adopt the `QuestionSet` pattern from the `trivia-timeout` worktree for database-backed question storage, create a `TriviaQuestion` model with category and difficulty fields, implement a `TriviaQuestionService` with full CRUD, and build an admin management interface following the existing wizard patterns (e.g., `store_admin_handlers.py` product wizard).
+**Key distinction from existing trivia:** The current `game_service.py` trivia is simple "play for besitos" with streak counting but no discount codes, no tiers, no player choice, and no timeout. Phase 16 is a **separate system** with its own models, services, FSM states, and player flows.
+
+**Primary recommendation:** Adopt the trivia-timeout worktree's patterns for TriviaPromotionConfig, QuestionSet, and TriviaConfig singleton, but adapt the model names and relationships to match SPEC.md exactly. Use the existing PromotionWizardStates as reference for the 17-step admin wizard.
 
 ## Architectural Responsibility Map
 
 | Capability | Primary Tier | Secondary Tier | Rationale |
 |------------|-------------|----------------|-----------|
-| Question storage | Database | — | `QuestionSet` model stores file_path reference; actual questions in JSON |
-| Question loading | API/Backend | — | `GameService.load_trivia_questions()` reads JSON file at runtime |
-| Admin management UI | API/Backend | — | Handlers route events, Services contain business logic |
-| Question CRUD | API/Backend | — | Service layer creates/reads/updates/deletes via ORM |
+| Discount code generation | API/Backend | — | TriviaDiscountService.generate_code() with atomic lock |
+| Streak tracking | API/Backend | — | UserStreak model, updated per answer |
+| Streak timeout | API/Backend | — | APScheduler job triggers invalidate_streak() |
+| Tier pool management | API/Backend | — | TriviaDiscountService.get_available_codes_count() |
+| Question loading | API/Backend | — | QuestionSet loads from JSON, GameService uses it |
+| Player FSM | API/Backend | — | TriviaStreakStates in handlers, MemoryStorage/RedisStorage |
+| Admin wizard | API/Backend | — | TriviaDiscountStates FSM, 17 steps |
 
 ## Standard Stack
 
@@ -27,14 +67,16 @@ Phase 16 implements administrative management of trivia questions for Lucien Bot
 | aiogram 3.x | 3.4+ | Telegram bot framework | Project uses aiogram for all handlers |
 | SQLAlchemy | 2.x | ORM for database models | Same as existing models.py |
 | Alembic | — | Database migrations | Existing migration infrastructure |
+| APScheduler | — | Streak timeout jobs | Already used in SchedulerService |
 
 ### Existing Patterns (to leverage)
 | Pattern | Source | Usage |
 |---------|--------|-------|
-| Wizard FSM pattern | `store_admin_handlers.py` ProductWizard | Multi-step question creation |
-| Service-with-service | `daily_gift_service.py` | Embed BesitoService for related features |
-| Config singleton pattern | `TriviaConfigService` (worktree) | Single-row config for settings |
-| QuestionSet pattern | `question_set_service.py` (worktree) | Themed question group management |
+| Wizard FSM | `promotion_admin_handlers.py` PromotionWizardStates | 17-step admin creation flow |
+| Service-with-service | `daily_gift_service.py` embeds BesitoService | TriviaDiscountService can embed GameService |
+| Atomic code generation | `store_service.py` create_product (SELECT FOR UPDATE) | Code pool concurrency |
+| Singleton config | `trivia-timeout/worktrees/trivia_config_service.py` | TriviaConfig for daily limits |
+| QuestionSet loading | `game_service.py` load_trivia_questions() | Load questions from JSON |
 
 **Installation:**
 ```bash
@@ -46,169 +88,163 @@ Phase 16 implements administrative management of trivia questions for Lucien Bot
 ### Recommended Project Structure
 ```
 services/
-├── trivia_question_service.py  # NEW - CRUD for individual questions
+├── trivia_discount_service.py      # NEW - promotion config, tiers, codes
+├── question_set_service.py         # NEW - themed question groups (from worktree)
+├── trivia_config_service.py        # NEW - singleton config for limits (from worktree)
 models/
-├── models.py                   # MODIFY - add TriviaQuestion model
+├── models.py                       # MODIFY - add TriviaPromotionConfig, Tier, DiscountCode, UserStreak, QuestionSet, Question, TriviaConfig
 handlers/
-├── trivia_question_admin_handlers.py  # NEW - admin management UI
+├── trivia_discount_admin_handlers.py  # NEW - admin wizard (from worktree)
+├── trivia_discount_user_handlers.py   # NEW - player FSM
 keyboards/
-├── inline_keyboards.py          # MODIFY - add trivia admin keyboards
+├── inline_keyboards.py              # MODIFY - add trivia discount keyboards
 ```
 
-### Pattern 1: QuestionSet Service (Reference: trivia-timeout worktree)
+### Pattern 1: TriviaDiscountService (from trivia-timeout worktree)
 ```python
-# services/question_set_service.py - database-backed question groups
-class QuestionSetService:
-    def get_all_sets(self) -> list[QuestionSet]:
-        with SessionLocal() as session:
-            return session.query(QuestionSet).order_by(...).all()
-
-    def create_set(self, name: str, file_path: str, description: Optional[str]) -> Optional[QuestionSet]:
-        # Creates a reference to a JSON file containing questions
+# services/trivia_discount_service.py - manages promotions, tiers, codes
+class TriviaDiscountService:
+    def create_trivia_promotion_config(self, name, discount_tiers, ...) -> Optional[TriviaPromotionConfig]
+    def generate_code(self, tier_id, user_id) -> Optional[DiscountCode]  # atomic with lock
+    def claim_code(self, code_id) -> bool
+    def invalidate_streak(self, user_id) -> None  # called by APScheduler job
 ```
 
-**When to use:** Custodio creates a themed set by providing path to JSON file.
+**When to use:** Managing discount code pools per tier, concurrency-safe code generation.
 
-### Pattern 2: Wizard FSM for Multi-step Creation (Reference: store_admin_handlers.py)
+### Pattern 2: Player FSM (TriviaStreakStates)
 ```python
-class ProductWizardStates(StatesGroup):
+# From trivia-timeout worktree handlers/game_user_handlers.py
+class TriviaStreakStates(StatesGroup):
+    waiting_answer = State()
+    streak_choice = State()  # reached threshold, player chooses
+    streak_continue = State()  # player chose to continue
+    waiting_retire = State()
+
+# Flow: idle → waiting_answer → (streak_choice | game_over)
+#                             ↓
+#                     waiting_retire → idle
+```
+
+**When to use:** Player completes streak threshold, shown discount offer with Continue/Retire/Salir buttons.
+
+### Pattern 3: Admin Wizard (TriviaDiscountStates from worktree)
+```python
+# 17-step wizard matching SPEC.md section 5.2
+class TriviaDiscountStates(StatesGroup):
+    waiting_promotion_type = State()      # Fixed / Relative
+    waiting_dates_or_duration = State()
     waiting_name = State()
     waiting_description = State()
-    waiting_price = State()
-    # ...
-
-async def create_product_name(message: Message, state: FSMContext):
-    name = message.text.strip()
-    await state.update_data(name=name)
-    await message.answer("Next question...")
-    await state.set_state(ProductWizardStates.waiting_description)
+    waiting_discount_tiers = State()      # NEW: multi-tier support
+    waiting_question_set = State()
+    waiting_confirmation = State()
 ```
 
-**When to use:** Multi-step question creation with validation at each step.
+**When to use:** Admin creates promotion with tiers, each tier having streak_threshold + discount_percentage + max_codes.
 
-### Pattern 3: Inline Editing with Confirmation (Reference: category_admin_handlers.py)
+### Pattern 4: Atomic Code Generation (from StoreService)
 ```python
-@router.callback_query(F.data.startswith("edit_category_"))
-async def edit_category(callback: CallbackQuery, state: FSMContext):
-    category_id = int(callback.data.replace("edit_category_", ""))
-    # Show current values with edit buttons
-    # On edit, set FSM state and prompt for new value
+# Pattern: SELECT FOR UPDATE for atomic code reservation
+def generate_code(self, tier_id: int, user_id: int) -> Optional[DiscountCode]:
+    with self._get_db() as session:
+        # Lock the tier row to prevent concurrent generation
+        tier = session.query(Tier).filter(Tier.id == tier_id).with_for_update().first()
+        if not tier or tier.available_count <= 0:
+            return None
+        # Generate code, decrement count, commit
 ```
 
-**When to use:** When editing existing questions, show current value and allow partial edits.
+**When to use:** Ensuring two players don't get the same code when they hit the threshold simultaneously.
 
 ## Don't Hand-Roll
 
 | Problem | Don't Build | Use Instead | Why |
 |---------|-------------|-------------|-----|
-| Question storage | JSON file editing by hand | Database with `TriviaQuestion` model | Easier admin UI, relationships to categories |
-| Configuration | Hardcoded constants | `TriviaConfig` singleton model | Allows runtime changes without code deploy |
-| Admin interface | Custom parsing | aiogram FSM with wizard pattern | Existing patterns are well-tested |
-| Question loading | Custom file readers | JSON in DB or referenced JSON files | Consistency with QuestionSet approach |
+| Streak persistence | In-memory tracking | UserStreak model in DB | Survives bot restart, tracks across sessions |
+| Code generation | Random without lock | SELECT FOR UPDATE | Concurrency safety, no duplicate codes |
+| Streak timeout | Polling/sleep | APScheduler job | Non-blocking, survives restart, precision |
+| Admin wizard | Callback spaghetti | FSM StatesGroup | Clean state management, back navigation |
+| Config management | Hardcoded constants | TriviaConfig singleton | Runtime changes, no deploy needed |
 
-**Key insight:** The trivia-timeout worktree has already solved the database storage problem with `QuestionSet`. The main codebase should adopt this pattern rather than inventing a new one.
+**Key insight:** The trivia-timeout worktree has already solved most of these problems. Adapt its patterns rather than inventing new solutions.
 
 ## Common Pitfalls
 
-### Pitfall 1: Questions Loaded at Runtime from Static File
-**What goes wrong:** Changes to questions require bot restart; no admin UI possible
-**Why it happens:** `GameService.load_trivia_questions()` reads `docs/preguntas.json` once and caches
-**How to avoid:** Move questions to database with `TriviaQuestion` model, implement cache invalidation
-**Warning signs:** "I edited the JSON but the bot still asks the old question"
+### Pitfall 1: Confusion Between Existing Trivia and New Trivia Discount System
+**What goes wrong:** Developers try to merge the two systems instead of treating them as separate
+**Why it happens:** Both use "trivia" in the name and share some question-loading code
+**How to avoid:** Clear separation: `game_service.py` = simple trivia, `trivia_discount_service.py` = gambling-style with codes
+**Warning signs:** Trying to add tiers to GameService, adding code pools to existing trivia
 
-### Pitfall 2: No Category/Difficulty Metadata
-**What goes wrong:** All questions treated equally; can't filter by topic or difficulty
-**Why it happens:** JSON format is flat: `{"q": "...", "opts": [...], "answer": N}`
-**How to avoid:** Add `category` and `difficulty` fields to `TriviaQuestion` model
-**Warning signs:** "How do I add only easy questions to the VIP trivia?"
+### Pitfall 2: Tier Pool Not Truly Independent
+**What goes wrong:** All tiers share a single code pool instead of independent pools
+**Why it happens:** Coding codes as a single pool on PromotionConfig instead of per Tier
+**How to avoid:** Each Tier has its own `max_codes` and `available_codes` count
+**Warning signs:** "Admin sees all codes under one pool instead of per tier"
 
-### Pitfall 3: Question IDs Not Stable Across Edits
-**What goes wrong:** Deleting a question shifts indices, breaking streak tracking
-**Why it happens:** Questions identified by array index in JSON
-**How to avoid:** Use auto-increment primary key IDs, never expose raw array indices
-**Warning signs:** "User's streak reset because I deleted a question"
+### Pitfall 3: Streak Timeout Not Atomic
+**What goes wrong:** Timeout check in handler allows race condition where player answers right at 2-minute mark
+**Why it happens:** Checking last_answered_at in handler without lock before processing answer
+**How to avoid:** APScheduler job calls invalidate_streak() atomically, handler checks is_active flag
+**Warning signs:** "Player's code not invalidated even after 2 minutes passed"
 
-### Pitfall 4: Admin Handler Doing Business Logic
-**What goes wrong:** Violates architecture rules, hard to test
-**Why it happens:** Trying to do too much in handler callbacks
-**How to avoid:** Handlers only call services, services do all ORM operations
-**Warning signs:** Handler imports models directly
+### Pitfall 4: Admin Wizard Too Long Without Save Point
+**What goes wrong:** Admin makes mistake on step 12, must restart entire wizard
+**Why it happens:** No intermediate save/resume capability
+**How to avoid:** Store FSM state to DB on each step, allow resuming from last step
+**Warning signs:** "I accidentally closed the wizard and lost all progress"
 
 ## Code Examples
 
-### Current Question Format (docs/preguntas.json)
-```json
-[
-  { "q": "¿Cuál es la capital de Francia?", "opts": ["Madrid", "París", "Roma"], "answer": 1 }
-]
-```
-**Format:** 3 options, `answer` is index of correct option (0=A, 1=B, 2=C)
-
-### Themed Question Set Format (docs/question_sets/primero_de_mayo.json)
-```json
-[
-  {
-    "q": "¿En qué fecha se celebra el Día Internacional del Trabajo...?",
-    "opts": ["1 de Mayo", "1 de Abril", "1 de Junio", "5 de Mayo"],
-    "answer": 0
-  }
-]
-```
-**Format:** Same as general questions, but stored in themed files.
-
-### QuestionSet Model (trivia-timeout worktree - verified)
+### Existing Trivia Flow (game_service.py - simple trivia, NO tiers/codes)
 ```python
-class QuestionSet(Base):
-    """Sets temáticos de preguntas de trivia"""
-    __tablename__ = "question_sets"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(200), nullable=False, unique=True)
-    file_path = Column(String(500), nullable=False)
-    description = Column(Text, nullable=True)
-    is_active = Column(Boolean, default=False)
-    is_override = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+# Current trivia is "play for besitos" - streak tracked but no discount codes
+def play_trivia(self, user_id, question_idx, answer_idx):
+    is_correct = self.check_trivia_answer(question, answer_idx)
+    if is_correct:
+        new_streak = previous_streak + 1
+        besitos = 1  # Fixed reward, no choice
+    else:
+        new_streak = 0  # Streak reset, no code invalidation
 ```
 
-### TriviaConfig Singleton (trivia-timeout worktree - verified)
+### New Trivia Discount Flow (from SPEC.md)
 ```python
-class TriviaConfig(Base):
-    """Configuración de límites de intentos de trivia"""
-    __tablename__ = "trivia_config"
-
-    id = Column(Integer, primary_key=True)
-    daily_trivia_limit_free = Column(Integer, default=7, nullable=False)
-    daily_trivia_limit_vip = Column(Integer, default=15, nullable=False)
-    daily_trivia_vip_limit = Column(Integer, default=5, nullable=False)
-    is_active = Column(Boolean, default=True)
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    updated_by = Column(BigInteger, nullable=True)
+# TriviaDiscountService handles the new flow
+def process_answer(self, user_id, answer):
+    is_correct = self.check_answer(question, answer)
+    if is_correct:
+        new_streak += 1
+        if new_streak == tier.streak_threshold:  # Exact match
+            code = self.generate_code(tier_id, user_id)  # Atomic
+            return {'tier_reached': True, 'code': code}
+    else:
+        self.invalidate_streak(user_id)  # Code invalidated
 ```
 
-### Admin Handler with Wizard FSM (reference: store_admin_handlers.py)
-```python
-class ProductWizardStates(StatesGroup):
-    waiting_name = State()
-    waiting_description = State()
-    selecting_package = State()
-    waiting_price = State()
-    waiting_stock = State()
-    confirming = State()
+### Tier Pool Independence (SPEC.md section 3.2)
+```
+Tier 1: Racha 5 → 10% descuento → 5 códigos (pool independently managed)
+Tier 2: Racha 10 → 20% descuento → 6 códigos
+Tier 3: Racha 15 → 30% descuento → 2 códigos
+```
 
-@router.callback_query(F.data == "create_product", lambda cb: is_admin(cb.from_user.id))
-async def create_product_start(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text("Nombre del producto:", ...)
-    await state.set_state(ProductWizardStates.waiting_name)
+### Code Status Flow (SPEC.md section 3.3)
+```
+AVAILABLE → (generate_code) → CLAIMED → (use_code) → USED
+           → (fail/wrong answer) → CANCELLED
+           → (timeout) → EXPIRED
 ```
 
 ## State of the Art
 
 | Old Approach | Current Approach | When Changed | Impact |
 |--------------|------------------|--------------|--------|
-| Static JSON file for questions | Database with `QuestionSet` references | trivia-timeout worktree | Enables runtime admin management |
-| No question categorization | `category` field on QuestionSet | This phase | Enables filtering and themed trivias |
-| Hardcoded trivia limits | `TriviaConfig` singleton in DB | trivia-timeout worktree | Runtime configurable limits |
+| Simple trivia (besitos only) | Trivia discount with tiered codes | This phase | New player experience, admin management |
+| Questions in static JSON | QuestionSet with file_path reference | trivia-timeout worktree | Runtime question set switching |
+| Hardcoded trivia limits | TriviaConfig singleton in DB | trivia-timeout worktree | Runtime configurable limits |
+| Single promo type | Fixed vs Relative promotions | SPEC.md section 5.2 | Admin chooses date-based or duration-based |
 
 **Deprecated/outdated:**
 - None relevant to this phase
@@ -217,24 +253,26 @@ async def create_product_start(callback: CallbackQuery, state: FSMContext):
 
 | # | Claim | Section | Risk if Wrong |
 |---|-------|---------|---------------|
-| A1 | The trivia-timeout worktree's models are compatible with main branch | Standard Stack | May need migration adaptation |
+| A1 | TriviaConfig singleton pattern from worktree is compatible with main branch | Standard Stack | May need import path adjustments |
+| A2 | APScheduler job pattern from SchedulerService works for streak timeout | Architecture | Same pattern, should work |
+| A3 | FSM storage (MemoryStorage vs RedisStorage) works for TriviaStreakStates | Player FSM | Existing pattern should work |
 
 ## Open Questions
 
-1. **Should individual questions be stored in DB or referenced JSON files?**
-   - What we know: `QuestionSet` stores `file_path` reference, loads questions from JSON at play time
-   - What's unclear: Whether to migrate all questions to `TriviaQuestion` rows in DB
-   - Recommendation: Start with referenced JSON files (QuestionSet pattern), migrate to DB rows later if admin UI needs it
+1. **Should existing trivia (game_service.py) be extended or replaced?**
+   - What we know: SPEC.md defines a separate "gambling-style trivia" distinct from existing simple trivia
+   - What's unclear: Whether to keep game_service.py trivia separate or merge them under one menu
+   - Recommendation: Keep separate entries in game menu — existing "Trivia" for besitos, new "Trivia Descuentos" for discounts
 
-2. **Should question editing support inline edits or require full replacement?**
-   - What we know: Current JSON format is flat with no ID field
-   - What's unclear: Whether Custodios prefer inline Telegram editing vs. uploading new JSON
-   - Recommendation: Support both — inline edit individual questions AND bulk JSON upload
+2. **Should questions be stored in DB or JSON files?**
+   - What we know: QuestionSet model stores `file_path` reference, loads from JSON at runtime
+   - What's unclear: Whether to migrate all questions to TriviaQuestion rows in DB
+   - Recommendation: Use QuestionSet pattern (JSON files) initially, as done in trivia-timeout worktree
 
-3. **Should categories be free-form strings or enum/relationship?**
-   - What we know: Questions span topics: geography, video games, anime, science, culture
-   - What's unclear: Whether to create `TriviaCategory` model or use string tags
-   - Recommendation: Use string tags initially, create model if categorization grows complex
+3. **How to handle VIP-exclusive trivia discount?**
+   - What we know: SPEC.md excludes VIP trivia from this phase
+   - What's unclear: Whether VIP players get separate limits or use same pool
+   - Recommendation: TriviaConfig has separate limits for free, VIP, and VIP-exclusive; this phase implements free tier
 
 ## Environment Availability
 
@@ -253,30 +291,54 @@ Step 2.6: SKIPPED (no external dependencies - all project code/config)
 ### Phase Requirements -> Test Map
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|----------|-----------|-------------------|-------------|
-| TRIVIA-ADMIN-01 | Create question via wizard | unit | `pytest tests/unit/test_trivia_question_service.py::test_create_question -x` | NO |
-| TRIVIA-ADMIN-02 | Edit existing question | unit | `pytest tests/unit/test_trivia_question_service.py::test_update_question -x` | NO |
-| TRIVIA-ADMIN-03 | Delete question | unit | `pytest tests/unit/test_trivia_question_service.py::test_delete_question -x` | NO |
-| TRIVIA-ADMIN-04 | List questions by category | unit | `pytest tests/unit/test_trivia_question_service.py::test_list_by_category -x` | NO |
-| TRIVIA-ADMIN-05 | Admin menu navigation | integration | `pytest tests/integration/test_trivia_admin_handlers.py -x` | NO |
+| REQ-16-01 | Player builds streak, gets tier discount at threshold | unit | `pytest tests/unit/test_trivia_discount_service.py::test_streak_tier_reached -x` | NO |
+| REQ-16-02 | Each tier has independent code pool | unit | `pytest tests/unit/test_trivia_discount_service.py::test_tier_pool_independent -x` | NO |
+| REQ-16-03 | Player can retire and claim code | unit | `pytest tests/unit/test_trivia_discount_service.py::test_player_retire -x` | NO |
+| REQ-16-04 | Wrong answer invalidates code | unit | `pytest tests/unit/test_trivia_discount_service.py::test_wrong_answer_invalidates -x` | NO |
+| REQ-16-05 | Admin wizard creates promotion with 3 tiers | integration | `pytest tests/integration/test_trivia_discount_admin.py -x` | NO |
+| REQ-16-06 | Daily limits respected per user type | unit | `pytest tests/unit/test_trivia_config_service.py::test_daily_limits -x` | NO |
+| REQ-16-07 | Atomic code generation prevents duplicates | unit | `pytest tests/unit/test_trivia_discount_service.py::test_code_generation_atomic -x` | NO |
 
 ### Wave 0 Gaps
-- [ ] `tests/unit/test_trivia_question_service.py` - covers TRIVIA-ADMIN-01 through 04
-- [ ] `tests/integration/test_trivia_admin_handlers.py` - covers TRIVIA-ADMIN-05
+- [ ] `tests/unit/test_trivia_discount_service.py` - covers REQ-16-01 through 04, 07
+- [ ] `tests/unit/test_trivia_config_service.py` - covers REQ-16-06
+- [ ] `tests/integration/test_trivia_discount_admin.py` - covers REQ-16-05
 - [ ] Framework install: pytest - already in requirements.txt
+
+## Security Domain
+
+### Applicable ASVS Categories
+
+| ASVS Category | Applies | Standard Control |
+|---------------|---------|-----------------|
+| V4 Access Control | yes | is_admin() check in trivia_discount_admin_handlers.py |
+| V5 Input Validation | yes | Validate tier thresholds, code counts, dates in service layer |
+| V6 Cryptography | yes | Discount codes use secrets.token_hex / secrets.choice for uniqueness |
+
+### Known Threat Patterns for Trivia Discount System
+
+| Pattern | STRIDE | Standard Mitigation |
+|---------|--------|---------------------|
+| User tries to claim code twice (double-spend) | Spoofing | Code status check in claim_code(), atomic transaction |
+| Admin creates invalid promotion (negative codes) | Tampering | Validation in create_trivia_promotion_config() |
+| Concurrent code generation race | Repudiation | SELECT FOR UPDATE lock on tier row |
+| Player spoofs answer (modify Telegram callback) | Spoofing | Validate question_idx + answer_idx match, server-side check |
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- `services/game_service.py` - Current trivia loading from JSON, question format
-- `docs/preguntas.json` - 675+ trivia questions with current format
-- `docs/preguntas_vip.json` - VIP trivia questions with same format
-- `.claude/worktrees/trivia-timeout/services/question_set_service.py` - QuestionSet service pattern
-- `.claude/worktrees/trivia-timeout/handlers/question_set_admin_handlers.py` - Admin management pattern
-- `.claude/worktrees/trivia-timeout/models/models.py` - QuestionSet, TriviaConfig models
+- `SPEC.md` - Full PRD for trivia discount system with model definitions, FSM states, 17-step wizard
+- `services/game_service.py` - Existing trivia implementation (baseline for player flow)
+- `.claude/worktrees/trivia-timeout/models/models.py` - TriviaPromotionConfig, QuestionSet, TriviaConfig models
+- `.claude/worktrees/trivia-timeout/services/trivia_discount_service.py` - Service implementation patterns
+- `.claude/worktrees/trivia-timeout/handlers/trivia_discount_admin_handlers.py` - Admin FSM wizard pattern
+- `handlers/promotion_admin_handlers.py` - PromotionWizardStates (reference for admin wizard)
+- `models/models.py` - Existing models, GameRecord already exists
 
 ### Secondary (MEDIUM confidence)
-- `handlers/store_admin_handlers.py` - Wizard FSM pattern for admin creation flows
-- `.planning/phases/14-minijuegos/14-RESEARCH.md` - Previous research on trivia baseline
+- `services/store_service.py` - Atomic code generation pattern (SELECT FOR UPDATE)
+- `services/scheduler_service.py` - APScheduler job pattern for timeout
+- `.planning/phases/16-expansi-n-de-trivias/16-CONTEXT.md` - Phase context and locked decisions
 
 ### Tertiary (LOW confidence)
 - None
@@ -286,7 +348,7 @@ Step 2.6: SKIPPED (no external dependencies - all project code/config)
 **Confidence breakdown:**
 - Standard stack: HIGH - using existing aiogram/SQLAlchemy, adopting proven worktree patterns
 - Architecture: HIGH - follows existing patterns (wizard FSM, service-with-service, singleton config)
-- Pitfalls: HIGH - clear what to avoid (handler business logic, static JSON limitations)
+- Pitfalls: HIGH - clear what to avoid (merging with simple trivia, race conditions)
 
 **Research date:** 2026-05-08
 **Valid until:** 30 days (stable tech stack, active development on trivia system)
