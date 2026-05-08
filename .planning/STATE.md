@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Milestone complete
-last_updated: "2026-05-07"
+status: milestone_complete
+last_updated: "2026-05-08T01:07:28.877Z"
 progress:
-  total_phases: 16
-  completed_phases: 6
-  total_plans: 26
-  completed_plans: 26
-  percent: 100
+  total_phases: 18
+  completed_phases: 7
+  total_plans: 36
+  completed_plans: 35
+  percent: 39
 ---
 
 # State: Lucien Bot
@@ -22,7 +22,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Crear una experiencia premium y gamificada que incentiva el compromiso de la comunidad con Diana a través de un sistema de recompensas, acceso exclusivo VIP y narrativa inmersiva.
-**Current focus:** Phase 16 — Expansión de Trivias (Not planned yet)
+**Current focus:** Phase 16.1 — expandir-promociones-por-racha-con-pools-de-c-digos-por-tier
 
 ## Milestone
 
@@ -135,3 +135,9 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 - GSD inicializado el 2026-03-30 para trazabilidad de fases
 - Plan 10-01 establishes foundation for Phase 10 entry flow rituals
 - Milestone v1.0 COMPLETE — All 26 plans executed successfully
+
+## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 16.1 inserted after Phase 16: Expandir promociones por racha con pools de códigos por tier (URGENT)
