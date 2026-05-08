@@ -106,7 +106,7 @@ class ErrorHandlerMiddleware(BaseMiddleware):
         # Handler que estaba procesando
         handler = data.get("handler")
         if handler:
-            context["handler"] = f"{handler.__module__}.{handler.__name__}"
+            context["handler"] = f"{handler.callback.__module__}.{handler.callback.__name__}"
 
         return context
 

@@ -634,13 +634,18 @@ async def show_confirmation(message: Message, state: FSMContext):
     tiers = data.get('discount_tiers')
     if tiers and len(tiers) > 0:
         if len(tiers) == 1:
-            tiers_info = f"🔥 <b>Nivel único:</b> {tiers[0]['streak']} respuestas = {tiers[0]['discount']}%\n"
+            tier = tiers[0]
+            max_codes = tier.get('max_codes')
+            pool_info = f" → Pool: {max_codes} códigos" if max_codes else " → Pool: ilimitado"
+            tiers_info = f"🔥 <b>Nivel único:</b> {tier['streak']} respuestas = {tier['discount']}%{pool_info}\n"
         else:
             tiers_info = "🔥 <b>Niveles de descuento:</b>\n"
             for i, tier in enumerate(tiers, 1):
                 is_last = (i == len(tiers))
                 bonus = " (GRATIS)" if is_last and tier['discount'] == 100 else ""
-                tiers_info += f"   {i}. {tier['streak']} respuestas → {tier['discount']}%{bonus}\n"
+                max_codes = tier.get('max_codes')
+                pool_info = f" → Pool: {max_codes} códigos" if max_codes else " → Pool: ilimitado"
+                tiers_info += f"   {i}. {tier['streak']} respuestas → {tier['discount']}%{bonus}{pool_info}\n"
     else:
         tiers_info = f"🔥 <b>Racha requerida:</b> {data['required_streak']} respuestas\n"
 
@@ -669,7 +674,7 @@ async def create_trivia_discount_existing_promo(callback: CallbackQuery, state: 
     """Mostrar lista de promociones existentes"""
     promo_service = PromotionService()
     try:
-        promotions = promo_service.get_active_promotions()
+        promotions = promo_service.get_all_promotions(active_only=True)
     finally:
         promo_service.close()
 
