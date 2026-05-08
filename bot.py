@@ -67,6 +67,7 @@ from handlers import (
 
 from handlers.rate_limit_middleware import ThrottlingMiddleware
 from handlers.chat_action_middleware import ChatActionMiddleware
+from handlers.error_handler_middleware import ErrorHandlerMiddleware
 
 # Configurar logging
 logging.basicConfig(
@@ -242,6 +243,9 @@ async def main():
     # Middlewares globales - indication de "escribiendo..." mientras se procesa
     dp.message.middleware(ChatActionMiddleware())
     dp.callback_query.middleware(ChatActionMiddleware())
+
+    # Middleware global de manejo de errores - captura excepciones no manejadas
+    dp.update.middleware(ErrorHandlerMiddleware(notify_admins=True))
 
     # Registrar routers
     dp.include_router(common_router)
