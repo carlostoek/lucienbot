@@ -298,3 +298,12 @@ Plans:
 *Updated: 2026-04-08 — Phase 15 Sistema de Mochila added*
 *Updated: 2026-04-08 — Phase 15 COMPLETE*
 *Updated: 2026-05-07 — Phase 16 Expansión de Trivias added*
+### Phase 16.1: Expandir promociones por racha con pools de códigos por tier (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 16
+**Plans:** 1/1 plans complete
+
+Plans:
+- [x] TBD (run /gsd-plan-phase 16.1 to break down) (completed 2026-05-08)
