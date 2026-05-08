@@ -302,7 +302,8 @@ async def trivia_answer(callback: CallbackQuery, state: FSMContext):
         if is_final:
             # Generar código con el descuento del tier final (no necesariamente 100%)
             with get_service(GameService) as service:
-                discount = service._generate_tier_discount_code(user_id, config_id, current_discount)
+                streak_tier = tier_info.get('streak_tier', 0)
+                discount = service._generate_tier_discount_code(user_id, config_id, current_discount, streak_tier)
 
             if discount and discount.get('code'):
                 header_template = service._select_template(service.STREAK_TEMPLATES['final_win_header'])
@@ -318,7 +319,15 @@ async def trivia_answer(callback: CallbackQuery, state: FSMContext):
                 )
                 keyboard = streak_final_keyboard(current_discount)
             else:
-                keyboard = game_menu_keyboard()
+                # Pool agotado - mostrar notificación pero permitir continuar
+                with get_service(GameService) as service:
+                    header = service._select_template(service.STREAK_TEMPLATES['pool_exhausted_header'])
+                    message = (
+                        f"{header}\n\n"
+                        f"<i>Este nivel de descuento esta agotado, pero su racha continua.</i>\n\n"
+                        f"Puede seguir jugando para alcanzar el siguiente nivel."
+                    )
+                keyboard = streak_continue_keyboard()
         else:
             # Caso 2b: Mostrar opciones de retirarse o continuar
             next_discount = next_tier['discount'] if next_tier else None
@@ -552,7 +561,8 @@ async def trivia_vip_answer(callback: CallbackQuery, state: FSMContext):
         # Caso 2a: Es el tier final (último tier disponible)
         if is_final:
             with get_service(GameService) as service:
-                discount = service._generate_tier_discount_code(user_id, config_id, current_discount)
+                streak_tier = tier_info.get('streak_tier', 0)
+                discount = service._generate_tier_discount_code(user_id, config_id, current_discount, streak_tier)
 
             if discount and discount.get('code'):
                 header_template = service._select_template(service.STREAK_TEMPLATES['final_win_header'])
@@ -568,7 +578,15 @@ async def trivia_vip_answer(callback: CallbackQuery, state: FSMContext):
                 )
                 keyboard = streak_final_keyboard(current_discount)
             else:
-                keyboard = game_menu_keyboard()
+                # Pool agotado - mostrar notificación pero permitir continuar
+                with get_service(GameService) as service:
+                    header = service._select_template(service.STREAK_TEMPLATES['pool_exhausted_header'])
+                    message = (
+                        f"{header}\n\n"
+                        f"<i>Este nivel de descuento esta agotado, pero su racha continua.</i>\n\n"
+                        f"Puede seguir jugando para alcanzar el siguiente nivel."
+                    )
+                keyboard = streak_continue_keyboard()
         else:
             # Caso 2b: Mostrar opciones
             next_discount = next_tier['discount'] if next_tier else None
@@ -656,7 +674,8 @@ async def streak_retire(callback: CallbackQuery, state: FSMContext):
         return
 
     with get_service(GameService) as service:
-        discount = service._generate_tier_discount_code(user_id, config_id, discount_percentage)
+        streak_tier = data.get('current_tier_streak', 0)
+        discount = service._generate_tier_discount_code(user_id, config_id, discount_percentage, streak_tier)
         # Romper racha para que si vuelve a jugar, empiece desde 1
         game_type = 'trivia_vip' if data.get('vip_mode', False) else 'trivia'
         service.reset_trivia_streak(user_id, game_type)
