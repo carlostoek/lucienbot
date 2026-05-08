@@ -474,7 +474,15 @@ class GameService:
             "<i>Ah... parece que sus dedos necesitaban un descanso más largo que su mente.\n"
             "El tiempo corre, incluso para quienes creen que pueden burlarlo.\n"
             "Su racha ha sido... olvidada.</i>"
-        )
+        ),
+
+        # ========================================
+        # POOL EXHAUSTED (tier pool depleted)
+        # ========================================
+        'pool_exhausted_header': [
+            "🎩 Lucien: El Gabinete de Oportunidades ha cerrado este nivel.",
+            "🎩 Lucien: Esta puerta se ha cerrado, pero hay otras esperando."
+        ]
     }
 
     def __init__(self, db: Session = None):
@@ -1127,9 +1135,9 @@ class GameService:
         if not tier:
             return None
 
-        # Verificar códigos disponibles
-        available = self._trivia_discount_service.get_available_codes_count(config.id)
-        if available <= 0:
+        # Verificar pool disponible del tier (no el global)
+        tier_pool = self._trivia_discount_service.get_tier_pool_status(config.id, tier['streak'])
+        if not tier_pool['available']:
             return None
 
         # Obtener siguiente tier para mostrar al usuario
@@ -1145,10 +1153,11 @@ class GameService:
             'next_tier': next_tier,
             'config_id': config.id,
             'is_final': next_tier is None,  # True si no hay siguiente tier
-            'tier_index': tier_index
+            'tier_index': tier_index,
+            'streak_tier': tier['streak']  # NEW: needed for pool check in code generation
         }
 
-    def _generate_tier_discount_code(self, user_id: int, config_id: int, discount_percentage: int) -> Optional[dict]:
+    def _generate_tier_discount_code(self, user_id: int, config_id: int, discount_percentage: int, streak_tier: int = 0) -> Optional[dict]:
         """Genera código de descuento con porcentaje específico del tier"""
         user_data = self._user_service.get_user(user_id)
         username = user_data.username if user_data else None
@@ -1158,6 +1167,7 @@ class GameService:
             user_id=user_id,
             config_id=config_id,
             discount_percentage=discount_percentage,
+            streak_tier=streak_tier,
             username=username,
             first_name=first_name
         )
