@@ -529,6 +529,11 @@ class TriviaDiscountService:
             if not isinstance(discount, int) or discount < 0 or discount > 100:
                 return False, f"Tier {i+1}: discount debe ser 0-100"
 
+            max_codes = tier.get('max_codes')
+            if max_codes is not None:
+                if not isinstance(max_codes, int) or max_codes < 0:
+                    return False, f"Tier {i+1}: max_codes debe ser entero >= 0"
+
             if streak <= prev_streak:
                 return False, f"Tier {i+1}: streak debe ser mayor que el anterior ({prev_streak})"
 
@@ -571,11 +576,43 @@ class TriviaDiscountService:
                 return tier
         return None
 
+    def get_tier_pool_status(self, config_id: int, streak: int) -> dict:
+        """
+        Obtiene estado del pool de codigos para un tier especifico.
+        Retorna: {codes_issued, max_codes, available, unlimited}
+        """
+        config = self.get_trivia_promotion_config(config_id)
+        if not config:
+            return {'codes_issued': 0, 'max_codes': None, 'available': True}
+
+        tier = self.get_tier_for_streak(config, streak)
+        if not tier:
+            return {'codes_issued': 0, 'max_codes': None, 'available': True}
+
+        max_codes = tier.get('max_codes')
+        if max_codes is None:
+            return {'codes_issued': 0, 'max_codes': None, 'available': True, 'unlimited': True}
+
+        # Count codes issued for this tier via discount_percentage match
+        with SessionLocal() as session:
+            codes_issued = session.query(DiscountCode).filter(
+                DiscountCode.config_id == config_id,
+                DiscountCode.discount_percentage == tier['discount']
+            ).count()
+
+        available = codes_issued < max_codes
+        return {
+            'codes_issued': codes_issued,
+            'max_codes': max_codes,
+            'available': available
+        }
+
     def generate_tiered_discount_code(
         self,
         user_id: int,
         config_id: int,
         discount_percentage: int,
+        streak_tier: int = 0,
         username: Optional[str] = None,
         first_name: Optional[str] = None
     ) -> Optional[dict]:
@@ -602,6 +639,13 @@ class TriviaDiscountService:
                     if remaining <= 0:
                         logger.warning(f"trivia_discount_service - generate_tiered_discount_code - {user_id} - expired by duration")
                         return None
+
+                # NEW: Check tier pool availability BEFORE generating
+                if streak_tier > 0:
+                    tier_pool = self.get_tier_pool_status(config_id, streak_tier)
+                    if not tier_pool['available']:
+                        logger.info(f"Pool exhausted for tier {streak_tier}")
+                        return None  # Silent skip
 
                 # Verificar códigos disponibles
                 available = config.max_codes - config.codes_claimed
