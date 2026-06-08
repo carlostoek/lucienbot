@@ -9,11 +9,11 @@ import logging
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
+from keyboards.callback_data import ReactionCallback
 from keyboards.inline_keyboards import (
     back_keyboard,
     reactions_keyboard_with_counts,
 )
-from middlewares.idempotency import idempotency_cache
 from services.besito_service import BesitoService
 from services.broadcast_service import BroadcastService
 from services.daily_gift_service import DailyGiftService
@@ -40,11 +40,11 @@ async def show_balance(callback: CallbackQuery):
 
 <i>Permíteme consultar los fragmentos de atención que ha acumulado...</i>
 
-💋 <b>Tu saldo de besitos:</b> {stats['balance']}
+💋 <b>Tu saldo de besitos:</b> {stats["balance"]}
 
 📊 <b>Estadísticas:</b>
-   • Total acumulado: {stats['total_earned']}
-   • Total gastado: {stats['total_spent']}
+   • Total acumulado: {stats["total_earned"]}
+   • Total gastado: {stats["total_spent"]}
 
 <i>Diana aprecia cada momento de su atención...</i>"""
 
@@ -189,8 +189,6 @@ async def claim_daily_gift(callback: CallbackQuery):
 
 # ==================== REACCIONES A BROADCAST ====================
 
-from keyboards.callback_data import ReactionCallback
-
 
 @router.callback_query(ReactionCallback.filter())
 async def handle_reaction(callback: CallbackQuery, callback_data: ReactionCallback):
@@ -199,11 +197,7 @@ async def handle_reaction(callback: CallbackQuery, callback_data: ReactionCallba
     broadcast_id = callback_data.broadcast_id
     emoji_id = callback_data.emoji_id
 
-    # Verificar si este callback ya fue procesado (previene duplicados por reintentos de Telegram)
-    if idempotency_cache.is_duplicate(callback.id):
-        await callback.answer()
-        return
-
+    # Idempotency / dedup now handled globally by IdempotencyMiddleware (gsd-mw-hardening phase 5 cleanup)
     broadcast_service = BroadcastService()
     try:
         reaction = await broadcast_service.check_and_register_reaction(
@@ -249,4 +243,3 @@ async def handle_reaction(callback: CallbackQuery, callback_data: ReactionCallba
             await callback.answer("Ya reaccionaste a este mensaje", show_alert=True)
     finally:
         broadcast_service.close()
-
