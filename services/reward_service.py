@@ -19,12 +19,28 @@ from utils.lucien_voice import LucienVoice
 logger = logging.getLogger(__name__)
 
 
+def get_reward_emoji(reward: Reward) -> tuple[str, str]:
+    """Retorna (emoji, description) según tipo de recompensa. Función pura (sin estado ni side-effects)."""
+    if reward.reward_type == RewardType.BESITOS:
+        return "💋", f"{reward.besito_amount} besitos"
+    elif reward.reward_type == RewardType.PACKAGE:
+        return "📦", f"Paquete exclusivo: {reward.name}"
+    elif reward.reward_type == RewardType.VIP_ACCESS:
+        return "👑", f"Acceso VIP: {reward.name}"
+    return "🎁", ""
+
+
 class RewardService:
     """Servicio para gestion de recompensas"""
 
     def __init__(self, db: Session = None):
+        self._owns_session = db is None
         self.db = db or SessionLocal()
-        self.besito_service = BesitoService(self.db)
+        # Held direct BesitoService composition removed (Item 5 / reduce via EventBus pattern).
+        # BESITOS reward delivery now uses local on-demand BesitoService(db=self.db) *only*
+        # inside _deliver_besitos (preserves atomicity: credit's internal commit + MISSION tx source
+        # + log_reward_delivery + return msg all unchanged; best-effort schedule_emit still fires).
+        # Package + VIP remain held (scope: other composers untouched for now).
         self.package_service = PackageService(self.db)
         self.vip_service = VIPService(self.db)
 
@@ -105,15 +121,10 @@ class RewardService:
 
     # ==================== UI HELPERS ====================
 
+    # Backward-compatible delegate added for Item 2 (arch-enforcer 1-service rule for reward handlers).
     def get_reward_emoji(self, reward: Reward) -> tuple[str, str]:
-        """Retorna (emoji, description) según tipo de recompensa"""
-        if reward.reward_type == RewardType.BESITOS:
-            return "💋", f"{reward.besito_amount} besitos"
-        elif reward.reward_type == RewardType.PACKAGE:
-            return "📦", f"Paquete exclusivo: {reward.name}"
-        elif reward.reward_type == RewardType.VIP_ACCESS:
-            return "👑", f"Acceso VIP: {reward.name}"
-        return "🎁", ""
+        """Retorna (emoji, description) según tipo de recompensa. Delegate a la función pura top-level para mantener compatibilidad."""
+        return get_reward_emoji(reward)
 
     # ==================== ACTUALIZACION Y ELIMINACION ====================
 
@@ -203,8 +214,11 @@ class RewardService:
             return False, f"Error al entregar recompensa: {str(e)}"
 
     async def _deliver_besitos(self, user_id: int, reward: Reward) -> tuple[bool, str]:
-        """Entrega recompensa de besitos"""
-        success = self.besito_service.credit_besitos(
+        """Entrega recompensa de besitos (local BesitoService on-demand with shared db for atomicity)."""
+        besito_service = BesitoService(
+            db=self.db
+        )  # local, on-demand; owns=False (db shared); credit commits internally as before
+        success = besito_service.credit_besitos(
             user_id=user_id,
             amount=reward.besito_amount,
             source=TransactionSource.MISSION,
@@ -213,7 +227,7 @@ class RewardService:
         )
 
         if success:
-            balance = self.besito_service.get_balance(user_id)
+            balance = besito_service.get_balance(user_id)
             return True, f"Has recibido {reward.besito_amount} besitos! Tu saldo es: {balance}"
         else:
             return False, "Error al acreditar besitos"
@@ -323,15 +337,45 @@ Haz clic para activar tu membresia VIP.""",
         }
 
     def close(self):
-        """Cierra la sesion de base de datos y servicios asociados"""
-        if hasattr(self, "db"):
+        """Cierra la sesión de base de datos si fue creada por este servicio."""
+        if self._owns_session and self.db:
             self.db.close()
-        if hasattr(self, "besito_service"):
-            self.besito_service.close()
-        if hasattr(self, "vip_service"):
-            self.vip_service.close()
+            self.db = None
+        # Cerrar subs (inofensivo: ellos tienen owns=False cuando db compartido)
+        for sub in (
+            getattr(self, "besito_service", None),
+            getattr(self, "package_service", None),
+            getattr(self, "vip_service", None),
+        ):
+            if sub and hasattr(sub, "close"):
+                sub.close()
 
-    def __del__(self):
-        """Cierra la sesion de base de datos"""
-        if hasattr(self, "db"):
-            self.db.close()
+
+# =============================================================================
+# Cross-domain event listeners (registered explicitly from bot.py on startup).
+# The listener lives here (rewards domain ownership). It is a plain async callable
+# receiving the standard payload dict. It MUST NOT call back into credit/debit besitos
+# (to avoid any re-entrancy with deliver paths or future extensions; delivery contracts
+# and partial-failure behavior are authoritative in the credit + log_reward_delivery flow).
+# This is observational only (best effort; errors swallowed by bus).
+# =============================================================================
+
+
+async def on_besitos_awarded_rewards_observer(payload: dict) -> None:
+    """
+    Rewards-domain listener for "besitos_awarded" events (emitted by BesitoService.credit_besitos
+    post-commit, including from MISSION reward deliveries in _deliver_besitos).
+
+    DESIRED CONTRACT (copy of narrative precedent): log reception with full context (user_id/amount/source/ref);
+    purely observational + wiring proof for this domain. MUST NOT credit, debit, or mutate besitos state here.
+    Future extensions (e.g. stats, hints tied to awards) belong in this module and should use
+    get_service(RewardService) or direct models if a fresh DB session is required.
+    """
+    uid = payload.get("user_id")
+    amt = payload.get("amount")
+    src = payload.get("source")
+    ref = payload.get("reference_id")
+    logger.info(
+        f"rewards | besitos_awarded_received | user_id={uid} | amount={amt} | source={src} | ref={ref}"
+    )
+    # No side effects that mutate besitos here (best effort, non-authoritative; 0 impact on deliver_reward contracts).
