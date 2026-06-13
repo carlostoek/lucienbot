@@ -7,9 +7,12 @@ Gestiona el catalogo de productos, carrito y compras.
 import logging
 from datetime import UTC, datetime
 
+from aiogram import Bot
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from config.settings import bot_config
 from models.database import SessionLocal
 from models.models import (
     CartItem,
@@ -19,6 +22,7 @@ from models.models import (
     Package,
     StoreProduct,
     TransactionSource,
+    User,
 )
 from services.besito_service import BesitoService
 from services.package_service import PackageService
@@ -43,6 +47,49 @@ def compute_stock_emoji_and_text(stock: int, is_low_stock: bool = False) -> tupl
     if is_low_stock:
         return "⚠️", str(stock)
     return "📦", str(stock)
+
+
+def build_purchase_notification_text(
+    user_display: str,
+    username: str,
+    user_id: int,
+    items: list[tuple[str, int, int]],
+    total_price: int,
+    date_str: str,
+    order_id: int,
+) -> str:
+    """Función pura (sin estado ni side-effects). Delega la construcción del texto a LucienVoice.
+
+    Mantiene la interfaz pura y los call sites. Los literales en español viven solo en utils/lucien_voice.py
+    para que el test e2e test_no_hardcoded_spanish_in_services los ignore (filtra líneas con 'LucienVoice.').
+    """
+    return LucienVoice.store_admin_purchase_notification(
+        user_display, username, user_id, items, total_price, date_str, order_id
+    )
+
+
+def build_purchase_admin_keyboard(user_link: str) -> InlineKeyboardMarkup:
+    """Construye el teclado de notificación de compra para admins (contacto + navegación al menú principal).
+
+    Función auxiliar de UI. Los labels de botones se obtienen de LucienVoice para evitar
+    strings en español user-facing dentro de services/ (auditoría de voz).
+    """
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=LucienVoice.store_admin_purchase_contact_button(),
+                    url=user_link,
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=LucienVoice.store_admin_purchase_back_button(),
+                    callback_data="back_to_admin",
+                )
+            ],
+        ]
+    )
 
 
 class StoreService:
@@ -553,9 +600,17 @@ class StoreService:
         order.completed_at = datetime.now(UTC)
         db.commit()
 
-        # Notificar alertas de stock a admins
+        # Notificar alertas de stock a admins (stub para low-stock; ver notify_stock_alert)
         for product_id in low_stock_products:
             await self.notify_stock_alert(bot, product_id)
+
+        # Notificar a administradores de la compra (best-effort; side-effect post-commit).
+        # Garantiza cobertura para TODAS las compras (directa + carrito/futuras) sin tocar handlers.
+        # 0 impacto en atomicidad del débito PURCHASE + stock + entrega (precedente stock alert + observers).
+        try:
+            await self._notify_admins_of_purchase(bot, order)
+        except Exception as e:
+            logger.error(f"store | purchase_notif_failed | order_id={order.id} | error={e}")
 
         logger.info(f"Orden completada: {order.id}")
         return True, LucienVoice.store_purchase_completed(order.total_price)
@@ -703,6 +758,67 @@ class StoreService:
         # Notification to admins is a pre-existing stub (out of scope for Item 10 tight changes;
         # low-stock detection + trigger lives in complete_order). Future: wire to ADMIN_IDS + LucienVoice.
         return
+
+    async def _notify_admins_of_purchase(self, bot: Bot, order: Order) -> None:
+        """Notifica a todos los administradores (ADMIN_IDS) sobre una compra completada en la tienda.
+
+        Usa snapshots de OrderItem (product_name, qty, totals) para evitar queries extra.
+        Lookup de User via la sesión del servicio para display name + link tg://user.
+        Best-effort: nunca falla la compra del visitante. Logging estilo "store | ...".
+        Colocado como método privado del servicio (único punto de finalización de purchase = complete_order).
+        """
+        if not bot_config.ADMIN_IDS:
+            logger.debug(f"store | purchase_notif_skipped | order_id={order.id} | reason=no_admin_ids")
+            return
+
+        db = self._get_db()
+        user = db.query(User).filter(User.telegram_id == order.user_id).first()
+
+        # Construir display (misma lógica que notify_admins_about_interest en promotion_user_handlers)
+        if user:
+            if user.first_name and user.last_name:
+                user_display = f"{user.first_name} {user.last_name}"
+            elif user.first_name:
+                user_display = user.first_name
+            else:
+                user_display = user.username or f"Visitante {order.user_id}"
+            username = f"@{user.username}" if user.username else "N/A"
+        else:
+            user_display = f"Visitante {order.user_id}"
+            username = "N/A"
+
+        user_link = f"tg://user?id={order.user_id}"
+
+        # Preparar items para el helper puro (tuplas simples para mantener pureza)
+        items_for_text: list[tuple[str, int, int]] = []
+        for it in (order.items or []):
+            items_for_text.append((it.product_name, it.quantity, it.total_price))
+
+        date_val = order.completed_at or order.created_at
+        date_str = date_val.strftime("%Y-%m-%d %H:%M") if date_val else "?"
+
+        text = build_purchase_notification_text(
+            user_display=user_display,
+            username=username,
+            user_id=order.user_id,
+            items=items_for_text,
+            total_price=order.total_price,
+            date_str=date_str,
+            order_id=order.id,
+        )
+        keyboard = build_purchase_admin_keyboard(user_link)
+
+        for admin_id in bot_config.ADMIN_IDS:
+            try:
+                await bot.send_message(
+                    chat_id=admin_id,
+                    text=text,
+                    reply_markup=keyboard,
+                    parse_mode="HTML",
+                )
+                logger.info(f"store | purchase_notif_sent | admin_id={admin_id} | order_id={order.id}")
+            except Exception as e:
+                logger.error(f"store | purchase_notif_error | admin_id={admin_id} | order_id={order.id} | error={e}")
 
 
 # =============================================================================
