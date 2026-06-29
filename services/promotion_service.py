@@ -5,8 +5,14 @@ Gestiona promociones comerciales con precio en dinero real (MXN)
 y el sistema de "Me Interesa" para notificar a administradores.
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from models.models import Package
 
 from sqlalchemy import and_, asc, desc
 from sqlalchemy.orm import Session
@@ -19,6 +25,7 @@ from models.models import (
     PromotionInterest,
     PromotionStatus,
 )
+from utils.lucien_voice import LucienVoice
 
 logger = logging.getLogger(__name__)
 
@@ -182,6 +189,16 @@ class PromotionService:
         """Reactiva una promocion pausada"""
         return self.update_promotion(promotion_id, status=PromotionStatus.ACTIVE)
 
+    # Support added for promotion_admin_handlers 1-service + pure extract (item 2/35).
+    # Arch-enforcer long-funcs + multi-service note addressed. Precedent item 8/9/34.
+    def get_available_packages_for_promo_wizard(self) -> list[Package]:
+        """Thin delegate to PackageService.get_all_packages().
+        Added for item 2/35: enables promotion_admin_handlers package selection in promo wizard to call exactly 1 service (PromotionService) per handlers/CLAUDE + arch rules.
+        Not core CRUD. 0 behavior change. Precedent item 8/9/34.
+        """
+        from services.package_service import PackageService
+        return PackageService(db=self._get_db()).get_all_packages()
+
     # ==================== SISTEMA "ME INTERESA" ====================
 
     def is_user_blocked(self, user_id: int) -> bool:
@@ -255,15 +272,15 @@ class PromotionService:
         if self.is_user_blocked(user_id):
             blocked_info = self.get_blocked_user_info(user_id)
             reason = blocked_info.reason if blocked_info else "Razon no especificada"
-            return False, f"No puedes expresar interes. Razon: {reason}", None
+            return False, LucienVoice.promotion_blocked(reason), None
 
         # Verificar si la promocion existe y esta disponible
         promotion = self.get_promotion(promotion_id)
         if not promotion:
-            return False, "Promocion no encontrada", None
+            return False, LucienVoice.promotion_not_found(), None
 
         if not promotion.is_available:
-            return False, "Esta promocion no esta disponible actualmente", None
+            return False, LucienVoice.promotion_unavailable(), None
 
         # Verificar si ya expreso interes (con lock para evitar race conditions)
         existing = (
@@ -275,7 +292,7 @@ class PromotionService:
             .first()
         )
         if existing:
-            return False, "Ya has expresado interes en esta promocion", None
+            return False, LucienVoice.promotion_already_interested(), None
 
         # Crear el registro de interes
         interest = PromotionInterest(
@@ -291,7 +308,7 @@ class PromotionService:
         db.refresh(interest)
 
         logger.info(f"Usuario {user_id} expreso interes en promocion {promotion_id}")
-        return True, "Interes registrado correctamente", interest
+        return True, LucienVoice.promotion_interest_registered(), interest
 
     def get_interest(self, interest_id: int) -> PromotionInterest | None:
         """Obtiene un registro de interes por ID"""

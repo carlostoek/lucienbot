@@ -323,3 +323,168 @@ Resultado:
 
 Pool anterior de 4 cerrado (tests passing per user). Nuevo pool de 4 iniciado. Quedan ~2-4 clusters del análisis inicial después de este pool.
 "Item 11/29 closed. Third of new pool of 4. ... Ready for arch-enforcer re-scan (enfocado en health checks + endpoint + admin views + no impact on 3 crit) + test-guardian (correr los tests críticos listados) + documentador (for final ROADMAP update) + gsd-executor del siguiente item del pool de 4."
+
+---
+
+## Channel admin hardening — security, real Telegram grant, custom messages, individual pending (Phase 30 / Item 12)
+
+**Motivo:**
+- Project Feature Advisor identificó fragilidades en administración de canales: solo `admin_channels` verificaba `is_admin`; wait time "custom" sin FSM; `approve_all_pending` solo mutaba BD sin `approve_chat_join_request`; botones de mensajes sin handler; lista de pendientes solo lectura.
+- Sistema crítico #3 (canales Free/VIP: pending → approve → welcome → scheduler) requiere grant real en Telegram y lógica centralizada compartida con el scheduler.
+- User aprobó scope ítems #1, #2, #4, #5, #6 del análisis.
+
+**Riesgos (mitigados):**
+- Regresión scheduler al extraer grant → delegación a `channel_grant.py` sin cambiar orden commit/rollback; gold tests scheduler verdes.
+- Flip contrato bulk approve → test integración actualizado en misma entrega.
+- ID duality (DB PK vs Telegram chat ID) → documentado en grant helper + CLAUDE + asserts en tests.
+- IDOR en approve/reject individual → `get_valid_pending_request` valida pertenencia al canal.
+- HTML en mensajes custom → escape en previews + fallback Lucien default en send.
+
+**Decisión:**
+- Nuevo `services/channel_grant.py` con `grant_pending_request`, `reject_pending_request`, puros `resolve_channel_message` / `build_welcome_payload`.
+- `ChannelService`: métodos async `approve_pending_now`, `reject_pending_now`, `approve_all_pending_now`; update mensajes; `get_valid_pending_request`.
+- `scheduler_service._process_pending_requests` delega al grant helper (0 duplicación).
+- `channel_handlers.py`: `is_admin` en todos los callbacks admin + guards FSM; FSM wait custom (1–1440); editor approval/welcome; lista pendientes paginada (8/página) con approve/reject individual; exactly 1 `get_service(ChannelService)` por entrypoint.
+- `free_channel_handlers.py`: resolver mensajes custom en welcome manual.
+- Callbacks tipados en `callback_data.py`; voz Lucien en `lucien_voice.py`.
+
+---
+## Adaptación de la regla VIP "siempre via Token" + base técnica para grants internos (2026-06)
+
+**Motivo:**
+- La regla estricta documentada en services/vip/CLAUDE.md ("No existe 'agregar/quitar VIP directo' — siempre via Token → Subscription") obliga a generar Tokens sintéticos (inmediatamente USED) para todos los grants internos (misiones VIP, paquetes VIP en tienda, forward admin).
+- Esto genera overhead (ruido en tabla tokens, acoplamiento tariff info solo vía token en Subscription, queries frágiles, metadata de workarounds para resends/idempotencia, fallback deep-link leakage).
+- El sistema evolucionó: la mayoría de grants son programáticos (no distribución manual). Reward/StoreProduct ya usan tariff_id directo; Subscription no.
+- Usuario pidió análisis de impacto + plan mínimo para relajar la regla y **sentar base técnica + convención explícita** para que todo desarrollo futuro (misiones, etc.) tenga un camino claro sin repetir el workaround de grant_vip_from_tariff.
+
+**Riesgos (mitigados):**
+- Romper flujo manual de tokens o contratos atómicos de redeem (FOR UPDATE, extensión, EVENT post-commit).
+- Pérdida de trazabilidad/audit para grants internos (mit: tariff_id directo + metadata existente en claims/fulfillments + opción de token opcional para fallback).
+- Inconsistencia en queries/display (backpack, listas) (mit: prefer direct + fallback).
+- Migración + datos existentes (mit: columna nullable + backfill).
+
+**Decisión:**
+- Modelo: agregar `tariff_id` (nullable) + rel a Subscription (models/models.py). Mantener token_id para manual.
+- Migración Alembic nueva (20260624_...) + backfill desde token.
+- VIPService: 
+  - redeem actualiza/establece tariff_id (token path).
+  - Nuevo `grant_internal_vip_access(user_id, tariff_id)` para grants directos (sin token forzado; misma atomicidad + emit).
+  - grant_vip_from_tariff se mantiene para compat (casos que necesitan token_code).
+  - Queries (get_active_*, etc.) cargan tariff directo + token fallback.
+- Callers internos migran (o usan) el nuevo path: reward, fulfillment, forward (forward mantiene from_tariff por necesidad de fallback code).
+- Backpack y lecturas actualizadas para usar tariff_id preferente.
+- Docs: actualizar services/vip/CLAUDE.md con convención clara (manual = Token; interno = direct Tariff). Añadir entry en decisions.md. Sincronizar otros CLAUDE.
+- Tests: cubrir nuevo path (sin token sintético para interno, tariff visible), re-correr golds (0 reg en manual + atomic).
+
+**Resultado:**
+- Base técnica sentada: patrón "interno = direct tariff" documentado y con helper + campo en modelo.
+- Futuros grants (nuevas misiones, admin tools, etc.) siguen el camino sin esfuerzo extra ni tokens fantasma.
+- Flujo manual 100% intacto.
+- 0 impacto en atomicidad, EventBus, is_user_vip, scheduler, 3 crit.
+- Ver plan.md en sesión para detalles de ejecución + verificación (golds, mig up/down, smoke).
+
+(Ver plan en /.../plan.md de esta sesión + impacto analysis previo.)
+
+Pool anterior de 4 cerrado (tests passing per user). Nuevo pool de 4 iniciado. Quedan ~2-4 clusters del análisis inicial después de este pool.
+- Status `"rejected"` para rechazo admin (sin migración Alembic; cabe en `String(20)`).
+- Tests: `test_channel_grant.py`, `test_channel_admin_handlers.py`, extensiones `test_channel_service.py`, flip contrato en `test_free_entry_flow.py`.
+
+**Resultado:**
+- Custodios pueden operar canales con seguridad (guards), wait custom, mensajes ritual/welcome personalizados, aprobar/rechazar individual o en masa con efecto real en Telegram.
+- Grant centralizado; scheduler y admin comparten la misma orquestación.
+- 66+ tests canal green; smoke broader 114p (1 pre daily concurrent flake doc non-reg).
+- Docs: `services/channels/CLAUDE.md`, `30-channel-admin-hardening-SUMMARY.md`, HARDENING_ROADMAP Phase 30, `handlers/CLAUDE.md` patrón channel admin.
+- 0 impact gamificación/narrativa; sistema crítico #3 protegido y reforzado.
+- Handoff: "Phase 30 channel admin hardening closed (tests passing)."
+
+---
+
+## Store Fulfillment Catalog — grant_node_access + discount atomicity (Phase 31)
+
+**Motivo:**
+- Catálogo Kinky requiere post-commit fulfillment sin doble cobro de descuentos.
+- `grant_node_access` debe ser idempotente y sin debit besitos.
+
+**Decisión:**
+- Descuento `StorePrivilege` se aplica **una sola vez** en `complete_order` (FOR UPDATE + `consume_active_discount`).
+- Órdenes guardan precio lista; UI usa `get_effective_price`.
+- `StoryService.grant_node_access` otorga nodo sin debit ni avance de historia principal.
+- Fulfillment AUTO kinds (`early_access`, `waitlist`, etc.) entran `AUTO_IN_PROGRESS` aunque `delivery_mode=MANUAL`.
+- Re-entrada idempotente de `complete_order` re-dispara post-commit si fulfillments incompletos.
+
+**Resultado:**
+- Ventaja Kinky y La Lista despachan correctamente; caps mensuales re-verificados bajo lock.
+
+---
+
+## Observability + health docs hygiene (Item 4/34, fourth of new pool of 4)
+
+**Motivo:**
+- Inconsistent structured logging (not everywhere per root CLAUDE "módulo | acción | user_id | resultado" rule; sparse outside health/story etc).
+- /health spike from Item 11/29 needed verification + hygiene post pool 33 (tests-only reality work).
+- Docs drift: handlers/CLAUDE.md "Ejemplo Correcto" still showed legacy `with get_session() as session: service = BesitoService(session)` while hardener (tirones 25-33/Items7-11) + code use `with get_service(XXX) as svc:` + 1 call + puros + integration style (real svc + class patch).
+
+**Riesgos (mitigados):**
+- None (tight 0/0/0 hygiene + spike verify only; logs added alongside or aligned, no tx/atomic change; targeted to middlewares + health + 1 core sample; re-runs of golds protect 3 crit + contracts; no writes to gamif/narr/channel-VIP paths).
+
+**Decisión:**
+- F2: structured logging hygiene (copy HealthService format al pie) for rate_limiter (limit hit, bypass, cleanup), idempotency (dupe/skip), besito credit/debit alongside, health verify+align.
+- F3: exercise python -m scripts.health_check [--json|--verbose]; bot smoke; verify core checks (DB/bot/channels/bus/scheduler + critical_sanity) + best-effort/read-only (grep 0 mutation) in health_service.get_overall_status.
+- F4: replace drifted example in handlers/CLAUDE.md with current get_service + 1svc; update Reglas + hardener pattern section with refs to puros/integration/Items 7-11/pool33 + logging enforcement; append this Item 4/34 entry to decisions.md (mirror style + pool phrase + handoff); optional 1-line cross in services/CLAUDE for traceability.
+- GSD pre every edit/gate; ruff/greps post; leverages Item11/29 HealthService precedent al pie (read-only/best-effort, Analytics pattern, logging, get_service 1 call + is_admin, Lucien voice, 0 impact).
+- Follows hardener agile: pool of 4, self-check PASSED + verbatim pool phrase at close.
+
+**Resultado:**
+- Logging format now enforced in observability paths + middlewares + sample critical (greps post: rate 5, idemp 2, besito +2, health 15+; overall format count increased).
+- /health verified working (terminal script + bot import + get_service); core checks present and best-effort (degraded/unknown expected when no bot/scheduler/backups; db/channels/sanity ok).
+- handlers/CLAUDE.md docs 1:1 reality (get_service example, rules reference 1svc/get_service/puros/integration + hardener refs + logging note; 0 get_session in active code examples).
+- decisions.md + (if) services/CLAUDE updated for traceability.
+- ruff clean on py touched (pre-exist idemp E402 etc non-reg); greps "with get_service" + "1 service" + "puros" + "get_session" (0 in runtime, fixed in docs).
+- 0 behavior/0 atomicity/0 prod change; 3 crit + atomicity/EventBus/get_service contracts 0 impact (re-runs + greps only).
+- UI 1:1 Lucien preserved (health renders unchanged).
+- F4 safe point. Ready for F5 gates (arch/testg re-runs ruff bot-smoke greps) + F6 self-check PASSED + handoff.
+- "Item 4/34 closed. Fourth of new pool of 4. Pool anterior de 4 cerrado (tests passing per user). Nuevo pool de 4 iniciado. Quedan ~2-4 clusters del análisis inicial después de este pool. Ready for arch-enforcer + test-guardian + documentador (final pool close + ROADMAP update)."
+
+(Refs: .planning/phases/34-observability-health-docs/PLAN.md + gsd-34-observability-health-docs.log + 29-observability-health + HARDENING_ROADMAP sec5 + pool33 + health_service.py + handlers/CLAUDE.md + services/CLAUDE.md)
+
+## Expand EventBus + structured logging coverage (Item 3/35, third of new pool of 4)
+
+**Motivo:**
+- Expand EventBus coverage with high-value purely observational listeners (e.g. streak promo for award receipt logging/stats per impact + precedents).
+- Align structured logging "módulo | acción | user_id=... | resultado=..." (copy health_service + pool34 item4 hygiene al pie) in besito emitter (credit/debit/_schedule paths) + touched files.
+- Update central explicit reg in bot.py + comments with "+ Item 3/35".
+- Extend test_event_bus + caplog assertions; port hygiene.
+- Re-run golds protecting atomicity/EventBus contracts + 3 crit. 0 behavior/0 atomicity/0 prod change.
+- Builds on Item1/5/6/10 (eventbus + locals + obs listeners), Item11 health logging, pool34 hygiene.
+
+**Riesgos (mitigados):**
+- New listener accidentally mutates (re-entrancy). Mit: copy template verbatim ("MUST NOT credit, debit, or mutate besitos state here" + DESIRED + best-effort + F1 analysis only safe obs + greps/tests assert no credit calls in listener).
+- Logging change affects parsing. Mit: exact format copy + hygiene only on touched (besito + listener).
+- Reg order/duplicate. Mit: explicit central block update; bot smoke + health check.
+- Test caplog brittle. Mit: exact substring match as precedents.
+- LOW overall (mature EventBus precedent; obs-only; golds protect).
+
+**Decisión:**
+- F1 prep: reads/greps/ruff/golds baseline on listeners/emit/logs/"MUST NOT"/schedule_emit + current reg (5 besitos); confirm streak/promo safe obs-only (streak debit only, no credit path).
+- F2: add 1 high-value obs listener in services/streak_promotion_service.py (copy exact template + "streak | besitos_awarded_received" + Item 3/35 comment; 0 mutation).
+- F3: align structured in besito_service (credit/debit/_schedule to full "besito_service | ... | user_id=... | ... result=..."; remove plain; arch comment; touched streak already good).
+- F4: bot.py import + register + extend comment ("... + Item 3/35 ...") + logger.info (now 6 besitos regs + "; + Item 3/35 logging expansion").
+- F5: extend tests/unit/test_event_bus.py (new test_streak..._per_item3_35 with caplog + import inside); no other 1-line needed (F1 no held exposed).
+- F6: ruff (preexist only); exact golds re-runs (all green 0 attrib reg); bot smoke + manual reg+emit; greps (0 held in new, MUST NOT + logs + Item 3/35 + reg=6 + patch schedule_emit + DESIRED exercised in cross).
+- GSD pre every; copy al pie listener template/"MUST NOT"/DESIRED/logging/central reg/patch atomic golds; decisions append + self-check at F7.
+- 3 crit always protected (obs only + greps/golds); 0/0/0.
+
+**Resultado:**
+- 1 safe obs listener added (streak); logging aligned in besito (structured primary, Item 3/35 comment); bot reg updated to 6 + comments.
+- test_event_bus extended with caplog for streak + "Item 3/35".
+- All exact golds: event_bus/cross (24p), reaction/daily (57p), besito/health/listener (474p), broader smoke (1003p) green; 0 attributable regressions (xf preexist only).
+- Ruff: preexist only (lazy imports conv in tests/lazy, N806 gold tol, long pre in bot/streak etc).
+- Greps: 0 held in streak (only local debit for protection), listeners MUST NOT verbatim, domain logs, bot reg 6 + Item 3/35, format, schedule_emit in atomicity gold, patch/DESIRED/"credit survives deliver False"/"post-credit best effort (misiones + listeners)" exercised.
+- Bot smoke + manual reg/emit ok; health check_event_bus_listeners will report +1.
+- 0 behavior/0 atomicity/0 prod/0 mutation on 3 crit (gamif/narr/channels-VIP) or contracts (EventBus/get_service/atomicity protected by golds + "MUST NOT").
+- GSD log: .planning/quick/gsd-35-eventbus-logging-expansion.log (30+ entries, pre every + wc).
+- decisions.md + PLAN + gsd + (post) SUMMARY/ROADMAP via documentador.
+- F6 safe point. F7 self-check PASSED + handoff.
+- "Item 3/35 closed. Third of new pool of 4. Pool anterior de 4 cerrado (tests passing per user). Nuevo pool de 4 iniciado. Quedan ~2-4 clusters del análisis inicial después de este pool. Ready for arch-enforcer + test-guardian + documentador (final pool close + ROADMAP update)."
+
+(Refs: .planning/phases/35-eventbus-logging-expansion/PLAN.md + gsd-35-eventbus-logging-expansion.log + impact excerpts + HARDENING_ROADMAP pool34 + 23/24/28/29/34 precedents + services/event_bus.py + bot.py + besito/health + listeners in story/reward/broadcast/game/store/streak + tests/unit/test_event_bus.py + golds cross/reaction etc.)

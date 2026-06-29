@@ -8,18 +8,28 @@ import logging
 
 from aiogram import Bot, F, Router
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from keyboards.callback_data import (
+    BackpackActivateVipCallback,
     BackpackDeliverCallback,
+    BackpackFulfillmentRetryCallback,
     BackpackPurchaseDetailCallback,
     BackpackPurchasesPageCallback,
+    BackpackReadChapterCallback,
+    BackpackSubmitInputCallback,
     BackpackRewardDetailCallback,
     BackpackRewardsPageCallback,
+    BackpackViewWaitlistCallback,
 )
+from keyboards.inline_keyboards import vip_access_keyboard
+from services import get_service
+from handlers.states.store_fulfillment_states import BackpackInputStates
 from services.backpack_service import BackpackService
-from services.vip_service import VIPService
+from services.story_service import StoryService
+from utils.admin import is_admin
 from utils.lucien_voice import LucienVoice
 
 logger = logging.getLogger(__name__)
@@ -185,28 +195,91 @@ def build_reward_detail_keyboard(reward: dict) -> InlineKeyboardMarkup:
 def build_purchase_detail_keyboard(purchase: dict) -> InlineKeyboardMarkup:
     """Construye el keyboard de detalle de compra"""
     keyboard_buttons = []
+    actions = purchase.get("actions_available") or []
+    fulfillment_id = purchase.get("fulfillment_id")
 
-    if purchase.get("package_id"):
+    if "retry_delivery" in actions and fulfillment_id:
         keyboard_buttons.append(
             [
                 InlineKeyboardButton(
-                    text="📂 Ver Contenido",
-                    callback_data=BackpackDeliverCallback(package_id=purchase["package_id"]).pack(),
+                    text=LucienVoice.backpack_fulfillment_retry_button(),
+                    callback_data=BackpackFulfillmentRetryCallback(
+                        fulfillment_id=fulfillment_id
+                    ).pack(),
                 )
             ]
         )
-
+    if "resend_vip_invite" in actions and fulfillment_id:
+        keyboard_buttons.append(
+            [
+                InlineKeyboardButton(
+                    text=LucienVoice.backpack_fulfillment_resend_vip_invite_button(),
+                    callback_data=BackpackActivateVipCallback(
+                        fulfillment_id=fulfillment_id
+                    ).pack(),
+                )
+            ]
+        )
+    package_kinds = {"package", "package_deferred"}
+    if (
+        purchase.get("fulfillment_kind") in package_kinds
+        and purchase.get("fulfillment_status") == "fulfilled"
+    ):
+        package_id = purchase.get("package_id") or (purchase.get("auto_result") or {}).get(
+            "package_id"
+        )
+        if package_id:
+            keyboard_buttons.append(
+                [
+                    InlineKeyboardButton(
+                        text="📂 Ver Contenido",
+                        callback_data=BackpackDeliverCallback(package_id=package_id).pack(),
+                    )
+                ]
+            )
+    if "submit_input" in actions and fulfillment_id:
+        keyboard_buttons.append(
+            [
+                InlineKeyboardButton(
+                    text=LucienVoice.fulfillment_input_submit_button(),
+                    callback_data=BackpackSubmitInputCallback(
+                        fulfillment_id=fulfillment_id
+                    ).pack(),
+                )
+            ]
+        )
+    if "read_chapter" in actions and fulfillment_id:
+        keyboard_buttons.append(
+            [
+                InlineKeyboardButton(
+                    text=LucienVoice.backpack_fulfillment_read_chapter_button(),
+                    callback_data=BackpackReadChapterCallback(
+                        fulfillment_id=fulfillment_id
+                    ).pack(),
+                )
+            ]
+        )
+    if "view_waitlist" in actions and fulfillment_id:
+        keyboard_buttons.append(
+            [
+                InlineKeyboardButton(
+                    text=LucienVoice.backpack_fulfillment_waitlist_button(),
+                    callback_data=BackpackViewWaitlistCallback(
+                        fulfillment_id=fulfillment_id
+                    ).pack(),
+                )
+            ]
+        )
     keyboard_buttons.append(
         [InlineKeyboardButton(text="🔙 Volver", callback_data="backpack_purchases")]
     )
-
     return InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
 
 
 # ==================== COMMAND ====================
 
 
-@router.message(Command("mochila"))
+@router.message(Command("mochila"), lambda m: not is_admin(m.from_user.id))
 async def cmd_mochila(message: Message, bot: Bot):
     """Muestra el menú principal de la mochila"""
     user_id = message.from_user.id
@@ -230,7 +303,7 @@ async def cmd_mochila(message: Message, bot: Bot):
 # ==================== CALLBACKS ====================
 
 
-@router.callback_query(F.data == "backpack_menu")
+@router.callback_query(F.data == "backpack_menu", lambda cb: not is_admin(cb.from_user.id))
 async def callback_backpack_menu(callback: CallbackQuery, bot: Bot):
     """Accede al menú de la mochila desde el menú principal"""
     user_id = callback.from_user.id
@@ -252,7 +325,7 @@ async def callback_backpack_menu(callback: CallbackQuery, bot: Bot):
         await callback.answer("Error al cargar la mochila", show_alert=True)
 
 
-@router.callback_query(F.data == "backpack_main")
+@router.callback_query(F.data == "backpack_main", lambda cb: not is_admin(cb.from_user.id))
 async def callback_backpack_main(callback: CallbackQuery, bot: Bot):
     """Vuelve al menú principal de la mochila"""
     user_id = callback.from_user.id
@@ -274,7 +347,7 @@ async def callback_backpack_main(callback: CallbackQuery, bot: Bot):
         await callback.answer("Error al cargar la mochila", show_alert=True)
 
 
-@router.callback_query(F.data == "backpack_rewards")
+@router.callback_query(F.data == "backpack_rewards", lambda cb: not is_admin(cb.from_user.id))
 async def callback_rewards(callback: CallbackQuery, bot: Bot):
     """Muestra lista de recompensas del usuario"""
     user_id = callback.from_user.id
@@ -298,7 +371,7 @@ async def callback_rewards(callback: CallbackQuery, bot: Bot):
         await callback.answer("Error al cargar recompensas", show_alert=True)
 
 
-@router.callback_query(BackpackRewardsPageCallback.filter())
+@router.callback_query(BackpackRewardsPageCallback.filter(), lambda cb: not is_admin(cb.from_user.id))
 async def callback_rewards_page(
     callback: CallbackQuery, callback_data: BackpackRewardsPageCallback
 ):
@@ -320,10 +393,10 @@ async def callback_rewards_page(
 
     except Exception as e:
         logger.error(f"backpack_handler | callback_rewards_page | user_id={user_id} | error={e}")
-        await callback.answer("Error al cargar página", show_alert=True)
+        await callback.answer(LucienVoice.backpack_page_load_error(), show_alert=True)
 
 
-@router.callback_query(F.data == "backpack_purchases")
+@router.callback_query(F.data == "backpack_purchases", lambda cb: not is_admin(cb.from_user.id))
 async def callback_purchases(callback: CallbackQuery, bot: Bot):
     """Muestra lista de compras del usuario"""
     user_id = callback.from_user.id
@@ -347,7 +420,7 @@ async def callback_purchases(callback: CallbackQuery, bot: Bot):
         await callback.answer("Error al cargar compras", show_alert=True)
 
 
-@router.callback_query(BackpackPurchasesPageCallback.filter())
+@router.callback_query(BackpackPurchasesPageCallback.filter(), lambda cb: not is_admin(cb.from_user.id))
 async def callback_purchases_page(
     callback: CallbackQuery, callback_data: BackpackPurchasesPageCallback
 ):
@@ -369,35 +442,17 @@ async def callback_purchases_page(
 
     except Exception as e:
         logger.error(f"backpack_handler | callback_purchases_page | user_id={user_id} | error={e}")
-        await callback.answer("Error al cargar página", show_alert=True)
+        await callback.answer(LucienVoice.backpack_page_load_error(), show_alert=True)
 
 
-@router.callback_query(F.data == "backpack_vip")
+@router.callback_query(F.data == "backpack_vip", lambda cb: not is_admin(cb.from_user.id))
 async def callback_vip(callback: CallbackQuery, bot: Bot):
     """Muestra membresías VIP activas"""
     user_id = callback.from_user.id
 
     try:
-        # Get VIP subscriptions via VIPService
-        vip_service = VIPService()
-        subscriptions = vip_service.get_active_subscriptions()
-        vip_service.close()
-
-        # Filter to user's subscriptions
-        user_subs = [s for s in subscriptions if s.user_id == user_id]
-
-        result = []
-        for sub in user_subs:
-            tariff_name = sub.token.tariff.name if sub.token and sub.token.tariff else "VIP"
-            result.append(
-                {
-                    "subscription_id": sub.id,
-                    "tariff_name": tariff_name,
-                    "start_date": sub.start_date,
-                    "end_date": sub.end_date,
-                    "is_active": sub.is_active,
-                }
-            )
+        with get_service(BackpackService) as backpack_service:
+            result = backpack_service.get_vip_subscriptions_for_backpack(user_id)
 
         text = LucienVoice.backpack_vip_list(result)
         keyboard = build_vip_keyboard(result)
@@ -413,7 +468,7 @@ async def callback_vip(callback: CallbackQuery, bot: Bot):
         await callback.answer("Error al cargar VIP", show_alert=True)
 
 
-@router.callback_query(BackpackRewardDetailCallback.filter())
+@router.callback_query(BackpackRewardDetailCallback.filter(), lambda cb: not is_admin(cb.from_user.id))
 async def callback_reward_detail(
     callback: CallbackQuery, callback_data: BackpackRewardDetailCallback
 ):
@@ -451,7 +506,7 @@ async def callback_reward_detail(
         await callback.answer("Error al cargar detalle", show_alert=True)
 
 
-@router.callback_query(BackpackPurchaseDetailCallback.filter())
+@router.callback_query(BackpackPurchaseDetailCallback.filter(), lambda cb: not is_admin(cb.from_user.id))
 async def callback_purchase_detail(
     callback: CallbackQuery, callback_data: BackpackPurchaseDetailCallback
 ):
@@ -476,17 +531,7 @@ async def callback_purchase_detail(
             await callback.answer("Compra no encontrada", show_alert=True)
             return
 
-        text = f"""🎩 <b>Lucien:</b>
-
-<i>El tesoro adquirido espera por usted...</i>
-
-📦 <b>Detalle de Compra</b>
-
-🏷️ Producto: {purchase["product_name"]}
-📅 Fecha: {purchase["purchased_at"].strftime("%d/%m/%Y") if purchase.get("purchased_at") else "N/A"}
-💰 Total: {purchase["total_price"]} besitos
-
-<i>Un tesoro valioso del reino de Diana.</i>"""
+        text = LucienVoice.backpack_purchase_detail(purchase)
 
         keyboard = build_purchase_detail_keyboard(purchase)
 
@@ -501,7 +546,141 @@ async def callback_purchase_detail(
         await callback.answer("Error al cargar detalle", show_alert=True)
 
 
-@router.callback_query(BackpackDeliverCallback.filter())
+@router.callback_query(
+    BackpackFulfillmentRetryCallback.filter(), lambda cb: not is_admin(cb.from_user.id)
+)
+async def callback_fulfillment_retry(
+    callback: CallbackQuery, callback_data: BackpackFulfillmentRetryCallback
+):
+    """Reintenta entrega PACKAGE desde mochila."""
+    with get_service(BackpackService) as backpack_service:
+        ok, msg = await backpack_service.retry_fulfillment_delivery(
+            callback.bot, callback.from_user.id, callback_data.fulfillment_id
+        )
+    toast = LucienVoice.backpack_fulfillment_toast_success(msg)
+    await callback.answer(toast[:200], show_alert=not ok)
+
+
+@router.callback_query(
+    BackpackActivateVipCallback.filter(), lambda cb: not is_admin(cb.from_user.id)
+)
+async def callback_resend_vip_invite(
+    callback: CallbackQuery, callback_data: BackpackActivateVipCallback
+):
+    """Reenvía enlace nativo de acceso VIP."""
+    with get_service(BackpackService) as backpack_service:
+        ok, msg = await backpack_service.resend_vip_invite_for_fulfillment(
+            callback.bot, callback.from_user.id, callback_data.fulfillment_id
+        )
+    if ok:
+        await callback.message.answer(
+            msg, reply_markup=vip_access_keyboard(), parse_mode="HTML"
+        )
+        await callback.answer()
+    else:
+        await callback.answer(msg, show_alert=True)
+
+
+@router.callback_query(
+    BackpackSubmitInputCallback.filter(), lambda cb: not is_admin(cb.from_user.id)
+)
+async def callback_submit_input_start(
+    callback: CallbackQuery, callback_data: BackpackSubmitInputCallback, state: FSMContext
+):
+    """Inicia FSM para enviar input pendiente desde mochila."""
+    with get_service(BackpackService) as backpack_service:
+        ok, msg = backpack_service.get_fulfillment_input_prompt(
+            callback.from_user.id, callback_data.fulfillment_id
+        )
+    if not ok:
+        await callback.answer(msg, show_alert=True)
+        return
+    await state.set_state(BackpackInputStates.awaiting_input)
+    await state.update_data(fulfillment_id=callback_data.fulfillment_id)
+    await callback.message.answer(msg, parse_mode="HTML")
+    await callback.answer()
+
+
+@router.message(BackpackInputStates.awaiting_input, F.text == "/cancel")
+async def cancel_backpack_input(message: Message, state: FSMContext):
+    """Cancela captura de input desde mochila."""
+    await state.clear()
+    await message.answer(LucienVoice.fulfillment_input_cancelled(), parse_mode="HTML")
+
+
+@router.message(BackpackInputStates.awaiting_input, lambda m: not is_admin(m.from_user.id))
+async def process_backpack_input(message: Message, state: FSMContext):
+    """Captura input del visitante para USER_INPUT_THEN_MANUAL desde mochila."""
+    data = await state.get_data()
+    fulfillment_id = data.get("fulfillment_id")
+    if not fulfillment_id:
+        await state.clear()
+        await message.answer(LucienVoice.store_order_not_found(), parse_mode="HTML")
+        return
+    await state.set_state(BackpackInputStates.validating)
+    with get_service(BackpackService) as backpack_service:
+        ok, msg = await backpack_service.submit_fulfillment_input(
+            message.bot, message.from_user.id, fulfillment_id, message.text or ""
+        )
+    if ok:
+        await state.clear()
+    elif msg in (
+        LucienVoice.fulfillment_input_already_submitted(),
+        LucienVoice.store_order_not_found(),
+    ):
+        await state.clear()
+    else:
+        await state.set_state(BackpackInputStates.awaiting_input)
+    await message.answer(msg, parse_mode="HTML")
+
+
+@router.callback_query(
+    BackpackReadChapterCallback.filter(), lambda cb: not is_admin(cb.from_user.id)
+)
+async def callback_read_chapter(
+    callback: CallbackQuery, callback_data: BackpackReadChapterCallback
+):
+    """Abre el nodo narrativo desbloqueado por STORY_UNLOCK."""
+    with get_service(BackpackService) as backpack_service:
+        detail = backpack_service.get_fulfillment_detail(
+            callback.from_user.id, callback_data.fulfillment_id
+        )
+    if not detail:
+        await callback.answer("Compra no encontrada", show_alert=True)
+        return
+    node_id = (detail.get("auto_result") or {}).get("node_id")
+    if not node_id:
+        await callback.answer(LucienVoice.story_fragment_unavailable(), show_alert=True)
+        return
+    from handlers.story_user_handlers import show_node
+
+    with get_service(StoryService) as story_service:
+        await show_node(callback, node_id, story_service)
+
+
+@router.callback_query(
+    BackpackViewWaitlistCallback.filter(), lambda cb: not is_admin(cb.from_user.id)
+)
+async def callback_view_waitlist(
+    callback: CallbackQuery, callback_data: BackpackViewWaitlistCallback
+):
+    """Muestra posición en lista de espera."""
+    with get_service(BackpackService) as backpack_service:
+        detail = backpack_service.get_fulfillment_detail(
+            callback.from_user.id, callback_data.fulfillment_id
+        )
+    if not detail:
+        await callback.answer("Compra no encontrada", show_alert=True)
+        return
+    position = (detail.get("auto_result") or {}).get("position", "?")
+    await callback.message.answer(
+        LucienVoice.backpack_fulfillment_waitlist_position(position),
+        parse_mode="HTML",
+    )
+    await callback.answer()
+
+
+@router.callback_query(BackpackDeliverCallback.filter(), lambda cb: not is_admin(cb.from_user.id))
 async def callback_deliver_package(callback: CallbackQuery, callback_data: BackpackDeliverCallback):
     """Entrega contenido de un paquete como álbum"""
     user_id = callback.from_user.id
@@ -528,7 +707,7 @@ async def callback_deliver_package(callback: CallbackQuery, callback_data: Backp
         await callback.answer("Error al entregar contenido", show_alert=True)
 
 
-@router.callback_query(F.data == "backpack_balance")
+@router.callback_query(F.data == "backpack_balance", lambda cb: not is_admin(cb.from_user.id))
 async def callback_balance(callback: CallbackQuery, bot: Bot):
     """Muestra información del balance de besitos"""
     user_id = callback.from_user.id
@@ -538,16 +717,7 @@ async def callback_balance(callback: CallbackQuery, bot: Bot):
         summary = backpack_service.get_backpack_summary(user_id)
         backpack_service.close()
 
-        text = f"""🎩 <b>Lucien:</b>
-
-<i>Los besitos son la moneda del reino de Diana...</i>
-
-💋 <b>Su Balance</b>
-
-💰 <b>Besitos disponibles:</b> {summary["besitos_balance"]}
-
-<i>Use sus besitos para adquirir tesoros en la tienda
-o completar misiones para ganar más.</i>"""
+        text = LucienVoice.backpack_besitos_balance_message(summary["besitos_balance"])
 
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[

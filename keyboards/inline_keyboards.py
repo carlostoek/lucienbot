@@ -6,10 +6,12 @@ Teclados personalizados con la estética elegante de Diana.
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+from utils.lucien_voice import LucienVoice
 from keyboards.callback_data import (
     AnonViewCallback,
     ApproveAllCallback,
     ConfigInviteCallback,
+    ConfigMessagesCallback,
     ConfigWaitCallback,
     CopyTokenCallback,
     DeleteChannelCallback,
@@ -56,7 +58,9 @@ def main_menu_keyboard(is_vip: bool = False) -> InlineKeyboardMarkup:
     )
 
     # Tienda (solo)
-    buttons.append([InlineKeyboardButton(text="🛍️ Tienda", callback_data="shop")])
+    buttons.append(
+        [InlineKeyboardButton(text=LucienVoice.main_menu_shop_button(), callback_data="shop")]
+    )
 
     # Misiones - Recompensas (misma fila)
     buttons.append(
@@ -187,7 +191,8 @@ def channel_actions_keyboard(channel_id: int, channel_type: str) -> InlineKeyboa
                 ],
                 [
                     InlineKeyboardButton(
-                        text="📨 Configurar mensajes", callback_data=f"config_messages_{channel_id}"
+                        text="📨 Configurar mensajes",
+                        callback_data=ConfigMessagesCallback(channel_id=channel_id).pack(),
                     )
                 ],
                 [
@@ -316,9 +321,9 @@ def back_keyboard(back_callback: str = "back_to_admin") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def cancel_keyboard() -> InlineKeyboardMarkup:
+def cancel_keyboard(callback_data: str = "cancel") -> InlineKeyboardMarkup:
     """Teclado con botón de cancelar"""
-    buttons = [[InlineKeyboardButton(text="❌ Cancelar", callback_data="cancel")]]
+    buttons = [[InlineKeyboardButton(text="❌ Cancelar", callback_data=callback_data)]]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 

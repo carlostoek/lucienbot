@@ -1,13 +1,14 @@
 """
 Tests unitarios para BackupService (credentials fix para pg_dump).
 """
-import pytest
-import os
-import subprocess
-from unittest.mock import patch, MagicMock
 
+import subprocess
 import sys
-sys.path.insert(0, '/data/data/com.termux/files/home/repos/lucien_bot')
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+sys.path.insert(0, "/data/data/com.termux/files/home/repos/lucien_bot")
 
 from services.backup_service import BackupService
 
@@ -35,7 +36,7 @@ class TestBackupServiceCredentials:
             result.stderr = ""
             return result
 
-        with patch.object(subprocess, 'run', mock_run):
+        with patch.object(subprocess, "run", mock_run):
             await service._backup_postgresql(db_url, "20260101_120000")
 
         # Verificar que PGPASSWORD esta en el env, NO en los argumentos CLI
@@ -78,7 +79,7 @@ class TestBackupServiceCredentials:
             result.stderr = ""
             return result
 
-        with patch.object(subprocess, 'run', mock_run):
+        with patch.object(subprocess, "run", mock_run):
             await service._backup_postgresql(db_url, "20260101_120000")
 
         assert captured_args["host"] == "db.example.com"
@@ -102,7 +103,7 @@ class TestBackupServiceCredentials:
             result.stderr = ""
             return result
 
-        with patch.object(subprocess, 'run', mock_run):
+        with patch.object(subprocess, "run", mock_run):
             await service._backup_postgresql(db_url, "20260101_120000")
 
         # PGPASSWORD no debe estar presente si no hay password en la URL
@@ -119,10 +120,22 @@ class TestBackupServiceCredentials:
             result.stderr = "connection refused"
             return result
 
-        with patch.object(subprocess, 'run', mock_run_fail):
+        with patch.object(subprocess, "run", mock_run_fail):
             result = await service._backup_postgresql(
-                "postgresql://user:pass@localhost/mydb",
-                "20260101_120000"
+                "postgresql://user:pass@localhost/mydb", "20260101_120000"
             )
 
         assert result is None  # None indica fallo (logged internamente)
+
+    @pytest.mark.asyncio
+    async def test_sqlite_backup_happy_path_creates_file(self, tmp_path):
+        """DESIRED CONTRACT: daily_backup for sqlite returns path + .exists() (gold deterministic)."""
+        from pathlib import Path
+
+        service = BackupService(backup_dir=str(tmp_path))
+        expected = str(tmp_path / "lucien_20260101_120000.db")
+        Path(expected).touch()
+        with patch.object(service, "_backup_sqlite", return_value=expected):
+            result = await service.daily_backup()
+        assert result == expected
+        assert Path(result).exists()

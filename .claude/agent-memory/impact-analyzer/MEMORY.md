@@ -1,3 +1,3 @@
 # Impact Analyzer Memory Index
 
-- [Item 11: Observability/Health Pre-Impl Impact](item11-observability-health.md) — LOW risk read-only HealthService + bot cmd/terminal views + simple /health; reuses get_service/analytics patterns; 0 risk to 3 critical systems (gamif/narrative/channel-vip) + atomicity; ready for gsd-planner 5-6ph (after Item 10 / new pool)
+- [Broadcast Link Buttons ITEM 1](broadcast-link-buttons-item1.md) — Catalog model + service CRUD only; no handler/wizard/send changes; FK decision flagged; gold tests identified

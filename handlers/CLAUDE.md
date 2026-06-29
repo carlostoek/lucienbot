@@ -50,10 +50,12 @@ handlers/
 
 ## Reglas de Handlers
 
-1. **UN service** por handler (exactly 1 call, usual via `with get_service(XXXService) as svc:`)
+1. **UN service** por handler (exactly 1 call, via `with get_service(XXXService) as svc:` ONLY; no direct Service() or get_session)
 2. **SIN lógica** de negocio
 3. **SIN acceso** directo a DB
-4. **Logging** de eventos recibidos (estándar "módulo | acción | user_id | resultado")
+4. **Logging** de eventos recibidos (estándar "módulo | acción | user_id | resultado") - enforced via GSD/hygiene
+
+**Hardener-enforced (tirones 25-34 / Items 7-11 + pool33):** puros (verb+context+result, "Función pura...", <=50 LOC via inspect) for long admin wizards; integration style (real svc + class patch in tests for user flows); 1:1 UI; get_service ctx manager. Refs: 27/28/29/33/34 SUMMARIES + HARDENING_ROADMAP + decisions Items.
 
 ## Patrón Probado en Hardener (tirones 25-29 / Items 7-11)
 Para handlers largos (wizards admin multi-step, lists, details, etc. >50 LOC común): 
@@ -66,6 +68,7 @@ Para handlers largos (wizards admin multi-step, lists, details, etc. >50 LOC com
 - 0 behavior / 0 delivery / 0 atomicity / 0 other handlers impact.
 - Verificación: arch-enforcer (PASS WITH NOTES 0 critical; grep 0 bare otros svcs, N with get_service, N puros, LOC<=50, delegates, UI1:1, logging, 3 crit protected orthogonal); test-guardian ("suite protege adecuadamente"; re-runs handler + pure subset + broader cross + golds; coverage puros direct + ports + delegates); self-check PASSED + GSD pre every + pool phrase.
 - Ejemplos: Item 9/27 mission_admin_handlers (10+ puros + delegates + 9 withs Mission + TestMissionAdminPureHelpers 11; 27-SUMMARY + impact9 + arch9 + test9 + gsd79+); Item 8/26 store_admin (6+ puros + 1svc Store + TestStoreAdminPureHelpers 9; 26-SUMMARY); Item 7/25 reward_user (2 puros + 1svc Mission; 25-SUMMARY). Precedentes en 25/26/27 SUMMARIES + HARDENING_ROADMAP + decisions Items 7/8/9 + documentador reports.
+- **Phase 30 / channel_handlers.py:** `is_admin` en todos los callbacks admin de canales + guards FSM; exactly 1 `get_service(ChannelService)`; métodos async de grant reciben `bot` desde `callback.bot`; puros `build_*`/`format_*`/`parse_*` para ≤50 LOC; IDOR guard vía `get_valid_pending_request`; ver `services/channel_grant.py` + `services/channels/CLAUDE.md` + `30-channel-admin-hardening-SUMMARY.md`.
 - Patrón se copia al pie de la letra de tirón previo (item8/26 para item9/27 etc.). Ver root CLAUDE "Hardener Workflow" section + .claude/agents/ + ROADMAP.
 
 ## Ejemplo Correcto
@@ -74,9 +77,8 @@ Para handlers largos (wizards admin multi-step, lists, details, etc. >50 LOC com
 async def handle_balance(callback: CallbackQuery):
     """Solo llama al service."""
     user_id = callback.from_user.id
-    with get_session() as session:
-        service = BesitoService(session)
-        balance = service.get_balance(user_id)
+    with get_service(BesitoService) as svc:  # exactly 1 service
+        balance = svc.get_balance(user_id)
     await callback.message.edit_text(f"Tu saldo: {balance}")
 ```
 

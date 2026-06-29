@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from models.database import SessionLocal
 from models.models import (
+    BroadcastButton,
     BroadcastMessage,
     BroadcastReaction,
     MissionType,
@@ -20,7 +21,7 @@ from models.models import (
     TransactionSource,
 )
 from services.besito_service import BesitoService
-from services.mission_service import MissionService
+from services.mission_service import MissionService, run_mission_side_effects_isolated
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +101,76 @@ class BroadcastService:
             return True
         return False
 
+    # ==================== BOTONES DE ENLACE EXTRA ====================
+
+    def create_broadcast_button(
+        self, label: str, url: str, description: str = None
+    ) -> BroadcastButton:
+        """Crea un nuevo botón de enlace extra.
+
+        Validation is loose per ITEM1 decision (Telegram link intent documented;
+        enforcement + tests deferred to ITEM2 integration). No strict checks here.
+        """
+        button = BroadcastButton(label=label, url=url, description=description, is_active=True)
+        self.db.add(button)
+        self.db.commit()
+        self.db.refresh(button)
+        logger.info(
+            f"broadcast_service | create_broadcast_button | label={label} | url={url} | id={button.id}"
+        )
+        return button
+
+    def get_broadcast_button(self, button_id: int) -> BroadcastButton | None:
+        """Obtiene un botón por ID"""
+        return self.db.query(BroadcastButton).filter(BroadcastButton.id == button_id).first()
+
+    def get_all_buttons(self, active_only: bool = True) -> list[BroadcastButton]:
+        """Obtiene todos los botones de enlace"""
+        query = self.db.query(BroadcastButton)
+        if active_only:
+            query = query.filter(BroadcastButton.is_active)
+        return query.all()
+
+    def toggle_broadcast_button(self, button_id: int) -> bool:
+        """Activa/desactiva un botón de enlace"""
+        button = self.get_broadcast_button(button_id)
+        if button:
+            button.is_active = not button.is_active
+            self.db.commit()
+            return True
+        return False
+
+    def update_broadcast_button(
+        self, button_id: int, label: str = None, url: str = None, description: str = None
+    ) -> bool:
+        """Actualiza campos provistos de un botón (parcial).
+
+        If no non-None fields provided, this is a no-op (no columns mutated)
+        but we still commit (harmless) and return True because the row was found.
+        This matches the simple "if found: mutate; commit; return True" pattern
+        used by update_emoji_value / siblings (no early-exit complexity).
+        """
+        button = self.get_broadcast_button(button_id)
+        if not button:
+            return False
+        if label is not None:
+            button.label = label
+        if url is not None:
+            button.url = url
+        if description is not None:
+            button.description = description
+        self.db.commit()  # commit even on no-op to keep pattern consistent
+        return True
+
+    def delete_broadcast_button(self, button_id: int) -> bool:
+        """Elimina un botón de enlace"""
+        button = self.get_broadcast_button(button_id)
+        if button:
+            self.db.delete(button)
+            self.db.commit()
+            return True
+        return False
+
     # ==================== MENSAJES DE BROADCAST ====================
 
     def create_broadcast_message(
@@ -114,8 +185,9 @@ class BroadcastService:
         has_reactions: bool = False,
         is_protected: bool = False,
         selected_emoji_ids: str = None,
+        extra_button_id: int = None,
     ) -> BroadcastMessage:
-        """Registra un mensaje de broadcast en la base de datos"""
+        """Registra un mensaje de broadcast en la base de datos (acepta extra_button_id opcional)."""
         broadcast = BroadcastMessage(
             message_id=message_id,
             channel_id=channel_id,
@@ -127,6 +199,7 @@ class BroadcastService:
             has_reactions=has_reactions,
             is_protected=is_protected,
             selected_emoji_ids=selected_emoji_ids,
+            extra_button_id=extra_button_id,
         )
         self.db.add(broadcast)
         self.db.commit()
@@ -137,6 +210,29 @@ class BroadcastService:
     def get_broadcast(self, broadcast_id: int) -> BroadcastMessage | None:
         """Obtiene un mensaje de broadcast por ID"""
         return self.db.query(BroadcastMessage).filter(BroadcastMessage.id == broadcast_id).first()
+
+    def update_broadcast_message_id(self, broadcast_id: int, message_id: int) -> bool:
+        """Actualiza el message_id de Telegram tras el envío al canal."""
+        broadcast = self.get_broadcast(broadcast_id)
+        if not broadcast:
+            return False
+        broadcast.message_id = message_id
+        self.db.commit()
+        return True
+
+    def delete_broadcast(self, broadcast_id: int) -> bool:
+        """Elimina un broadcast huérfano (p. ej. fallo de envío a Telegram)."""
+        broadcast = self.get_broadcast(broadcast_id)
+        if not broadcast:
+            return False
+        self.db.delete(broadcast)
+        self.db.commit()
+        logger.info(f"broadcast_service | delete_broadcast | broadcast_id={broadcast_id} | ok")
+        return True
+
+    @staticmethod
+    def _reaction_failure(reason: str) -> dict:
+        return {"success": False, "reason": reason}
 
     def get_selected_emoji_ids(self, broadcast_id: int) -> list[int]:
         """Obtiene la lista de IDs de emojis seleccionados para un broadcast"""
@@ -186,6 +282,12 @@ class BroadcastService:
         self, broadcast_id: int, user_id: int, emoji_id: int, username: str = None
     ) -> BroadcastReaction | None:
         """
+        DEPRECATED: Use check_and_register_reaction instead.
+
+        Legacy sync path kept for existing tests. Does not deliver mission rewards
+        via bot and duplicates mission logic differently than the production async
+        path. New code must call check_and_register_reaction.
+
         Registra una reacción y otorga besitos al usuario.
         Retorna None si el usuario ya reaccionó.
         """
@@ -226,13 +328,19 @@ class BroadcastService:
             besito_service = BesitoService(
                 db=self.db
             )  # local, on-demand; owns=False (db shared); credit commits internally as before + schedule_emit best-effort
-            besito_service.credit_besitos(
+            credited = besito_service.credit_besitos(
                 user_id=user_id,
                 amount=besito_value,
                 source=TransactionSource.REACTION,
                 description=description,
                 reference_id=broadcast_id,
             )
+            if not credited:
+                self.db.rollback()
+                logger.error(
+                    f"broadcast_service | register_reaction | user_id={user_id} | broadcast_id={broadcast_id} | credit_failed"
+                )
+                return None
 
             self.db.commit()
             self.db.refresh(reaction)
@@ -254,29 +362,62 @@ class BroadcastService:
             return None
 
     async def check_and_register_reaction(
-        self, broadcast_id: int, user_id: int, emoji_id: int, username: str = None, bot=None
-    ) -> dict | None:
+        self,
+        broadcast_id: int,
+        user_id: int,
+        emoji_id: int,
+        username: str = None,
+        bot=None,
+        channel_id: int = None,
+        message_id: int = None,
+    ) -> dict:
         """
         Verifica y registra una reacción en una sola transacción atómica.
         Entrega recompensas de misiones automáticamente.
-        Retorna None si el usuario ya reaccionó.
-        Retorna dict con datos de la reacción si fue exitosa.
+
+        Retorna dict con ``success`` True y datos de la reacción, o
+        ``success`` False con ``reason`` (duplicate, invalid_broadcast, etc.).
 
         IMPORTANTE: Construye el dict de retorno ANTES del segundo commit
         para evitar el bug 'DetachedInstanceError' que existe en main.
         """
         db = self.db
 
-        # Obtener el emoji y su valor primero (no necesita transacción)
+        broadcast = self.get_broadcast(broadcast_id)
+        if not broadcast:
+            logger.warning(
+                f"broadcast_service | check_and_register_reaction | user_id={user_id} | broadcast_id={broadcast_id} | invalid_broadcast"
+            )
+            return self._reaction_failure("invalid_broadcast")
+        if not broadcast.has_reactions:
+            return self._reaction_failure("no_reactions")
+        if channel_id is not None and broadcast.channel_id != channel_id:
+            return self._reaction_failure("message_mismatch")
+        if message_id is not None and broadcast.message_id != message_id:
+            return self._reaction_failure("message_mismatch")
+
         emoji = self.get_reaction_emoji(emoji_id)
         if not emoji:
             logger.error(f"Emoji {emoji_id} no encontrado")
-            return None
+            return self._reaction_failure("invalid_emoji")
+        if not emoji.is_active:
+            return self._reaction_failure("inactive_emoji")
+
+        selected_emoji_ids = self.get_selected_emoji_ids(broadcast_id)
+        if emoji_id not in selected_emoji_ids:
+            return self._reaction_failure("emoji_not_allowed")
+
+        # Defensa en profundidad: chequeo explícito antes del INSERT (UC sigue siendo la protección final para races).
+        if self.has_user_reacted(broadcast_id, user_id):
+            logger.info(
+                f"broadcast_service | check_and_register_reaction | user_id={user_id} | broadcast_id={broadcast_id} | duplicate (pre-check)"
+            )
+            return self._reaction_failure("duplicate")
 
         besito_value = emoji.besito_value
 
         try:
-            # Crear la reacción - el UniqueConstraint en BD evitará duplicados
+            # Crear la reacción - el UniqueConstraint en BD evitará duplicados (fallback para concurrencia)
             reaction = BroadcastReaction(
                 broadcast_id=broadcast_id,
                 user_id=user_id,
@@ -292,13 +433,19 @@ class BroadcastService:
             besito_service = BesitoService(
                 db=self.db
             )  # local, on-demand; owns=False (db shared); credit commits internally as before + schedule_emit best-effort
-            besito_service.credit_besitos(
+            credited = besito_service.credit_besitos(
                 user_id=user_id,
                 amount=besito_value,
                 source=TransactionSource.REACTION,
                 description=description,
                 reference_id=broadcast_id,
             )
+            if not credited:
+                db.rollback()
+                logger.error(
+                    f"broadcast_service | check_and_register_reaction | user_id={user_id} | broadcast_id={broadcast_id} | credit_failed"
+                )
+                return self._reaction_failure("credit_failed")
 
             # Commit de la transacción principal
             db.commit()
@@ -312,28 +459,23 @@ class BroadcastService:
             reaction_id = reaction.id
             emoji_char = emoji.emoji
 
-            # Procesar misiones en una NUEVA transacción para evitar problemas de sesión
-            completed_count = 0
-            try:
-                mission_service = MissionService(db)
-                completed_missions = await mission_service.increment_progress_and_deliver(
-                    user_id,
-                    MissionType.REACTION_COUNT,
-                    amount=1,
-                    bot=bot,
-                    reference_id=broadcast_id,
+            # Misiones: sesión DB aislada + reintento (best-effort; no invalida la reacción)
+            completed_count = await run_mission_side_effects_isolated(
+                user_id,
+                MissionType.REACTION_COUNT,
+                amount=1,
+                bot=bot,
+                reference_id=broadcast_id,
+                db=db,
+            )
+            if completed_count:
+                logger.info(
+                    f"Misiones completadas por reacción: user={user_id}, broadcast={broadcast_id}, count={completed_count}"
                 )
-                completed_count = len(completed_missions)
-                if completed_missions:
-                    logger.info(
-                        f"Misiones completadas por reacción: user={user_id}, broadcast={broadcast_id}, count={completed_count}"
-                    )
-            except Exception as mission_error:
-                # Error en misiones no debe invalidar la reacción
-                logger.warning(f"Error procesando misiones para reacción: {mission_error}")
 
             # Retornar diccionario con datos GUARDADOS (no acceder al objeto reaction)
             return {
+                "success": True,
                 "id": reaction_id,
                 "broadcast_id": broadcast_id,
                 "user_id": user_id,
@@ -342,17 +484,39 @@ class BroadcastService:
                 "emoji_char": emoji_char,
             }
 
-        except IntegrityError:
-            # UniqueConstraint violado - usuario ya reaccionó (race condition)
+        except IntegrityError as exc:
             db.rollback()
-            logger.info(
-                f"Usuario {user_id} ya reaccionó al broadcast {broadcast_id} (detectado por constraint)"
+            err_text = str(exc.orig) if getattr(exc, "orig", None) else str(exc)
+            err_lower = err_text.lower()
+            is_duplicate = (
+                "uq_broadcast_user_reaction" in err_text
+                or "unique constraint failed" in err_lower  # SQLite common message
+                or (
+                    "unique" in err_lower
+                    and "broadcast_reactions" in err_lower
+                    and "user_id" in err_lower
+                )
             )
-            return None
+            if is_duplicate:
+                logger.info(
+                    f"broadcast_service | check_and_register_reaction | user_id={user_id} | broadcast_id={broadcast_id} | duplicate"
+                )
+                return self._reaction_failure("duplicate")
+            if "foreign key" in err_lower:
+                logger.warning(
+                    f"broadcast_service | check_and_register_reaction | user_id={user_id} | broadcast_id={broadcast_id} | invalid_broadcast_fk"
+                )
+                return self._reaction_failure("invalid_broadcast")
+            logger.error(
+                f"broadcast_service | check_and_register_reaction | user_id={user_id} | integrity_error={exc}"
+            )
+            return self._reaction_failure("error")
         except Exception as e:
             db.rollback()
-            logger.error(f"Error registrando reacción: {e}")
-            return None
+            logger.error(
+                f"broadcast_service | check_and_register_reaction | user_id={user_id} | error={e}"
+            )
+            return self._reaction_failure("error")
 
     def get_reactions_by_broadcast(self, broadcast_id: int) -> list[BroadcastReaction]:
         """Obtiene todas las reacciones de un mensaje"""
@@ -417,22 +581,20 @@ class BroadcastService:
 
     async def update_reaction_message(
         self, bot, channel_id: int, message_id: int, new_markup: InlineKeyboardMarkup
-    ):
-        """Actualiza el markup de un mensaje de broadcast con los nuevos conteos.
-
-        Args:
-            bot: Instancia de bot de Telegram
-            channel_id: ID del canal
-            message_id: ID del mensaje
-            new_markup: Nuevo teclado inline
-        """
+    ) -> bool:
+        """Actualiza el markup de un mensaje de broadcast con los nuevos conteos."""
         try:
             await bot.edit_message_reply_markup(
                 chat_id=channel_id, message_id=message_id, reply_markup=new_markup
             )
+            return True
         except Exception as e:
-            logger.warning(f"No se pudo actualizar conteo en mensaje: {e}")
-            raise
+            if "message is not modified" in str(e).lower():
+                return True
+            logger.warning(
+                f"broadcast_service | update_reaction_message | channel_id={channel_id} | message_id={message_id} | error={e}"
+            )
+            return False
 
 
 # =============================================================================

@@ -18,6 +18,7 @@ from services import get_service
 from services.besito_service import BesitoService
 from services.broadcast_service import BroadcastService
 from services.daily_gift_service import DailyGiftService
+from utils.admin import is_admin
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -26,7 +27,7 @@ router = Router()
 # ==================== CONSULTAR SALDO ====================
 
 
-@router.callback_query(F.data == "my_balance")
+@router.callback_query(F.data == "my_balance", lambda cb: not is_admin(cb.from_user.id))
 async def show_balance(callback: CallbackQuery):
     """Muestra el saldo de besitos del usuario"""
     user_id = callback.from_user.id
@@ -52,7 +53,7 @@ async def show_balance(callback: CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(F.data == "transaction_history")
+@router.callback_query(F.data == "transaction_history", lambda cb: not is_admin(cb.from_user.id))
 async def show_transaction_history(callback: CallbackQuery):
     """Muestra el historial de transacciones"""
     user_id = callback.from_user.id
@@ -102,7 +103,7 @@ async def show_transaction_history(callback: CallbackQuery):
 # ==================== REGALO DIARIO ====================
 
 
-@router.callback_query(F.data == "daily_gift")
+@router.callback_query(F.data == "daily_gift", lambda cb: not is_admin(cb.from_user.id))
 async def daily_gift_menu(callback: CallbackQuery):
     """Menú del regalo diario"""
     user_id = callback.from_user.id
@@ -145,13 +146,15 @@ async def daily_gift_menu(callback: CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(F.data == "claim_gift")
+@router.callback_query(F.data == "claim_gift", lambda cb: not is_admin(cb.from_user.id))
 async def claim_daily_gift(callback: CallbackQuery):
     """Procesa el reclamo del regalo diario"""
     user_id = callback.from_user.id
 
     with get_service(DailyGiftService) as gift_service:
-        success, amount, message = gift_service.claim_gift(user_id)
+        success, amount, message = await gift_service.claim_gift_with_missions(
+            user_id, bot=callback.bot
+        )
 
     if success:
         text = f"""🎩 <b>Lucien:</b>
@@ -189,49 +192,124 @@ def calculate_emoji_counts_from_reactions(reactions: list) -> dict[int, int]:
     return emoji_counts
 
 
+REACTION_FAILURE_MESSAGES = {
+    "duplicate": "Ya reaccionaste a este mensaje",
+    "invalid_broadcast": "Este mensaje ya no está disponible para reaccionar.",
+    "message_mismatch": "Este mensaje ya no está disponible para reaccionar.",
+    "no_reactions": "Este mensaje no acepta reacciones.",
+    "inactive_emoji": "Esta reacción no está disponible en este mensaje.",
+    "emoji_not_allowed": "Esta reacción no está disponible en este mensaje.",
+    "invalid_emoji": "Emoji no válido.",
+    "credit_failed": "No pudimos registrar tu reacción. Inténtalo de nuevo.",
+}
+
+
+def reaction_failure_message(reason: str) -> str:
+    """Mensaje de error para el usuario según el motivo de fallo. Función pura."""
+    return REACTION_FAILURE_MESSAGES.get(
+        reason, "No pudimos procesar tu reacción. Inténtalo de nuevo."
+    )
+
+
+async def refresh_reaction_markup_counts(
+    broadcast_service: BroadcastService,
+    bot,
+    broadcast,
+    broadcast_id: int,
+) -> None:
+    """Reconstruye y actualiza el teclado de reacciones con conteos (preserva botón extra URL si existe)."""
+    selected_emoji_ids = broadcast_service.get_selected_emoji_ids(broadcast_id)
+    reactions = broadcast_service.get_reactions_by_broadcast(broadcast_id)
+    emoji_counts = calculate_emoji_counts_from_reactions(reactions)
+    emojis = []
+    for selected_emoji_id in selected_emoji_ids:
+        emoji_obj = broadcast_service.get_reaction_emoji(selected_emoji_id)
+        if emoji_obj:
+            emojis.append((selected_emoji_id, emoji_obj.emoji))
+
+    # Preservar extra button: usar reactions_keyboard_with_counts (estable) para fila de reacciones + fila URL manual si extra.
+    # NO modificar reactions_keyboard_with_counts.
+    extra_button = None
+    extra_id = getattr(broadcast, "extra_button_id", None)
+    if isinstance(extra_id, int):
+        extra_button = broadcast_service.get_broadcast_button(extra_id)
+
+    if emojis:
+        # Fila de reacciones con conteos (estable)
+        reaction_markup = reactions_keyboard_with_counts(broadcast_id, emojis, emoji_counts)
+        rows = (
+            list(reaction_markup.inline_keyboard)
+            if reaction_markup and reaction_markup.inline_keyboard
+            else []
+        )
+        from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
+        if extra_button:
+            rows.append([InlineKeyboardButton(text=extra_button.label, url=extra_button.url)])
+        new_markup = InlineKeyboardMarkup(inline_keyboard=rows) if rows else None
+    else:
+        if extra_button:
+            from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
+            new_markup = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text=extra_button.label, url=extra_button.url)]
+                ]
+            )
+        else:
+            new_markup = None
+
+    if new_markup is not None:
+        await broadcast_service.update_reaction_message(
+            bot=bot,
+            channel_id=broadcast.channel_id,
+            message_id=broadcast.message_id,
+            new_markup=new_markup,
+        )
+
+
 @router.callback_query(ReactionCallback.filter())
 async def handle_reaction(callback: CallbackQuery, callback_data: ReactionCallback):
     """Maneja las reacciones a mensajes de broadcast y actualiza conteos"""
+    if not callback.message:
+        await callback.answer(
+            "No pudimos procesar tu reacción. Inténtalo de nuevo.", show_alert=True
+        )
+        return
+
     user = callback.from_user
     broadcast_id = callback_data.broadcast_id
     emoji_id = callback_data.emoji_id
 
-    # Idempotency / dedup now handled globally by IdempotencyMiddleware (gsd-mw-hardening phase 5 cleanup)
+    if is_admin(user.id):
+        await callback.answer("Los custodios observan con elegancia...")
+        return
+
     with get_service(BroadcastService) as broadcast_service:
-        reaction = await broadcast_service.check_and_register_reaction(
+        result = await broadcast_service.check_and_register_reaction(
             broadcast_id=broadcast_id,
             user_id=user.id,
             emoji_id=emoji_id,
             username=user.username,
             bot=callback.bot,
+            channel_id=callback.message.chat.id,
+            message_id=callback.message.message_id,
         )
 
-        if reaction:
-            besitos = reaction.get("besitos_awarded", 0)
-
-            # Obtener el broadcast para actualizar el mensaje
+        if result.get("success"):
+            besitos = result.get("besitos_awarded", 0)
             broadcast = broadcast_service.get_broadcast(broadcast_id)
             if broadcast and broadcast.has_reactions:
-                selected_emoji_ids = broadcast_service.get_selected_emoji_ids(broadcast_id)
-                reactions = broadcast_service.get_reactions_by_broadcast(broadcast_id)
-                emoji_counts = calculate_emoji_counts_from_reactions(reactions)
-                emojis = []
-                for emoji_id in selected_emoji_ids:
-                    emoji_obj = broadcast_service.get_reaction_emoji(emoji_id)
-                    if emoji_obj:
-                        emojis.append((emoji_id, emoji_obj.emoji))
-                if emojis:
-                    new_markup = reactions_keyboard_with_counts(broadcast_id, emojis, emoji_counts)
-                    await broadcast_service.update_reaction_message(
-                        bot=callback.bot,
-                        channel_id=broadcast.channel_id,
-                        message_id=broadcast.message_id,
-                        new_markup=new_markup,
-                    )
-
+                await refresh_reaction_markup_counts(
+                    broadcast_service, callback.bot, broadcast, broadcast_id
+                )
             logger.info(
                 f"gamification_user_handlers | handle_reaction | user_id={user.id} | broadcast_id={broadcast_id} | emoji={emoji_id} | besitos={besitos}"
             )
             await callback.answer(f"¡+{besitos} besitos! 💋")
         else:
-            await callback.answer("Ya reaccionaste a este mensaje", show_alert=True)
+            reason = result.get("reason", "error")
+            logger.info(
+                f"gamification_user_handlers | handle_reaction | user_id={user.id} | broadcast_id={broadcast_id} | emoji={emoji_id} | reason={reason}"
+            )
+            await callback.answer(reaction_failure_message(reason), show_alert=True)

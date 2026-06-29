@@ -15,6 +15,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -25,6 +26,11 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from models.database import Base
+
+
+def str_enum_values(enum_cls: type[enum.StrEnum]) -> list[str]:
+    """Persist StrEnum .value in DB (matches Alembic lowercase enum definitions)."""
+    return [member.value for member in enum_cls]
 
 
 class ChannelType(enum.StrEnum):
@@ -154,6 +160,7 @@ class Subscription(Base):
     user_id = Column(BigInteger, ForeignKey("users.telegram_id"), nullable=False)
     channel_id = Column(Integer, ForeignKey("channels.id"), nullable=False)
     token_id = Column(Integer, ForeignKey("tokens.id"), nullable=False)
+    tariff_id = Column(Integer, ForeignKey("tariffs.id"), nullable=True)  # Direct tariff for internal grants (missions, store, admin forward). Null for legacy/manual token-based subs.
     start_date = Column(DateTime(timezone=True), server_default=func.now())
     end_date = Column(DateTime(timezone=True), nullable=False)
     is_active = Column(Boolean, default=True)
@@ -164,6 +171,7 @@ class Subscription(Base):
     user = relationship("User", back_populates="subscriptions")
     channel = relationship("Channel", back_populates="subscriptions")
     token = relationship("Token", back_populates="subscriptions")
+    tariff = relationship("Tariff")  # Direct (preferred for internal grants); fallback to token.tariff when tariff_id is None
 
 
 class PendingRequest(Base):
@@ -173,6 +181,11 @@ class PendingRequest(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(BigInteger, nullable=False, index=True)
+    user_chat_id = Column(
+        BigInteger,
+        nullable=True,
+        doc="ChatJoinRequest.user_chat_id (ventana DM Telegram post-solicitud)",
+    )
     channel_id = Column(Integer, ForeignKey("channels.id"), nullable=False)
     username = Column(String(100), nullable=True)
     first_name = Column(String(100), nullable=True)
@@ -264,6 +277,21 @@ class ReactionEmoji(Base):
     broadcast_reactions = relationship("BroadcastReaction", back_populates="reaction_emoji")
 
 
+class BroadcastButton(Base):
+    """Botones de enlace extra reutilizables para broadcasts"""
+
+    __tablename__ = "broadcast_buttons"
+
+    id = Column(Integer, primary_key=True, index=True)
+    label = Column(String(100), nullable=False)  # Texto del botón
+    url = Column(
+        String(500), nullable=False
+    )  # Enlace de Telegram (https://t.me/ o tg://); Validation is loose per ITEM1 decision (Telegram link intent documented; enforcement + tests deferred to ITEM2 integration)
+    description = Column(Text, nullable=True)  # Nota para admins (opcional)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 class BroadcastMessage(Base):
     """Mensajes de broadcasting con reacciones"""
 
@@ -282,6 +310,9 @@ class BroadcastMessage(Base):
     selected_emoji_ids = Column(
         String(200), nullable=True
     )  # IDs de emojis seleccionados separados por coma
+    extra_button_id = Column(
+        Integer, ForeignKey("broadcast_buttons.id"), nullable=True, index=True
+    )  # Botón de enlace extra opcional (ITEM 1: nullable, no bidirectional relationship)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relaciones
@@ -354,6 +385,11 @@ class TriviaConfig(Base):
     trivia_vip_limit = Column(Integer, default=5, nullable=False)
     trivia_simple_limit_free = Column(Integer, default=5, nullable=False)
     trivia_simple_limit_vip = Column(Integer, default=10, nullable=False)
+    # Nuevos límites de besitos ganados (no de jugadas)
+    trivia_besitos_daily_free = Column(Integer, default=10, nullable=False)
+    trivia_besitos_daily_vip = Column(Integer, default=15, nullable=False)
+    trivia_besitos_weekly_free = Column(Integer, default=30, nullable=False)
+    trivia_besitos_weekly_vip = Column(Integer, default=40, nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     updated_by = Column(BigInteger, nullable=True)
 
@@ -500,7 +536,7 @@ class Category(Base):
 # ============================================================
 
 
-class NurtureAudience(str, enum.Enum):
+class NurtureAudience(enum.StrEnum):
     """Audiencia objetivo para secuencias de nurture (embudo de contenido esporádico)"""
 
     FREE = "free"
@@ -517,7 +553,10 @@ class NurtureSequence(Base):
     name = Column(String(150), nullable=False, unique=True)
     description = Column(Text, nullable=True)
     audience = Column(
-        Enum(NurtureAudience), default=NurtureAudience.VIP, nullable=False, index=True
+        Enum(NurtureAudience, values_callable=str_enum_values),
+        default=NurtureAudience.VIP,
+        nullable=False,
+        index=True,
     )
     is_active = Column(Boolean, default=True, index=True)
     created_by = Column(BigInteger, nullable=True)
@@ -717,8 +756,73 @@ class UserRewardHistory(Base):
 
 
 # ============================================================
-# FASE 4: TIENDA
+# FASE 4: TIENDA + FULFILLMENT CATALOG
 # ============================================================
+
+
+class DeliveryMode(enum.StrEnum):
+    """Modo de entrega de producto en tienda."""
+
+    AUTO = "auto"
+    MANUAL = "manual"
+
+
+class FulfillmentKind(enum.StrEnum):
+    """Tipo de cumplimiento post-compra."""
+
+    PACKAGE = "package"
+    PACKAGE_DEFERRED = "package_deferred"
+    USER_INPUT_THEN_MANUAL = "user_input_manual"
+    PRIVILEGE_EARLY_ACCESS = "early_access"
+    PRIVILEGE_DISCOUNT = "discount"
+    STORY_UNLOCK = "story_unlock"
+    VIP_GRANT = "vip_grant"
+    WAITLIST_ENTRY = "waitlist"
+    CHANNEL_HONOR = "channel_honor"
+    SCHEDULED_CHAT = "scheduled_chat"
+
+
+class FulfillmentStatus(enum.StrEnum):
+    """Estado de cumplimiento de una línea de orden."""
+
+    PENDING_INPUT = "pending_input"
+    PENDING_FULFILLMENT = "pending"
+    AUTO_IN_PROGRESS = "auto_running"
+    FULFILLED = "fulfilled"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class PrivilegeType(enum.StrEnum):
+    """Tipo de privilegio de tienda."""
+
+    EARLY_ACCESS = "early_access"
+    DISCOUNT = "discount"
+
+
+class WaitlistStatus(enum.StrEnum):
+    """Estado de entrada en lista de espera."""
+
+    ACTIVE = "active"
+    FULFILLED = "fulfilled"
+    EXPIRED = "expired"
+
+
+class StoreTier(Base):
+    """Tiers del catálogo Kinky (IMPULSO → MÍTICO)."""
+
+    __tablename__ = "store_tiers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String(50), unique=True, nullable=False)
+    name = Column(String(100), nullable=False)
+    tagline = Column(Text, nullable=True)
+    price_min = Column(Integer, nullable=False, default=0)
+    price_max = Column(Integer, nullable=False, default=0)
+    order_index = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
+
+    products = relationship("StoreProduct", back_populates="tier")
 
 
 class StoreProduct(Base):
@@ -730,11 +834,29 @@ class StoreProduct(Base):
     name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
 
-    # Relacion con paquete
-    package_id = Column(Integer, ForeignKey("packages.id"), nullable=False)
+    # Relacion con paquete (nullable para kinds MANUAL sin paquete fijo)
+    package_id = Column(Integer, ForeignKey("packages.id"), nullable=True)
 
     # Categoría
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True, index=True)
+
+    # Fulfillment catalog
+    delivery_mode = Column(
+        Enum(DeliveryMode, values_callable=str_enum_values),
+        default=DeliveryMode.AUTO,
+        nullable=False,
+    )
+    fulfillment_kind = Column(
+        Enum(FulfillmentKind, values_callable=str_enum_values),
+        default=FulfillmentKind.PACKAGE,
+        nullable=False,
+    )
+    tier_id = Column(Integer, ForeignKey("store_tiers.id"), nullable=True, index=True)
+    story_node_id = Column(Integer, ForeignKey("story_nodes.id"), nullable=True)
+    tariff_id = Column(Integer, ForeignKey("tariffs.id"), nullable=True)
+    fulfillment_config = Column(Text, nullable=True)  # JSON serializado
+    monthly_stock_cap = Column(Integer, nullable=True)
+    sort_order = Column(Integer, default=0)
 
     # Precio en besitos
     price = Column(Integer, nullable=False)
@@ -752,6 +874,9 @@ class StoreProduct(Base):
     # Relaciones
     package = relationship("Package")
     category = relationship("Category")
+    tier = relationship("StoreTier", back_populates="products")
+    story_node = relationship("StoryNode")
+    tariff = relationship("Tariff")
     cart_items = relationship("CartItem", back_populates="product", cascade="all, delete-orphan")
     order_items = relationship("OrderItem", back_populates="product")
 
@@ -861,6 +986,88 @@ class OrderItem(Base):
     # Relaciones
     order = relationship("Order", back_populates="items")
     product = relationship("StoreProduct", back_populates="order_items")
+    fulfillment = relationship(
+        "OrderFulfillment",
+        back_populates="order_item",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+
+class OrderFulfillment(Base):
+    """Cumplimiento post-compra por línea de orden (1:1 con OrderItem)."""
+
+    __tablename__ = "order_fulfillments"
+    __table_args__ = (
+        UniqueConstraint("order_item_id", name="uq_order_fulfillment_order_item"),
+        Index("ix_order_fulfillments_status", "status"),
+        Index("ix_order_fulfillments_user_status", "user_id", "status"),
+        Index("ix_order_fulfillments_product_created", "product_id", "created_at"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_item_id = Column(Integer, ForeignKey("order_items.id"), nullable=False, unique=True)
+    user_id = Column(BigInteger, nullable=False, index=True)
+    product_id = Column(Integer, ForeignKey("store_products.id"), nullable=False)
+    fulfillment_kind = Column(
+        Enum(FulfillmentKind, values_callable=str_enum_values), nullable=False
+    )
+    status = Column(
+        Enum(FulfillmentStatus, values_callable=str_enum_values),
+        default=FulfillmentStatus.PENDING_FULFILLMENT,
+    )
+    user_input = Column(Text, nullable=True)
+    admin_notes = Column(Text, nullable=True)
+    fulfilled_by = Column(BigInteger, nullable=True)
+    fulfilled_at = Column(DateTime(timezone=True), nullable=True)
+    auto_result = Column(Text, nullable=True)  # JSON serializado
+    retry_count = Column(Integer, default=0)
+    last_attempt_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    order_item = relationship("OrderItem", back_populates="fulfillment")
+    product = relationship("StoreProduct")
+    privileges = relationship("StorePrivilege", back_populates="fulfillment")
+    waitlist_entry = relationship("StoreWaitlistEntry", back_populates="fulfillment", uselist=False)
+
+
+class StorePrivilege(Base):
+    """Privilegio temporal otorgado por compra (early access, descuento)."""
+
+    __tablename__ = "store_privileges"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(BigInteger, nullable=False, index=True)
+    product_id = Column(Integer, ForeignKey("store_products.id"), nullable=False)
+    order_fulfillment_id = Column(Integer, ForeignKey("order_fulfillments.id"), nullable=False)
+    privilege_type = Column(Enum(PrivilegeType, values_callable=str_enum_values), nullable=False)
+    config = Column(Text, nullable=True)  # JSON serializado
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+    consumed_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    fulfillment = relationship("OrderFulfillment", back_populates="privileges")
+    product = relationship("StoreProduct")
+
+
+class StoreWaitlistEntry(Base):
+    """Entrada en lista de espera (La Lista)."""
+
+    __tablename__ = "store_waitlist_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(BigInteger, nullable=False, index=True)
+    product_id = Column(Integer, ForeignKey("store_products.id"), nullable=False)
+    order_fulfillment_id = Column(Integer, ForeignKey("order_fulfillments.id"), nullable=False)
+    position = Column(Integer, nullable=False)
+    joined_at = Column(DateTime(timezone=True), server_default=func.now())
+    status = Column(
+        Enum(WaitlistStatus, values_callable=str_enum_values),
+        default=WaitlistStatus.ACTIVE,
+    )
+
+    fulfillment = relationship("OrderFulfillment", back_populates="waitlist_entry")
+    product = relationship("StoreProduct")
 
 
 # ============================================================
@@ -1103,6 +1310,7 @@ class UserStoryProgress(Base):
     """Progreso de cada usuario en la narrativa"""
 
     __tablename__ = "user_story_progress"
+    __table_args__ = (UniqueConstraint("user_id", name="uq_user_story_progress_user_id"),)
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(BigInteger, nullable=False, index=True)
@@ -1206,6 +1414,9 @@ class UserStoryAchievement(Base):
     """Logros desbloqueados por cada usuario"""
 
     __tablename__ = "user_story_achievements"
+    __table_args__ = (
+        UniqueConstraint("user_id", "achievement_id", name="uq_user_story_achievement"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(BigInteger, nullable=False, index=True)
@@ -1217,6 +1428,8 @@ class UserStoryAchievement(Base):
     # Recompensa entregada
     reward_delivered = Column(Boolean, default=False)
     reward_delivered_at = Column(DateTime(timezone=True), nullable=True)
+
+    achievement = relationship("StoryAchievement")
 
 
 # ============================================================
@@ -1278,6 +1491,7 @@ class GameRecord(Base):
     game_type = Column(String(20), nullable=False)  # 'dice', 'trivia'
     result = Column(String(50), nullable=False)
     payout = Column(Integer, default=0)
+    correct = Column(Boolean, default=False, nullable=False)
     played_at = Column(DateTime(timezone=True), server_default=func.now())
 
 

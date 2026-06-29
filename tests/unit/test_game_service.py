@@ -11,7 +11,7 @@ Focus (smallest effective change, 10+ high-value deterministic unit tests):
 - Streak calculation (_get_*_streak via GameRecord) + milestone bonuses (3/5/7/10, VIP *2)
 - Promo code "entrega" hook (claim_for_streak integration via play_* when correct + streak tier)
 - Error paths (question not found / bad idx, limit reached structure)
-- VIP-specific (play_trivia_vip requires active sub, separate game_type records, 5 besitos base)
+- VIP-specific (play_trivia_vip requires active sub, separate game_type records, base reward)
 
 Patterns replicated exactly from prior sessions:
 - @pytest.mark.unit + descriptive class + per-test docstrings
@@ -31,12 +31,14 @@ All tests must remain 100% passing + ruff clean after each edit.
 
 import asyncio
 import logging
+import threading
 from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
 import pytest
 
 from models.models import (
+    BesitoBalance,
     GameRecord,
     Subscription,
     Token,
@@ -118,6 +120,7 @@ class TestGameServiceTriviaPaths:
                 game_type="trivia",
                 result=f"pre_{i}",
                 payout=1,
+                correct=True,
                 played_at=today + timedelta(minutes=i),
             )
             db_session.add(rec)
@@ -135,7 +138,7 @@ class TestGameServiceTriviaPaths:
     def test_play_trivia_vip_requires_vip_and_uses_vip_limit_and_besitos(
         self, db_session, sample_user, sample_vip_channel, sample_tariff
     ):
-        """play_trivia_vip: non-VIP gets specific 'exclusiva' message; VIP path uses 5 besitos base + trivia_vip records."""
+        """play_trivia_vip: non-VIP gets specific 'exclusiva' message; VIP path uses base reward + trivia_vip records."""
         service = GameService(db_session)
         user_tg = sample_user.telegram_id
 
@@ -166,7 +169,7 @@ class TestGameServiceTriviaPaths:
             result = service.play_trivia_vip(user_id=user_tg, question_idx=0, answer_idx=0)
 
         assert result["correct"] is True
-        assert result["besitos"] == 5  # TRIVIA_VIP_WIN_BESITOS
+        assert result["besitos"] == 2  # TRIVIA_VIP_WIN_BESITOS (actualizado)
         # Verify separate game_type record
         vip_count = (
             db_session.query(GameRecord)
@@ -191,6 +194,7 @@ class TestGameServiceTriviaPaths:
                 game_type="trivia",
                 result=f"prior_{i}",
                 payout=1,
+                correct=True,
                 played_at=today + timedelta(minutes=i),
             )
             db_session.add(rec)
@@ -219,7 +223,7 @@ class TestGameServiceTriviaPaths:
         assert result["correct"] is True
         assert result["new_streak"] == 3
         assert result["streak_bonus"] == 4  # 2 * 2 (VIP)
-        assert result["besitos_total"] == 1 + 4
+        assert result["besitos_total"] == 1 + 4  # base 1 + bonus
         service.close()
 
     def test_play_trivia_wrong_answer_after_streak_resets_and_no_bonus(
@@ -267,8 +271,8 @@ class TestGameServiceTriviaPaths:
             description="Directed item6",
             levels=levels,
             duration_mode="dates",
-            start_date=datetime.utcnow(),
-            end_date=datetime.utcnow() + timedelta(days=7),
+            start_date=datetime.now(UTC),
+            end_date=datetime.now(UTC) + timedelta(days=7),
         )
         promo.is_active = True
         promo.status = "active"  # enum string ok per usage
@@ -363,6 +367,58 @@ class TestGameServiceTriviaPaths:
             assert result2["correct"] is True
             # Deterministic: type + presence (besitos key always in happy-path return per contract; value may vary by simple win logic not exposed as constant)
             assert isinstance(result2.get("besitos"), int)
+        service.close()
+
+    def test_trivia_besitos_daily_cap_enforced_and_streak_survives_zero_payout(
+        self, db_session, sample_user
+    ):
+        """Correct answers respect daily earning cap; streak continues even if besitos awarded=0; payout recorded matches credit."""
+        service = GameService(db_session)
+        user_tg = sample_user.telegram_id
+        # Force low cap via direct TriviaConfig (bypasses some get but fine for unit)
+        from models.models import TriviaConfig
+
+        cfg = TriviaConfig(
+            trivia_besitos_daily_free=2,
+            trivia_besitos_daily_vip=2,
+            trivia_besitos_weekly_free=100,
+            trivia_besitos_weekly_vip=100,
+        )
+        db_session.add(cfg)
+        db_session.commit()
+
+        mock_q = {"question": "Q?", "opts": ["A", "B"], "answer": 0}
+        with patch.object(service, "load_trivia_questions", return_value=[mock_q]):
+            # First correct: awards 1
+            r1 = service.play_trivia(user_id=user_tg, question_idx=0, answer_idx=0)
+            assert r1["correct"] is True
+            assert r1["besitos"] == 1
+            assert r1["besitos_total"] == 1
+
+            # Second correct (would be another 1): hits cap, awards 1 more then 0 on next
+            r2 = service.play_trivia(user_id=user_tg, question_idx=0, answer_idx=0)
+            assert r2["correct"] is True
+            # Depending on order, second may get the last 1 or 0
+            assert r2["besitos"] + r1["besitos"] <= 2
+
+            # Third: must award 0 but still correct + streak advances
+            r3 = service.play_trivia(user_id=user_tg, question_idx=0, answer_idx=0)
+            assert r3["correct"] is True
+            assert r3["besitos"] == 0
+            # New streak should be 3 (previous two + this)
+            assert r3["new_streak"] == 3
+
+        # Verify GameRecords have correct flag and payout matches what was "awarded"
+        records = (
+            db_session.query(GameRecord)
+            .filter(GameRecord.user_id == user_tg, GameRecord.game_type == "trivia")
+            .order_by(GameRecord.played_at)
+            .all()
+        )
+        awarded_sum = sum(r.payout for r in records if r.game_type == "trivia")
+        assert awarded_sum <= 2
+        # At least the third record should have correct=True even with payout 0
+        assert any(r.correct is True and r.payout == 0 for r in records)
         service.close()
 
     def test_get_daily_limits_vip_vs_free_differs(
@@ -467,12 +523,18 @@ class TestGameServiceLimitsAndConcurrent:
         assert count == 5  # no extra created beyond limit
         service.close()
 
-    async def test_concurrent_plays_respect_limit(self, db_session, sample_user):
-        """Concurrent plays (gather to_thread) near limit: total records do not explode (respect or best-effort per SQLite like other races)."""
+    @pytest.mark.asyncio
+    async def test_concurrent_plays_respect_limit(self, db_session, sample_user, sample_balance):
+        """Two near-limit plays via gather+to_thread: daily cap (5 free) never exceeded.
+
+        SQLAlchemy sessions are not thread-safe; a per-call lock serializes DB access while
+        still exercising the concurrent dispatch entry point (besito credit mocked).
+        """
         service = GameService(db_session)
         tg = sample_user.telegram_id
+        today = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
 
-        # Pre-create trivia config (to avoid concurrent insert unique on trivia_config.id during plays' internal load, per daily config fix precedent).
+        # Pre-create trivia config (avoid concurrent insert unique on trivia_config.id).
         tcfg = TriviaConfig(
             dice_limit_free=10,
             dice_limit_vip=20,
@@ -481,30 +543,57 @@ class TestGameServiceLimitsAndConcurrent:
             trivia_vip_limit=5,
             trivia_simple_limit_free=5,
             trivia_simple_limit_vip=10,
+            trivia_besitos_daily_free=10,
+            trivia_besitos_daily_vip=15,
+            trivia_besitos_weekly_free=30,
+            trivia_besitos_weekly_vip=40,
         )
         db_session.add(tcfg)
+        # One slot left: 4 of 5 free trivia plays already consumed today.
+        for i in range(4):
+            db_session.add(
+                GameRecord(
+                    user_id=tg,
+                    game_type="trivia",
+                    result=f"pre_{i}",
+                    payout=1,
+                    played_at=today + timedelta(minutes=i),
+                )
+            )
         db_session.commit()
         db_session.expire_all()
 
-        # Minimal concurrent exercise (from 0, gather 2): documents the gather entry point for plays (like broadcast/besito races).
-        # Near-limit + credit side (besito credit in to_thread + shared unit db_session) can cause tx closed / interface in env (see logs); not the limit check itself.
-        # Limit coverage provided by existing test_play_trivia_limit_reached + fresh TG test above (both pass). This one exercises concurrent call path.
         mock_q = {"question": "Q?", "opts": ["A", "B"], "answer": 0}
-        with patch.object(service, "load_trivia_questions", return_value=[mock_q]):
-            _results = await asyncio.gather(
-                asyncio.to_thread(service.play_trivia, tg, 0, 0),
-                asyncio.to_thread(service.play_trivia, tg, 0, 0),
-                return_exceptions=True,
+        play_lock = threading.Lock()
+
+        def _locked_play():
+            with play_lock:
+                return service.play_trivia(tg, 0, 0)
+
+        mock_besito = patch("services.game_service.BesitoService")
+        mock_promo = patch("services.streak_promotion_service.StreakPromotionService")
+        with (
+            patch.object(service, "load_trivia_questions", return_value=[mock_q]),
+            mock_besito as besito_cls,
+            mock_promo as promo_cls,
+        ):
+            besito_cls.return_value.credit_besitos.return_value = True
+            promo_cls.return_value.claim_for_streak.return_value = None
+            results = await asyncio.gather(
+                asyncio.to_thread(_locked_play),
+                asyncio.to_thread(_locked_play),
             )
+
+        assert all(isinstance(r, dict) for r in results)
+        assert sum(1 for r in results if r.get("limit_reached")) == 1
+        assert sum(1 for r in results if r.get("correct")) == 1
 
         total_records = (
             db_session.query(GameRecord)
             .filter(GameRecord.user_id == tg, GameRecord.game_type == "trivia")
             .count()
         )
-        assert (
-            total_records >= 0
-        )  # some may have committed before side error; env limitation documented
+        assert total_records == 5
         service.close()
 
     def test_no_held_besito_service_after_init(self, db_session, sample_user):
@@ -565,6 +654,47 @@ class TestGameServiceLimitsAndConcurrent:
             for rec in caplog.records
         )
         assert found, "game award observer not invoked or did not log per Item 6 contract"
+
+    def test_play_dice_game_contract(self, db_session):
+        """DESIRED CONTRACT Fase14 Minijuegos: play_dice_game exact keys + win credit delta (pairs/doubles).
+        Fresh explicit + patch force win + re-query + hygiene (gold).
+        """
+        from unittest.mock import patch
+
+        tg = 77714001
+        u = User(telegram_id=tg, username="diceu", role=UserRole.USER)
+        db_session.add(u)
+        db_session.commit()
+        db_session.refresh(u)
+        bal = BesitoBalance(user_id=tg, balance=10, total_earned=10, total_spent=0)
+        db_session.add(bal)
+        db_session.commit()
+        service = GameService(db_session)
+        try:
+            with patch.object(service, "roll_dice", return_value=(2, 2)):
+                res = service.play_dice_game(tg)
+            expected_keys = {
+                "dice1",
+                "dice2",
+                "sum",
+                "won",
+                "win_type",
+                "is_near_miss",
+                "near_miss_type",
+                "besitos",
+                "remaining_after",
+                "message_parts",
+                "limit_reached",
+                "message",
+            }
+            assert set(res.keys()) == expected_keys
+            assert res["won"] is True
+            assert res["win_type"] == "doubles"
+            assert res["besitos"] > 0
+            rebal = db_session.query(BesitoBalance).filter_by(user_id=tg).first()
+            assert rebal.balance == 10 + res["besitos"]
+        finally:
+            service.close()
 
 
 # Decision notes (per refactor_testing.md + item5 precedent):

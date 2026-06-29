@@ -11,7 +11,7 @@ from aiogram.filters.callback_data import CallbackData
 
 
 class ReactionCallback(CallbackData, prefix="react"):
-    """Reacciones a mensajes broadcast: react_{broadcast_id}_{emoji_id}"""
+    """Reacciones a mensajes broadcast: react:broadcast_id:emoji_id"""
 
     broadcast_id: int
     emoji_id: int
@@ -166,6 +166,70 @@ class DeleteProductCallback(CallbackData, prefix="del_prod"):
     confirmed: bool = False
 
 
+class EditProductCallback(CallbackData, prefix="edit_prod"):
+    """Abrir menú de edición de producto"""
+
+    product_id: int
+
+
+class EditProductFieldCallback(CallbackData, prefix="edit_prod_field"):
+    """Editar un campo específico del producto"""
+
+    product_id: int
+    field: str  # name | description | package | price | stock | tariff | story_node
+
+
+class SelectPkgEditProductCallback(CallbackData, prefix="sel_pkg_edit"):
+    """Seleccionar paquete al editar producto"""
+
+    product_id: int
+    package_id: int
+
+
+class SelectTariffStoreWizardCallback(CallbackData, prefix="wiz_store_tariff"):
+    """Seleccionar tarifa VIP en wizard crear producto tienda."""
+
+    tariff_id: int
+
+
+class SelectStoryNodeStoreWizardCallback(CallbackData, prefix="wiz_store_story"):
+    """Seleccionar nodo narrativo en wizard crear producto tienda."""
+
+    story_node_id: int
+
+
+class SelectTariffEditProductCallback(CallbackData, prefix="sel_tariff_edit"):
+    """Seleccionar tarifa al editar producto VIP_GRANT."""
+
+    product_id: int
+    tariff_id: int
+
+
+class SelectTierEditProductCallback(CallbackData, prefix="sel_tier_edit"):
+    """Seleccionar tier/nivel al editar producto."""
+
+    product_id: int
+    tier_id: int
+
+
+class SelectStoryNodeEditProductCallback(CallbackData, prefix="sel_story_edit"):
+    """Seleccionar nodo al editar producto STORY_UNLOCK."""
+
+    product_id: int
+    story_node_id: int
+
+
+class CreatePkgForProductCallback(CallbackData, prefix="create_pkg_prod"):
+    """Crear nuevo paquete desde selección de paquete en flujo de producto"""
+
+    source: str  # "wizard" (creación) o "edit" (edición)
+    product_id: int = 0  # solo usado en source="edit"
+
+
+class CancelPackageWizardCallback(CallbackData, prefix="cancel_pkg_wiz"):
+    """Cancelar wizard de paquete (namespaced para no colisionar con cancel global)"""
+
+
 # ==================== PROMOTIONS ====================
 
 
@@ -289,6 +353,63 @@ class ApproveAllCallback(CallbackData, prefix="approve_all"):
     channel_id: int
 
 
+class ConfigMessagesCallback(CallbackData, prefix="config_msgs"):
+    """Menú configuración de mensajes del canal"""
+
+    channel_id: int  # DB PK
+
+
+class ConfigMessageTypeCallback(CallbackData, prefix="config_msg_type"):
+    """Selección de tipo de mensaje a editar"""
+
+    channel_id: int
+    msg_type: str  # "approval" | "welcome"
+
+
+class ViewMessagesCallback(CallbackData, prefix="view_msgs"):
+    """Ver mensajes actuales del canal"""
+
+    channel_id: int
+
+
+class RestoreMessagesCallback(CallbackData, prefix="restore_msgs"):
+    """Restaurar mensajes a default Lucien"""
+
+    channel_id: int
+    msg_type: str  # "approval" | "welcome" | "all"
+
+
+class ApproveOneCallback(CallbackData, prefix="approve_one"):
+    """Aprobar solicitud individual"""
+
+    request_id: int
+    channel_id: int  # DB PK (navegación)
+    page: int = 0
+
+
+class RejectOneCallback(CallbackData, prefix="reject_one"):
+    """Rechazar solicitud individual (muestra confirmación)"""
+
+    request_id: int
+    channel_id: int
+    page: int = 0
+
+
+class ConfirmRejectCallback(CallbackData, prefix="confirm_reject"):
+    """Confirmar rechazo de solicitud"""
+
+    request_id: int
+    channel_id: int
+    page: int = 0
+
+
+class PendingPageCallback(CallbackData, prefix="pending_page"):
+    """Paginación de solicitudes pendientes"""
+
+    channel_id: int
+    page: int
+
+
 class DeleteChannelCallback(CallbackData, prefix="delete_channel"):
     """Confirmar eliminación de canal"""
 
@@ -410,6 +531,12 @@ class StoryNewArchetypeCallback(CallbackData, prefix="story_new_archetype"):
     archetype: str  # ArchetypeType enum value
 
 
+class StoryArchetypeEditCallback(CallbackData, prefix="story_arch_edit"):
+    """Editar arquetipo existente"""
+
+    archetype: str  # ArchetypeType enum value
+
+
 class StoryChoiceCallback(CallbackData, prefix="story_choice"):
     """Seleccionar opción de historia"""
 
@@ -434,6 +561,12 @@ class ArchetypeSelectCallback(CallbackData, prefix="archetype_select"):
     archetype: str
 
 
+class StoryNodeListPageCallback(CallbackData, prefix="story_node_list"):
+    """Paginación de listado de nodos admin"""
+
+    page: int = 0
+
+
 class StoryNodeDetailCallback(CallbackData, prefix="story_node_detail"):
     """Detalle de nodo de historia"""
 
@@ -455,6 +588,12 @@ class StoryNodeDeleteCallback(CallbackData, prefix="story_node_delete"):
 
 class StoryAddChoicesCallback(CallbackData, prefix="story_add_choices"):
     """Agregar opciones a nodo"""
+
+    node_id: int
+
+
+class StoryAchievementNodeCallback(CallbackData, prefix="story_ach_node"):
+    """Nodo requerido para logro (0 = ninguno)"""
 
     node_id: int
 
@@ -610,6 +749,49 @@ class BroadcastProtectCallback(CallbackData, prefix="bc_protect"):
     """Protección del mensaje broadcast"""
 
     action: str  # "yes" | "no"
+
+
+class ToggleExtraButtonCallback(CallbackData, prefix="bc_extra"):
+    """Toggle selección de botón extra (single choice: 0 = ninguno)"""
+
+    button_id: int  # 0 means "ninguno"
+
+
+# ==================== BROADCAST BUTTONS ADMIN (gestión del catálogo "definir primero") ====================
+
+
+class EditButtonCallback(CallbackData, prefix="edit_btn"):
+    """Editar un botón de enlace existente (admin wizard)"""
+
+    button_id: int
+
+
+class ToggleButtonCallback(CallbackData, prefix="toggle_btn"):
+    """Activar o desactivar un botón de enlace (admin)"""
+
+    button_id: int
+
+
+class DeleteButtonCallback(CallbackData, prefix="del_btn"):
+    """Eliminar botón de enlace (requiere confirmación)"""
+
+    button_id: int
+    confirmed: bool = False
+
+
+class ChangeButtonLabelCallback(CallbackData, prefix="ch_btn_label"):
+    """Iniciar cambio de label de un botón (admin wizard)"""
+    button_id: int
+
+
+class ChangeButtonUrlCallback(CallbackData, prefix="ch_btn_url"):
+    """Iniciar cambio de url de un botón (admin wizard)"""
+    button_id: int
+
+
+class ChangeButtonDescCallback(CallbackData, prefix="ch_btn_desc"):
+    """Iniciar cambio de descripción de un botón (admin wizard)"""
+    button_id: int
 
 
 # ==================== ANONYMOUS MESSAGE ====================
@@ -859,4 +1041,66 @@ class BackpackPurchaseDetailCallback(CallbackData, prefix="backpack_purchase"):
 class BackpackDeliverCallback(CallbackData, prefix="backpack_deliver"):
     """Entregar contenido de paquete"""
 
+    package_id: int
+
+
+class BackpackFulfillmentRetryCallback(CallbackData, prefix="bp_fulfill_retry"):
+    """Reintentar entrega de fulfillment PACKAGE."""
+
+    fulfillment_id: int
+
+
+class BackpackActivateVipCallback(CallbackData, prefix="bp_activate_vip"):
+    """Activar VIP desde token de fulfillment."""
+
+    fulfillment_id: int
+
+
+class BackpackReadChapterCallback(CallbackData, prefix="bp_read_chapter"):
+    """Leer capítulo desbloqueado por fulfillment STORY_UNLOCK."""
+
+    fulfillment_id: int
+
+
+class BackpackViewWaitlistCallback(CallbackData, prefix="bp_view_waitlist"):
+    """Ver posición en lista de espera."""
+
+    fulfillment_id: int
+
+
+class BackpackSubmitInputCallback(CallbackData, prefix="bp_submit_input"):
+    """Inicia FSM para enviar input pendiente desde mochila."""
+
+    fulfillment_id: int
+
+
+class StoreTierCallback(CallbackData, prefix="store_tier"):
+    """Navegación catálogo por tier."""
+
+    tier_id: int
+
+
+class FulfillmentAdminQueueCallback(CallbackData, prefix="fulfill_admin_q"):
+    """Filtro cola admin fulfillment."""
+
+    status: str = "all"
+
+
+class FulfillmentAdminItemCallback(CallbackData, prefix="fulfill_admin_item"):
+    """Detalle item cola admin."""
+
+    fulfillment_id: int
+    filter_status: str = "pending"
+
+
+class FulfillmentAdminMarkCallback(CallbackData, prefix="fulfill_admin_mark"):
+    """Marcar fulfillment cumplido."""
+
+    fulfillment_id: int
+
+
+class FulfillmentAdminDeliverCallback(CallbackData, prefix="fulfill_admin_deliver"):
+    """Entregar paquete desde cola admin."""
+
+    fulfillment_id: int
     package_id: int

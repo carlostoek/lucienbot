@@ -19,6 +19,39 @@ from services import get_service
 from services.nurture_service import NurtureService
 
 
+def test_nurture_audience_strenum_binds_lowercase_values():
+    """PostgreSQL nurtureaudience enum expects 'vip'/'all'/'free', not member names."""
+    assert NurtureAudience.VIP == "vip"
+    assert NurtureAudience.ALL == "all"
+    assert NurtureAudience.FREE == "free"
+    assert isinstance(NurtureAudience.VIP, str)
+
+
+def test_nurture_audience_query_binds_lowercase_on_postgres():
+    """Regression: sin values_callable SQLAlchemy emite 'VIP'/'ALL' y falla en producción."""
+    from sqlalchemy.dialects import postgresql
+
+    from models.models import NurtureSequence
+
+    stmt = (
+        NurtureSequence.__table__.select()
+        .where(
+            NurtureSequence.audience.in_([NurtureAudience.VIP, NurtureAudience.ALL]),
+        )
+        .limit(1)
+    )
+    compiled = str(
+        stmt.compile(
+            dialect=postgresql.dialect(),
+            compile_kwargs={"literal_binds": True},
+        )
+    )
+    assert "'vip'" in compiled
+    assert "'all'" in compiled
+    assert "'VIP'" not in compiled
+    assert "'ALL'" not in compiled
+
+
 # For unit service tests: simple direct fixture (gold pattern in test_vip etc). Handler/e2e use get_service.
 @pytest.fixture
 def nurture_svc(db_session):

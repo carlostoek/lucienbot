@@ -7,8 +7,17 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
 import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from models.models import BesitoTransaction, DailyGiftClaim, DailyGiftConfig, TransactionSource
+from models.database import Base
+from models.models import (
+    BesitoBalance,
+    BesitoTransaction,
+    DailyGiftClaim,
+    DailyGiftConfig,
+    TransactionSource,
+)
 from services.besito_service import BesitoService
 from services.daily_gift_service import DailyGiftService
 
@@ -265,56 +274,66 @@ class TestDailyGiftConcurrentClaim:
     Usa sample TG (contract). Build on daily atomic pilot in cross (claim+credit visibility post internal).
     """
 
-    async def test_concurrent_first_claims_at_most_one_succeeds(self, db_session, sample_user):
-        """
-        Two concurrent first claims: at most 1 succeeds (claim row + credit); no double besitos.
-
-        NOTE on fragility (shared db_session across to_thread): Session is not thread-safe.
-        Real concurrent protection golds use file-based SQLite + isolated sessions (see cross_service_atomicity
-        and the "file variant" comments). Here we tolerate exceptions in results (expected loser path when
-        hitting unique on DailyGiftClaim or related during race) + explicit session cleanup before asserts.
-        This reduces leaking IntegrityError as top-level test failure.
-        """
-        service = DailyGiftService(db_session)
-        tg = sample_user.telegram_id
-
-        # Pre-create config to avoid concurrent default creation inside claim_gift.get_config() (would hit UNIQUE on daily_gift_config.id=1 from 2 threads).
-        # This lets the race be on the claim/credit path itself (the intended for this test).
-        cfg = DailyGiftConfig(besito_amount=10, is_active=True)
-        db_session.add(cfg)
-        db_session.commit()
-        db_session.expire_all()
-
-        results = await asyncio.gather(
-            asyncio.to_thread(service.claim_gift, tg),
-            asyncio.to_thread(service.claim_gift, tg),
-            return_exceptions=True,
+    def _create_engine_and_session(self, tmp_path):
+        """SQLite file + TestSession (gold pattern: besito concurrent + daily atomicity)."""
+        db_path = tmp_path / "test_daily_concurrent.db"
+        engine = create_engine(
+            f"sqlite:///{db_path}",
+            connect_args={"check_same_thread": False},
         )
+        Base.metadata.create_all(engine)
+        TestSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)  # noqa: N806
+        return engine, TestSession
 
-        # Explicitly tolerate exceptions in results: the "loser" of the first-claim race may surface
-        # as IntegrityError (constraint) or other, caught inside claim_gift or bubbling from thread.
-        # We only care that the *business* outcome (successes + claim rows + balance) respects the contract.
-        successes = [r for r in results if isinstance(r, tuple) and r[0] is True]
-        assert len(successes) <= 1
+    async def test_concurrent_first_claims_at_most_one_succeeds(self, tmp_path):
+        """Two concurrent first claims: at most 1 succeeds (claim row + credit); no double besitos.
 
-        # Note: we do NOT force rollback/expire here to avoid de-associating the tx from the test fixture
-        # (which can trigger SAWarning + failures in some runs). The original expire_all() before gather
-        # + the filter on results already provide the tolerance. Full isolation is in the integration
-        # file-variant versions of concurrent atomicity tests.
-        claim_count = db_session.query(DailyGiftClaim).filter(DailyGiftClaim.user_id == tg).count()
-        assert claim_count <= 1
+        Uses isolated file SQLite + separate TestSession per thread (not SessionLocal/prod DB).
+        """
+        engine, TestSession = self._create_engine_and_session(tmp_path)  # noqa: N806
+        tg = 77709010
 
-        bal = (
-            service.besito_service.get_balance(tg)
-            if hasattr(service, "besito_service")
-            else BesitoService(db_session).get_balance(tg)
-        )  # 1-line fix post local-in-claim (F5); daily precedent guard preserved
-        assert bal <= 10  # default config amt; never double in race
+        setup = TestSession()
+        try:
+            setup.add_all(
+                [
+                    DailyGiftConfig(besito_amount=10, is_active=True),
+                    BesitoBalance(user_id=tg, balance=0, total_earned=0, total_spent=0),
+                ]
+            )
+            setup.commit()
+        finally:
+            setup.close()
 
-        # Exceptions (e.g. IntegrityError) appearing in `results` are acceptable for the race loser path.
-        # The test uses return_exceptions=True precisely because the second concurrent claim can hit
-        # DB constraints (unique on claim or besito tx) or application checks. The filter + asserts
-        # verify the contract regardless of whether the loser returned a tuple or an exception object.
+        def _claim_with_own_session():
+            sess = TestSession()
+            try:
+                with patch("services.event_bus.schedule_emit"):
+                    return DailyGiftService(sess).claim_gift(tg)
+            finally:
+                sess.close()
+
+        try:
+            results = await asyncio.gather(
+                asyncio.to_thread(_claim_with_own_session),
+                asyncio.to_thread(_claim_with_own_session),
+                return_exceptions=True,
+            )
+
+            successes = [r for r in results if isinstance(r, tuple) and r[0] is True]
+            assert len(successes) <= 1
+
+            verify = TestSession()
+            try:
+                claim_count = (
+                    verify.query(DailyGiftClaim).filter(DailyGiftClaim.user_id == tg).count()
+                )
+                assert claim_count <= 1
+                assert BesitoService(verify).get_balance(tg) <= 10
+            finally:
+                verify.close()
+        finally:
+            engine.dispose()
 
     def test_property_kept_for_guard_and_compat(self, db_session, sample_user):
         """Post Item 6: @property besito_service kept (for test guards/compat + hasattr precedent) even though claim_gift uses local inside."""
@@ -353,3 +372,48 @@ class TestDailyGiftConcurrentClaim:
         final_bal = BesitoService(db_session).get_balance(sample_user.telegram_id)
         assert final_bal == 10
         service.close()
+
+
+@pytest.mark.unit
+class TestGamifDailyCapsExplicit:
+    """Explicit daily cap: once-per-day claim enforced (per PLAN F2 caps hygiene).
+    Real DailyGiftService + credit path. Copy daily guards + 1-line/guard style if bal.
+    0 beh change. UI/return messages pinned for hygiene.
+    """
+
+    def test_claim_gift_once_per_day_explicit(self, db_session, sample_user):
+        """First claim succeeds (credit + claim row); second same day blocks with cooldown msg.
+        Exercises the daily cap explicitly (no two claims within 24h window).
+        """
+        service = DailyGiftService(db_session)
+
+        # First claim: success
+        ok1, amt1, msg1 = service.claim_gift(sample_user.telegram_id)
+        assert ok1 is True
+        assert amt1 == 10
+        # 1-line/guard port post Item10 local (copy daily precedent in cross; arch-enforcer); was service.besito_service
+        bal = (
+            BesitoService(db=db_session).get_balance(sample_user.telegram_id)
+            if not hasattr(service, "besito_service")
+            else service.besito_service.get_balance(sample_user.telegram_id)
+        )
+        assert bal == 10
+
+        # force not hasattr path for guard fidelity (per review; bare object to hit independent BesitoService branch)
+        bare = object()
+        bal_bare = (
+            BesitoService(db=db_session).get_balance(sample_user.telegram_id)
+            if not hasattr(bare, "besito_service")
+            else getattr(bare, "besito_service", None)
+        )
+        assert bal_bare == 10
+
+        # Second claim immediately (same day): must block
+        ok2, amt2, msg2 = service.claim_gift(sample_user.telegram_id)
+        assert ok2 is False
+        assert amt2 is None
+        assert "debes esperar" in (msg2 or "").lower() or "cooldown" in (msg2 or "").lower() or "esperar" in (msg2 or "").lower()
+
+        # Balance unchanged (cap protected)
+        bal2 = BesitoService(db=db_session).get_balance(sample_user.telegram_id)
+        assert bal2 == 10

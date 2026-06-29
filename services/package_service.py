@@ -7,12 +7,15 @@ Gestiona la creación, edición y entrega de paquetes de contenido.
 import html
 import logging
 
+from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 from aiogram.types import InputMediaPhoto, InputMediaVideo
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, selectinload
 
 from models.database import SessionLocal
 from models.models import Category, Package, PackageFile
+from utils.lucien_voice import LucienVoice
+from utils.telegram_delivery import classify_bad_request_error, classify_forbidden_error
 
 logger = logging.getLogger(__name__)
 
@@ -317,7 +320,14 @@ class PackageService:
 
         return media_groups, individual_files
 
-    async def deliver_package_to_user(self, bot, user_id: int, package_id: int) -> tuple[bool, str]:
+    async def deliver_package_to_user(
+        self,
+        bot,
+        user_id: int,
+        package_id: int,
+        *,
+        delivery_source: str = "unknown",
+    ) -> tuple[bool, str]:
         """
         Entrega un paquete a un usuario enviando todos los archivos.
         Fotos y videos se agrupan en albums; animaciones y documentos se envían individual.
@@ -326,26 +336,28 @@ class PackageService:
             bot: Instancia del bot
             user_id: ID del usuario destino
             package_id: ID del paquete
+            delivery_source: Origen para logs (nurture/mission/reward/backpack/etc.)
 
         Returns:
             Tuple (éxito, mensaje)
         """
         package = self.get_package(package_id)
         if not package:
-            return False, "Paquete no encontrado"
+            return False, LucienVoice.package_not_found()
 
         files = self.get_package_files(package_id)
         if not files:
-            return False, "El paquete no contiene archivos"
+            return False, LucienVoice.package_empty_files()
 
         try:
             # Construir grupos de media
             media_groups, individual_files = self._build_media_groups(files)
 
             # Enviar mensaje introductorio
-            await bot.send_message(
-                chat_id=user_id,
-                text=f"""🎩 <b>Lucien:</b>
+            try:
+                await bot.send_message(
+                    chat_id=user_id,
+                    text=f"""🎩 <b>Lucien:</b>
 
 <i>Diana ha preparado algo especial para usted...</i>
 
@@ -354,8 +366,26 @@ class PackageService:
 <i>{html.escape(package.description or "Un obsequio del reino...")}</i>
 
 Enviando {len(files)} archivo(s)...""",
-                parse_mode="HTML",
-            )
+                    parse_mode="HTML",
+                )
+            except TelegramBadRequest as e:
+                is_perm, code = classify_bad_request_error(e)
+                if is_perm:
+                    logger.warning(
+                        f"package_service | deliver | source={delivery_source} | "
+                        f"user_id={user_id} | package_id={package_id} | result={code}"
+                    )
+                    return False, code
+                raise
+            except TelegramForbiddenError as e:
+                is_perm, code = classify_forbidden_error(e)
+                if is_perm:
+                    logger.warning(
+                        f"package_service | deliver | source={delivery_source} | "
+                        f"user_id={user_id} | package_id={package_id} | result={code}"
+                    )
+                    return False, code
+                raise
 
             # Enviar media groups (fotos y videos agrupados)
             for media_group in media_groups:
@@ -379,12 +409,18 @@ Enviando {len(files)} archivo(s)...""",
                     logger.error(f"Error enviando archivo {file_entry.id}: {e}")
                     continue
 
-            logger.info(f"Paquete {package_id} entregado a usuario {user_id}")
-            return True, f"Paquete '{package.name}' entregado exitosamente"
+            logger.info(
+                f"package_service | deliver | source={delivery_source} | "
+                f"user_id={user_id} | package_id={package_id} | result=success"
+            )
+            return True, LucienVoice.package_delivery_success(package.name)
 
         except Exception as e:
-            logger.error(f"Error entregando paquete {package_id}: {e}")
-            return False, "Error al entregar el paquete"
+            logger.error(
+                f"package_service | deliver | source={delivery_source} | "
+                f"user_id={user_id} | package_id={package_id} | error={e}"
+            )
+            return False, LucienVoice.package_delivery_failed()
 
     # ==================== ESTADÍSTICAS ====================
 

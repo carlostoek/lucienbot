@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session, joinedload
 from models.database import SessionLocal
 from models.models import Channel, ChannelType, Subscription, Tariff, Token, TokenStatus, User
 from services.event_bus import EVENT_VIP_ACTIVATED, get_event_bus, schedule_emit
+from utils.lucien_voice import LucienVoice
 
 logger = logging.getLogger(__name__)
 
@@ -227,6 +228,7 @@ class VIPService:
             existing_subscription.is_active = True  # Defensive: ensure active after extension
             # Mantener la nueva referencia del token aunque sea extensión
             existing_subscription.token_id = token.id
+            existing_subscription.tariff_id = token.tariff_id  # direct tariff (new convention for internals + legacy compat)
 
             # Desactivar cualquier otra suscripción activa del usuario (duplicados por bug anterior)
             db.query(Subscription).filter(
@@ -278,7 +280,11 @@ class VIPService:
             return None
 
         subscription = Subscription(
-            user_id=user_id, channel_id=vip_channel.id, token_id=token.id, end_date=end_date
+            user_id=user_id,
+            channel_id=vip_channel.id,
+            token_id=token.id,
+            tariff_id=token.tariff_id,  # direct tariff association (enables relaxed rule for internal grants)
+            end_date=end_date,
         )
 
         db.add(subscription)
@@ -299,6 +305,25 @@ class VIPService:
             )
         )
 
+        return subscription
+
+    async def redeem_token_with_missions(
+        self, token_code: str, user_id: int, bot=None
+    ) -> Subscription | None:
+        """Canjea token VIP y procesa misiones VIP_ACTIVE con entrega automática."""
+        subscription = self.redeem_token(token_code, user_id)
+        if subscription:
+            from services.mission_service import run_vip_mission_side_effects
+
+            shared_db = self.db if not self._owns_session else None
+            completed = await run_vip_mission_side_effects(
+                user_id, bot=bot, db=shared_db
+            )
+            if completed:
+                logger.info(
+                    f"vip_service | vip_mission_side_effects | user_id={user_id} | "
+                    f"completed={completed}"
+                )
         return subscription
 
     def set_gift_status(self, token_id: int, is_gift: bool) -> bool:
@@ -348,7 +373,10 @@ class VIPService:
         now = datetime.now(UTC).replace(tzinfo=None)
         query = (
             db.query(Subscription)
-            .options(joinedload(Subscription.token).joinedload(Token.tariff))
+            .options(
+                joinedload(Subscription.token).joinedload(Token.tariff),
+                joinedload(Subscription.tariff),  # direct tariff (preferred for internal grants)
+            )
             .filter(
                 Subscription.is_active,
                 Subscription.end_date > now,
@@ -432,6 +460,189 @@ class VIPService:
             .filter(Channel.channel_type == ChannelType.VIP, Channel.is_active)
             .first()
         )
+
+    async def create_vip_invite_link(
+        self, bot, user_id: int, *, allow_fallback: bool = False
+    ) -> str | None:
+        """Genera enlace de invitación de un solo uso al canal VIP."""
+        vip_channel = self.get_vip_channel()
+        if not vip_channel:
+            return None
+        try:
+            invite_link_obj = await bot.create_chat_invite_link(
+                chat_id=vip_channel.channel_id,
+                name=f"VIP {user_id}",
+                creates_join_request=False,
+                member_limit=1,
+                expire_date=datetime.now(UTC)
+                + timedelta(days=self.INVITE_LINK_EXPIRATION_DAYS),
+            )
+            return invite_link_obj.invite_link
+        except Exception as exc:
+            logger.error(
+                f"vip_service | create_vip_invite_link | user_id={user_id} | "
+                f"channel_id={vip_channel.channel_id} | error={exc}"
+            )
+            if allow_fallback:
+                return vip_channel.invite_link
+            return None
+
+    async def grant_vip_from_tariff(
+        self, bot, user_id: int, tariff_id: int
+    ) -> tuple[bool, str, dict]:
+        """Genera token, canjea VIP y prepara mensaje de acceso directo."""
+        tariff = self.get_tariff(tariff_id)
+        if not tariff:
+            return False, LucienVoice.reward_tariff_not_found(), {}
+
+        token = self.generate_token(tariff_id)
+        subscription = await self.redeem_token_with_missions(
+            token.token_code, user_id, bot=bot
+        )
+        if not subscription:
+            logger.error(
+                f"vip_service | grant_vip_from_tariff | redeem_failed | "
+                f"user_id={user_id} | tariff_id={tariff_id}"
+            )
+            return False, LucienVoice.reward_vip_activation_failed(), {}
+
+        invite_link = await self.create_vip_invite_link(bot, user_id, allow_fallback=False)
+        if not invite_link:
+            logger.error(
+                f"vip_service | grant_vip_from_tariff | invite_failed | "
+                f"user_id={user_id} | tariff_id={tariff_id}"
+            )
+            partial_metadata = {
+                "vip_activated": True,
+                "subscription_id": subscription.id,
+                "invite_link": None,
+                "tariff_name": tariff.name,
+                "token_id": token.id,
+            }
+            return False, LucienVoice.reward_vip_invite_failed(), partial_metadata
+
+        metadata = {
+            "vip_activated": True,
+            "subscription_id": subscription.id,
+            "invite_link": invite_link,
+            "tariff_name": tariff.name,
+            "token_id": token.id,
+            "token_code": token.token_code,
+        }
+        return True, LucienVoice.vip_direct_access(invite_link), metadata
+
+    async def grant_internal_vip_access(
+        self, user_id: int, tariff_id: int
+    ) -> tuple[bool, Subscription | None, dict]:
+        """
+        Otorga (o extiende) acceso VIP directamente asociado a una tarifa, sin requerir Token.
+        Usar para grants internos/programáticos: misiones, tienda (VIP_GRANT), activación admin/forward, etc.
+
+        Sigue el mismo contrato de atomicidad/extensión que redeem (pero sin token).
+        Emite EVENT_VIP_ACTIVATED (best-effort).
+        Retorna (ok, subscription_or_None, metadata).
+        """
+        tariff = self.get_tariff(tariff_id)
+        if not tariff:
+            return False, None, {"error": "tariff_not_found"}
+
+        db = self._get_db()
+        now = datetime.now(UTC)
+
+        # Verificar si el usuario ya tiene una suscripción activa
+        existing_subscription = self.get_user_subscription(user_id)
+        sub_end_date = (
+            _ensure_aware(existing_subscription.end_date)
+            if existing_subscription and existing_subscription.end_date is not None
+            else None
+        )
+
+        if existing_subscription and sub_end_date is not None and sub_end_date > now:
+            # Extender existente
+            existing_subscription.end_date = sub_end_date + timedelta(days=tariff.duration_days)
+            existing_subscription.is_active = True
+            # No tocamos token_id (puede ser None para grants internos)
+            existing_subscription.tariff_id = tariff_id
+
+            db.query(Subscription).filter(
+                Subscription.user_id == user_id,
+                Subscription.is_active,
+                Subscription.id != existing_subscription.id,
+            ).update({Subscription.is_active: False})
+
+            db.commit()
+            db.refresh(existing_subscription)
+
+            user = db.query(User).filter(User.telegram_id == user_id).first()
+            if user:
+                user.vip_entry_status = None
+                user.vip_entry_stage = None
+                db.commit()
+
+            logger.info(
+                f"vip_service | grant_internal_vip_access | extended | user_id={user_id} | tariff_id={tariff_id}"
+            )
+            schedule_emit(
+                get_event_bus().emit(
+                    EVENT_VIP_ACTIVATED,
+                    {"user_id": user_id, "subscription_id": existing_subscription.id},
+                )
+            )
+            return True, existing_subscription, {"subscription_id": existing_subscription.id, "tariff_id": tariff_id}
+
+        # Crear nueva
+        end_date = now + timedelta(days=tariff.duration_days)
+
+        db.query(Subscription).filter(
+            Subscription.user_id == user_id, Subscription.is_active
+        ).update({Subscription.is_active: False})
+
+        vip_channel = (
+            db.query(Channel)
+            .filter(Channel.channel_type == ChannelType.VIP, Channel.is_active)
+            .first()
+        )
+        if not vip_channel:
+            db.rollback()
+            return False, None, {"error": "no_vip_channel"}
+
+        subscription = Subscription(
+            user_id=user_id,
+            channel_id=vip_channel.id,
+            token_id=None,  # internal grant: no token required
+            tariff_id=tariff_id,
+            end_date=end_date,
+        )
+        db.add(subscription)
+        db.commit()
+        db.refresh(subscription)
+
+        user = db.query(User).filter(User.telegram_id == user_id).first()
+        if user:
+            user.vip_entry_status = None
+            user.vip_entry_stage = None
+            db.commit()
+
+        logger.info(
+            f"vip_service | grant_internal_vip_access | created | user_id={user_id} | tariff_id={tariff_id} | sub_id={subscription.id}"
+        )
+        schedule_emit(
+            get_event_bus().emit(
+                EVENT_VIP_ACTIVATED, {"user_id": user_id, "subscription_id": subscription.id}
+            )
+        )
+        return True, subscription, {"subscription_id": subscription.id, "tariff_id": tariff_id}
+
+    async def resend_vip_invite_for_user(
+        self, bot, user_id: int
+    ) -> tuple[bool, str, str | None]:
+        """Regenera enlace VIP si el usuario tiene suscripción activa."""
+        if not self.is_user_vip(user_id):
+            return False, LucienVoice.reward_vip_not_configured(), None
+        invite_link = await self.create_vip_invite_link(bot, user_id, allow_fallback=False)
+        if not invite_link:
+            return False, LucienVoice.reward_vip_invite_failed(), None
+        return True, LucienVoice.vip_direct_access(invite_link), invite_link
 
     # ==================== VIP ENTRY STATE (legacy cleanup) ====================
 

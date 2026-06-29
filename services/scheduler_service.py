@@ -15,13 +15,14 @@ import logging
 from datetime import UTC, datetime, timedelta
 
 from aiogram import Bot
-from aiogram.exceptions import TelegramBadRequest
+from aiogram.exceptions import TelegramForbiddenError
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
 from keyboards.inline_keyboards import social_links_keyboard
 from models.database import SessionLocal
 from services.backup_service import BackupService
+from services.channel_grant import build_approval_payload, grant_pending_request
 from services.channel_service import ChannelService
 from services.package_service import PackageService
 from services.streak_scheduler_bridge import activate_streak_promotion, deactivate_streak_promotion
@@ -72,7 +73,9 @@ async def _run_backup_job():
         logger.error(f"Error running backup: {e}")
 
 
-async def _send_free_welcome_job(user_id: int, channel_id: int):
+async def _send_free_welcome_job(
+    user_id: int, channel_id: int, user_chat_id: int | None = None
+):
     """Envía el mensaje ritual de entrada al canal Free tras 30s de espera.
 
     Job handler de módulo para evitar errores de serialización con APScheduler.
@@ -86,17 +89,26 @@ async def _send_free_welcome_job(user_id: int, channel_id: int):
             logger.warning(f"Canal {channel_id} no encontrado o inactivo para welcome job")
             return
 
-        bot = _get_bot()
+        from utils.telegram_delivery import resolve_private_chat_id
 
+        bot = _get_bot()
+        dm_chat_id = resolve_private_chat_id(user_id, user_chat_id)
         await bot.send_message(
-            chat_id=user_id,
-            text=LucienVoice.free_entry_ritual(channel.channel_name or "Los Kinkys"),
+            chat_id=dm_chat_id,
+            text=build_approval_payload(channel),
             parse_mode="HTML",
             reply_markup=social_links_keyboard(),
         )
 
-        logger.info(f"Mensaje ritual enviado: user={user_id}, channel={channel_id}")
+        logger.info(
+            f"Mensaje ritual enviado: user={user_id} | dm_chat_id={dm_chat_id} | "
+            f"user_chat_id={user_chat_id} | channel={channel_id}"
+        )
 
+    except TelegramForbiddenError:
+        logger.warning(
+            f"Mensaje ritual no enviable (forbidden): user={user_id}, channel={channel_id}"
+        )
     except Exception as e:
         logger.error(f"Error enviando mensaje ritual a user={user_id}: {e}")
     finally:
@@ -112,58 +124,10 @@ async def _process_pending_requests():
         bot = _get_bot()
 
         for request in ready_requests:
-            try:
-                channel = request.channel
-                if not channel or not channel.is_active:
-                    continue
-
-                await bot.approve_chat_join_request(
-                    chat_id=channel.channel_id, user_id=request.user_id
-                )
-
-                request.status = "approved"
-                request.approved_at = datetime.now(UTC)
-                db.commit()
-
-                # Enviar mensaje de bienvenida directamente.
-                # NOTA: El webhook handle_member_join NO se dispara cuando el bot
-                # aprueba via API (el evento tiene from_user=bot, no el usuario).
-                # Para aprobaciones manuales por custodio sí funciona el webhook.
-                try:
-                    message = LucienVoice.free_entry_welcome(channel.channel_name or "Los Kinkys")
-                    if channel.invite_link:
-                        message += f"\n{channel.invite_link}"
-                    await bot.send_message(
-                        chat_id=request.user_id,
-                        text=message,
-                        parse_mode="HTML",
-                        reply_markup=social_links_keyboard(),
-                    )
-                    logger.info(
-                        f"Mensaje bienvenida enviado a user={request.user_id} tras aprobacion automatica"
-                    )
-                except Exception as e:
-                    logger.error(f"Error enviando bienvenida a user={request.user_id}: {e}")
-
-                logger.info(
-                    f"Solicitud aprobada: user={request.user_id}, channel={channel.channel_id}"
-                )
-
-            except TelegramBadRequest as e:
-                if "USER_ALREADY_PARTICIPANT" in str(e):
-                    request.status = "approved"
-                    request.approved_at = datetime.now(UTC)
-                    db.commit()
-                    logger.info(
-                        f"Solicitud {request.id}: user={request.user_id} ya era participante, "
-                        f"marcada como aprobada"
-                    )
-                else:
-                    logger.error(f"Error aprobando solicitud {request.id}: {e}")
-                    db.rollback()
-            except Exception as e:
-                logger.error(f"Error aprobando solicitud {request.id}: {e}")
-                db.rollback()
+            channel = request.channel
+            if not channel or not channel.is_active:
+                continue
+            await grant_pending_request(db, request, bot)
 
     finally:
         db.close()
@@ -194,6 +158,32 @@ async def _process_expiring_subscriptions():
                 logger.error(f"Error enviando recordatorio {subscription.id}: {e}")
                 db.rollback()
 
+    finally:
+        db.close()
+
+
+async def _process_pending_mission_rewards():
+    """Reintenta entregas de recompensas de misiones pendientes (llamado por APScheduler)."""
+    db = SessionLocal()
+    try:
+        from services.mission_service import MissionService
+
+        mission_service = MissionService(db)
+        bot = _get_bot()
+        user_ids = mission_service.get_users_with_pending_reward_deliveries()
+        for user_id in user_ids:
+            try:
+                count = await mission_service.deliver_pending_rewards(user_id, bot=bot)
+                if count:
+                    logger.info(
+                        f"scheduler_service | pending_mission_rewards | user_id={user_id} | "
+                        f"delivered={count}"
+                    )
+            except Exception as exc:
+                logger.error(
+                    f"scheduler_service | pending_mission_rewards | user_id={user_id} | "
+                    f"error={exc}"
+                )
     finally:
         db.close()
 
@@ -269,7 +259,7 @@ async def _perform_nurture_content_delivery(bot, user_id: int, step, db) -> tupl
         pkg_svc = PackageService(db)  # shares
         try:
             success, result_msg = await pkg_svc.deliver_package_to_user(
-                bot, user_id, step.package_id
+                bot, user_id, step.package_id, delivery_source="nurture"
             )
             delivered = success
         finally:
@@ -504,11 +494,32 @@ class SchedulerService:
             replace_existing=True,
             name="Limpieza de sesiones de racha expiradas",
         )
+        self._scheduler.add_job(
+            _process_pending_mission_rewards,
+            IntervalTrigger(minutes=30),
+            id="pending_mission_rewards",
+            replace_existing=True,
+            name="Retry pending mission reward deliveries",
+        )
+        from services.fulfillment_service import reset_monthly_store_caps_job
+
+        self._scheduler.add_job(
+            reset_monthly_store_caps_job,
+            trigger="cron",
+            day=1,
+            hour=0,
+            minute=0,
+            id="reset_monthly_store_caps",
+            replace_existing=True,
+            name="Reset monthly store caps",
+        )
         self._scheduler.start()
         self.running = True
         logger.info("Scheduler started (APScheduler + SQLAlchemyJobStore)")
 
-    def schedule_free_welcome(self, user_id: int, channel_id: int):
+    def schedule_free_welcome(
+        self, user_id: int, channel_id: int, user_chat_id: int | None = None
+    ):
         """Programa el mensaje ritual de entrada con 30s de delay.
 
         Usa DateTrigger para un job one-shot que se ejecuta 30 segundos
@@ -521,7 +532,11 @@ class SchedulerService:
             trigger=DateTrigger(run_date=run_date),
             id=job_id,
             replace_existing=True,
-            kwargs={"user_id": user_id, "channel_id": channel_id},
+            kwargs={
+                "user_id": user_id,
+                "channel_id": channel_id,
+                "user_chat_id": user_chat_id,
+            },
         )
         logger.info(
             f"Scheduled free welcome job: user={user_id}, channel={channel_id}, run_at={run_date}"

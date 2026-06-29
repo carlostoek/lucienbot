@@ -5,25 +5,35 @@ Handlers para comandos básicos y flujos generales.
 """
 
 import logging
-from datetime import timedelta
 
 from aiogram import F, Router
 from aiogram.filters import Command, CommandStart
 from aiogram.types import CallbackQuery, Message
 
-from config.settings import bot_config
 from keyboards.inline_keyboards import (
     admin_menu_keyboard,
     main_menu_keyboard,
     returning_user_keyboard,
     vip_access_keyboard,
 )
+from services import get_service
+from services.mission_service import MissionService
 from services.user_service import UserService
 from services.vip_service import VIPService
+from utils.admin import is_admin
 from utils.lucien_voice import LucienVoice
 
 logger = logging.getLogger(__name__)
 router = Router()
+
+
+def _redact_start_log_args(args: str | None) -> str:
+    """Redact sensitive deep-link tokens; log presence/length only."""
+    if not args:
+        return "none"
+    if args == "free":
+        return "free"
+    return f"token(len={len(args)})"
 
 
 @router.message(CommandStart())
@@ -35,7 +45,9 @@ async def cmd_start(message: Message):
     user_service = UserService()
     vip_service = VIPService()
 
-    logger.info(f"/start recibido - user_id={user.id}, args={args}, full_text='{message.text}'")
+    logger.info(
+        f"/start recibido - user_id={user.id}, args={_redact_start_log_args(args)}"
+    )
 
     try:
         # Verificar si es deep link "free"
@@ -90,31 +102,25 @@ async def cmd_start(message: Message):
             last_name=user.last_name,
         )
 
+        # Best-effort: entregas de misiones pendientes al volver
+        try:
+            with get_service(MissionService) as mission_service:
+                await mission_service.deliver_pending_rewards(user.id, bot=message.bot)
+        except Exception as exc:
+            logger.warning(
+                f"common_handlers | pending_rewards_catchup | user_id={user.id} | error={exc}"
+            )
+
         # Verificar si es token de acceso VIP
         if args:
-            subscription = vip_service.redeem_token(args, user.id)
+            subscription = await vip_service.redeem_token_with_missions(
+                args, user.id, bot=message.bot
+            )
 
             if subscription:
-                # Token válido - enviar enlace directo al canal VIP
-                vip_channel = vip_service.get_vip_channel()
-                invite_link = None
-
-                if vip_channel:
-                    try:
-                        invite_link_obj = await message.bot.create_chat_invite_link(
-                            chat_id=vip_channel.channel_id,
-                            name=f"VIP {user.id}",
-                            creates_join_request=False,
-                            member_limit=1,
-                            expire_date=timedelta(days=VIPService.INVITE_LINK_EXPIRATION_DAYS),
-                        )
-                        invite_link = invite_link_obj.invite_link
-                    except Exception as e:
-                        logger.error(
-                            f"Error creando invite link para canal {vip_channel.channel_id}: {e}"
-                        )
-                        invite_link = vip_channel.invite_link
-
+                invite_link = await vip_service.create_vip_invite_link(
+                    message.bot, user.id, allow_fallback=True
+                )
                 await message.answer(
                     LucienVoice.vip_direct_access(invite_link),
                     reply_markup=vip_access_keyboard(),
@@ -132,12 +138,8 @@ async def cmd_start(message: Message):
                     await message.answer(LucienVoice.token_invalid(), parse_mode="HTML")
                 return
 
-        # Verificar si es administrador
-        # NOTA: Combina ADMIN_IDS + role en BD — NO cambiar a utils.admin.is_admin()
-        # porque esa función solo verifica ADMIN_IDS. Esta línea es intencionalmente diferente.
-        is_admin = user.id in bot_config.ADMIN_IDS or db_user.role.value == "admin"
-
-        if is_admin:
+        # Verificar si es administrador (ADMIN_IDS + role en BD via utils.admin)
+        if is_admin(user.id):
             await message.answer(
                 LucienVoice.admin_greeting(), reply_markup=admin_menu_keyboard(), parse_mode="HTML"
             )
@@ -186,10 +188,18 @@ async def cmd_help(message: Message):
 
 @router.callback_query(F.data == "back_to_main")
 async def back_to_main(callback: CallbackQuery):
-    """Volver al menú principal"""
+    """Volver al menú principal (o admin según rol)"""
     user = callback.from_user
 
-    # Verificar si es VIP
+    if is_admin(user.id):
+        # Administradores se quedan en su panel
+        await callback.message.edit_text(
+            LucienVoice.admin_greeting(), reply_markup=admin_menu_keyboard(), parse_mode="HTML"
+        )
+        await callback.answer()
+        return
+
+    # Verificar si es VIP (solo para visitantes)
     vip_service = VIPService()
     try:
         is_vip = vip_service.is_user_vip(user.id)
@@ -208,7 +218,7 @@ async def back_to_main(callback: CallbackQuery):
         logger.debug(f"callback.answer() expirada en back_to_main para user {user.id}: {e}")
 
 
-@router.callback_query(F.data == "back_to_admin")
+@router.callback_query(F.data == "back_to_admin", lambda cb: is_admin(cb.from_user.id))
 async def back_to_admin(callback: CallbackQuery):
     """Volver al menú de administrador"""
     await callback.message.edit_text(
@@ -230,7 +240,13 @@ async def cancel_action(callback: CallbackQuery):
 @router.callback_query(F.data.in_({"profile", "narrative"}))
 async def coming_soon_features(callback: CallbackQuery):
     """Features aún no implementadas"""
-    await callback.message.edit_text(
-        LucienVoice.coming_soon(), reply_markup=main_menu_keyboard(), parse_mode="HTML"
-    )
+    user = callback.from_user
+    if is_admin(user.id):
+        await callback.message.edit_text(
+            LucienVoice.admin_greeting(), reply_markup=admin_menu_keyboard(), parse_mode="HTML"
+        )
+    else:
+        await callback.message.edit_text(
+            LucienVoice.coming_soon(), reply_markup=main_menu_keyboard(), parse_mode="HTML"
+        )
     await callback.answer()

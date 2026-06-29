@@ -6,7 +6,7 @@ Fixtures y configuración para tests de Lucien Bot.
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, create_autospec
 
 import pytest
 from sqlalchemy import create_engine
@@ -195,7 +195,7 @@ def sample_expired_token(db_session: Session, sample_tariff):
         token_code="EXPIRED123",
         tariff_id=sample_tariff.id,
         status=TokenStatus.EXPIRED,
-        expires_at=datetime.utcnow() - timedelta(days=1),
+        expires_at=datetime.now(UTC) - timedelta(days=1),
     )
     db_session.add(token)
     db_session.commit()
@@ -266,9 +266,10 @@ def sample_mission(db_session: Session):
 
 @pytest.fixture
 def sample_mission_progress(db_session: Session, sample_user, sample_mission):
-    """Crea un progreso de misión de prueba."""
+    """Crea un progreso de misión de prueba.
+    DESIRED CONTRACT: user_id stores TG BigInt (telegram_id value) per models (UserMissionProgress.user_id BigInteger FK to users.telegram_id), real handler flows (from_user.id), MissionService calls, and prior ID contract fixes (VIP commit 00fd7e8, Fase4 gamif). Matches sample_user.telegram_id; never the internal PK .id. Used for dup guard, recurring, catch-up pilots."""
     progress = UserMissionProgress(
-        user_id=sample_user.id,
+        user_id=sample_user.telegram_id,
         mission_id=sample_mission.id,
         target_value=sample_mission.target_value,
         current_value=5,
@@ -502,6 +503,33 @@ def mock_dispatcher():
     """Crea un mock del dispatcher."""
     dp = MagicMock()
     return dp
+
+
+def mock_service_ctx(mock_get_service, service_class, **methods):
+    """Crea un service mock con create_autospec para handler tests.
+
+    Valida que los métodos mockeados existan realmente en el service class.
+    Cada kwarg es un `nombre_metodo=valor_retorno`.
+
+    Uso::
+        @patch("handlers.foo.get_service")
+        async def test_foo(self, mock_get_service):
+            svc = mock_service_ctx(mock_get_service, StoreService,
+                get_all_products=[],
+                get_product=product,
+            )
+            await handler(cb)
+            svc.get_product.assert_called_once_with(1)
+    """
+    svc = create_autospec(service_class, spec_set=True, instance=True)
+    for name, val in methods.items():
+        method_mock = getattr(svc, name)
+        method_mock.return_value = val
+    ctx = MagicMock()
+    ctx.__enter__.return_value = svc
+    ctx.__exit__.return_value = False
+    mock_get_service.return_value = ctx
+    return svc
 
 
 @pytest.fixture

@@ -413,7 +413,7 @@ class TestReactionInvariants:
 
     async def test_check_and_register_reaction_idempotent_no_duplicate_besitos(self, tmp_path):
         """I6: Two reactions with same user+broadcast+emoji: first succeeds (besitos awarded),
-        second is caught by IntegrityError and returns None. Besitos credited only once."""
+        second is caught by IntegrityError and returns duplicate reason. Besitos credited only once."""
         engine, TestSession = self._create_engine_and_session(tmp_path)
         db = TestSession()
         broadcast_svc = None
@@ -482,7 +482,7 @@ class TestReactionInvariants:
                 username="reactuser_inv",
                 bot=mock_bot,
             )
-            assert r1 is not None
+            assert r1["success"] is True
             assert r1["besitos_awarded"] == 4
 
             # Second reaction (same params): must fail gracefully
@@ -493,7 +493,8 @@ class TestReactionInvariants:
                 username="reactuser_inv",
                 bot=mock_bot,
             )
-            assert r2 is None
+            assert r2["success"] is False
+            assert r2["reason"] == "duplicate"
 
             # Only ONE reaction row exists
             reaction_count = (
@@ -552,13 +553,14 @@ class TestMissionInvariants:
         db_session.refresh(mission)
 
         # First call with reference_id=42: progress +1
+        # DESIRED CONTRACT: user_id param and stored value is TG BigInt (.telegram_id)
         svc.increment_progress(
-            sample_user.id, MissionType.REACTION_COUNT, amount=1, reference_id=42
+            sample_user.telegram_id, MissionType.REACTION_COUNT, amount=1, reference_id=42
         )
         progress = (
             db_session.query(UserMissionProgress)
             .filter(
-                UserMissionProgress.user_id == sample_user.id,
+                UserMissionProgress.user_id == sample_user.telegram_id,
                 UserMissionProgress.mission_id == mission.id,
             )
             .first()
@@ -569,7 +571,7 @@ class TestMissionInvariants:
 
         # Second call with SAME reference_id=42: must be skipped (no double-count)
         svc.increment_progress(
-            sample_user.id, MissionType.REACTION_COUNT, amount=1, reference_id=42
+            sample_user.telegram_id, MissionType.REACTION_COUNT, amount=1, reference_id=42
         )
         db_session.refresh(progress)
         assert progress.current_value == 1  # unchanged
@@ -577,7 +579,7 @@ class TestMissionInvariants:
 
         # Call with DIFFERENT reference_id=43: must increment
         svc.increment_progress(
-            sample_user.id, MissionType.REACTION_COUNT, amount=1, reference_id=43
+            sample_user.telegram_id, MissionType.REACTION_COUNT, amount=1, reference_id=43
         )
         db_session.refresh(progress)
         assert progress.current_value == 2
@@ -641,10 +643,10 @@ class TestStoreOrderInvariants:
         # Cancel a COMPLETED order must fail
         assert svc.cancel_order(order.id) is False
 
-        # Complete an already-COMPLETED order must fail
+        # Complete an already-COMPLETED order is idempotent (success, no re-debit)
         mock_bot = AsyncMock()
         ok, msg = await svc.complete_order(mock_bot, order.id)
-        assert ok is False
+        assert ok is True
         # Status unchanged
         db_session.refresh(order)
         assert order.status == OrderStatus.COMPLETED

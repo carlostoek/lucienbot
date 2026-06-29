@@ -1,0 +1,13 @@
+# 🎩 Lucien Bot - Railway config
+# https://railway.app
+#
+# NOTA: Estas secciones globales solo afectan al servicio con source repo (lucienbot).
+# Postgres es image-based (sin repo) y NO recibe esta configuracion.
+
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "alembic upgrade head && python bot.py"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

@@ -1,24 +1,31 @@
 """
 Tests unitarios para ThrottlingMiddleware.
 """
-import pytest
-from unittest.mock import MagicMock, AsyncMock
 
-from pathlib import Path
+# NOTE (Issue9 suggestion): unit coverage strong for bypass/exceed; for load/abuse telemetry under concurrent would need integration load test (e.g. many concurrent cbs). Out of unit scope for this tirón; documented for future (no prod).
 import sys
+from pathlib import Path
+
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from middlewares.rate_limiter import ThrottlingMiddleware, _LIMITER_TTL  # gsd-mw-hardening phase 2: import from canonical location
+from middlewares.rate_limiter import (  # gsd-mw-hardening phase 2: import from canonical location
+    _LIMITER_TTL,
+    ThrottlingMiddleware,
+)
 
 
 class MockUser:
     """Mock user object for testing."""
+
     def __init__(self, user_id: int):
         self.id = user_id
 
 
 class MockEvent:
     """Mock Telegram event (Message/CallbackQuery) with answer method."""
+
     def __init__(self):
         self.answered = False
         self.answer_text = None
@@ -60,6 +67,7 @@ class TestThrottlingMiddleware:
 
         # Mock config (real config objects; gsd-mw-hardening phase 2: updated import path)
         import middlewares.rate_limiter as rl_module
+
         original_admin_bypass = rl_module.rate_limit_config.ADMIN_BYPASS
         original_admin_ids = rl_module.bot_config.ADMIN_IDS
 
@@ -145,6 +153,7 @@ class TestThrottlingMiddleware:
 
         # Manually age the entries past TTL
         import time
+
         old_time = time.monotonic() - _LIMITER_TTL - 10
         for uid in [100, 200]:
             limiter, _ = mw._limiters[uid]
@@ -158,7 +167,6 @@ class TestThrottlingMiddleware:
 
     def test_get_limiter_updates_last_seen(self):
         """Test que _get_limiter actualiza last_seen para evitar cleanup."""
-        import time
         mw = ThrottlingMiddleware()
 
         # Create limiter
@@ -167,6 +175,7 @@ class TestThrottlingMiddleware:
 
         # Call again after a small delay
         import time as t
+
         t.sleep(0.01)
         mw._get_limiter(100)
         _, last_seen_after = mw._limiters[100]
@@ -221,7 +230,7 @@ class TestThrottlingMiddleware:
         with caplog.at_level(logging.WARNING):
             await mw(lambda e, d: None, event, data)
 
-        assert "Could not send throttling reply" in caplog.text
+        assert "rate_limiter | answer_failed" in caplog.text
         assert str(user_id) in caplog.text
 
         limiter.max_rate = orig_max
@@ -245,7 +254,7 @@ class TestThrottlingMiddleware:
         with caplog.at_level(logging.INFO):
             await mw(lambda e, d: None, event, data)
 
-        assert "rate_limiter - limit_exceeded" in caplog.text
+        assert "rate_limiter | limit_exceeded" in caplog.text
         assert str(user_id) in caplog.text
         assert "throttled" in caplog.text
 
@@ -254,7 +263,7 @@ class TestThrottlingMiddleware:
     @pytest.mark.asyncio
     async def test_admin_bypass_with_live_config_mutation(self):
         """Realistic bypass test mutating the live singleton config objects directly (not module patch)."""
-        from config.settings import rate_limit_config, bot_config
+        from config.settings import bot_config, rate_limit_config
 
         mw = ThrottlingMiddleware()
         orig_bypass = rate_limit_config.ADMIN_BYPASS
@@ -282,3 +291,44 @@ class TestThrottlingMiddleware:
         finally:
             rate_limit_config.ADMIN_BYPASS = orig_bypass
             bot_config.ADMIN_IDS = orig_ids
+
+    @pytest.mark.asyncio
+    async def test_redis_optional_path_constructs_and_parity_branch(self):
+        """Minimal optional redis path (F5): constructs with redis=; exercises ZSET branch + in-mem fallback remains 100% for default ctor.
+        Uses AsyncMock to avoid real redis dep; asserts calls + equiv allow/limit semantics. In-mem tests above cover fallback exactly.
+        """
+        from unittest.mock import AsyncMock
+
+        mock_redis = AsyncMock()
+        mock_redis.zremrangebyscore = AsyncMock()
+        mock_redis.zcard = AsyncMock(return_value=0)  # under limit -> allow
+        mock_redis.zadd = AsyncMock()
+        mock_redis.expire = AsyncMock()
+
+        mw = ThrottlingMiddleware(redis=mock_redis)
+
+        handler_called = False
+
+        async def mock_handler(event, data):
+            nonlocal handler_called
+            handler_called = True
+            return "handled-redis"
+
+        event = MockEvent()
+        data = {"event_from_user": MockUser(424242)}
+
+        result = await mw(mock_handler, event, data)
+
+        assert handler_called is True
+        assert result == "handled-redis"
+        mock_redis.zcard.assert_awaited()
+        mock_redis.zadd.assert_awaited()
+
+        # now simulate limit exceeded via zcard
+        mock_redis.zcard.return_value = 99
+        handler_called = False
+        event2 = MockEvent()
+        await mw(mock_handler, event2, {"event_from_user": MockUser(424243)})
+
+        assert event2.answered is True
+        assert handler_called is False

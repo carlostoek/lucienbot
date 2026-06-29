@@ -188,6 +188,8 @@ Este patrón quedó documentado en `tests/integration/test_reaction_full_chain.p
 - Matriz completa ritual + scheduler (múltiples canales VIP, renovación mid-ritual).
 - Mantener estándar: file SQLite + TestSession + patch SessionLocal/_get_bot.
 
+**Nota Fase 5 Misiones (actualización desde fases_refactor_testing.md):** Revisión sistemática por fases iniciada (Paso 1-2 map completos + Hoja actualizada + sección detallada append). Promesa MISS-01-04 + ADMIN-03. Componentes principales + brechas (dup ref, recurring cooldown, partial deliver/catch-up, gold side-effects, ID fixtures) + recs pilots Alta (extend cross/invariants + unit increment + ID fix + isolated gold) registrados. Pilots follow-up Alta #1-5 + ID + full gold for isolated side in named test delivered (184/706 gates, 0 reg). GSD pre used. Smoke pytest -k mission: 164+ passing (pre-exist warns only). Ver fases_refactor_testing.md##Fase 5 + Pilots Follow-up subsection + process.md. (Nota updated post-pilots for traceability.)
+
 ---
 
 ## 7. Notas y Decisiones Importantes
@@ -290,6 +292,56 @@ Este patrón quedó documentado en `tests/integration/test_reaction_full_chain.p
 - test EOF tiene más + decision notes. No review_file este run (effort=1). Este cierre marca la completación de los 10 ítems críticos de testing identificados en fases_refactor_testing.md.
 
 **Fin del documento de traspaso.**
+
+---
+
+## Handoff Tirón Fase 6/7/8 (2026-06-18)
+
+**Resumen tirón:** Completados 6 pasos por fase (docs/fase_testing_review_process.md) para Fase6 (Tienda+Prom+Narr bundle), Fase7 (VIP Invite), Fase08 (meta debt). Hoja actualizada, secciones detalladas + brechas/recs/pilots Alta en fases_refactor_testing.md. Pilots implementados + review fixes: atomic gold + expanded asserts (store), cost>0+strict (story), member_limit=1+fallback+caplog (common). All 13 issues fixed or defended in review_file. GSD pre every (wc fase6~44+ etc at close). 0 prod, 0 impact 3 crit. Security pre-existing documented + defensive in pilots.
+
+**Actualizaciones en refactor:** 
+- Fase6/7/8 pilots + handoff append (this). 
+- Próximos naturales post tirón: handler e2e buy/interest/advance callbacks (make_callback), full cov %, property Hypothesis on purchase/narr, concurrent on store complete + invite, tz modern global, Fase08 items remaining (e2e, races beyond).
+
+**Archivos clave re-touched (review):** fases_refactor_testing.md (recs esfuerzo/riesgo + sync), refactor (handoff), store test (tighten docstring, partial asserts, import to top, security notes), story test (cost/choice/strict/ID/doc), common test (VIP rewrite + caplog), /tmp/grok-review-ea699af0.md (Status+Response 1-13), gsd, summary.
+
+**Gates post review fixes (re-run exact):** see embedded below.
+
+**Decisiones:** extend; verbatim; pushback on full DB/scope (handler direct VIPService() evidence); security via pilots/docs not prod. Pre-existing TOCTOU/token noted "pre-existing contract not altered; pilots protect atomic paths".
+
+**Verif:** GSD pre, strict, no drift, review complete. 
+
+(End handoff tirón 6-7-8 post review fixes. All issues addressed. Update next from here.)
+
+---
+
+## Handoff Tirón Fases 9-10-11 (Testing Roadmap Ligera, 2026-06-18)
+
+**Resumen tirón:** Aplicada metodología exacta docs/fase_testing_review_process.md (6 pasos: promesa, map, inventario, brechas vs contrato, recs prior tipo/esfuerzo/riesgo, registro) a fases 9,10,11 de fases_refactor_testing.md . Actualizada Hoja (En progreso -> ✅ completed). Pilots delivered in this tirón: deterministic gold sqlite backup (patch + strict Path.exists in test_backup_service.py); strict gold VIP expire guard mid-ritual (deact sub + exact asserts + no tolerant in test_vip_ritual_flow.py); hygiene close try/finally on injected VIPServices across class; review fixes for strictness, hygiene, determinism. (Analytics ID duality/DESIRED/hygiene was prior context, not this tirón's delivered pilots.) GSD pre every edit (exact wc: 16/11/2). 0 prod changes. 0 impact 3 crit.
+
+**Actualizaciones:**
+- fases_refactor_testing.md: tabla Hoja (9-11 updated to ✅), full sections Fase9/10/11 with exact pilots, brechas/recs (uniform esfuerzo/riesgo phrasing), registro.
+- refactor_testing.md: este handoff (corrected scope).
+- tests/unit/test_backup_service.py , tests/integration/test_vip_ritual_flow.py (pilots + strict/close fixes; review applied).
+- /tmp/grok-review-a26ee1c1.md + /tmp/grok-impl-summary-a26ee1c1.md (synced + Responses + updated Impl Summary).
+- GSD logs + gates re-run.
+
+**Gates outputs (re-run post all fixes):**
+- ruff check --fix + format: clean (pilots + docs).
+- pytest -q -k "phase9 or polish or rate or ... or backup or ... or vip_ritual ..." --tb=line + broader smoke (besito|daily|vip|free_entry|cross|invariants): all targeted pass, 0 attributable reg.
+- (embedded in final summary)
+
+**Decisiones:** extend; verbatim gold (strict==, DESIRED, try/finally even injected, patch for det); bat/rg/eza; sync docs to *exactly* this tirón's delivered (backup+vip+review hygiene); no new files; tests-only.
+
+**Archivos cambiados (this tirón scope):** fases_refactor_testing.md, refactor_testing.md, tests/unit/test_backup_service.py, tests/integration/test_vip_ritual_flow.py, review_file, summary (no analytics test changes here).
+**GSD counts (wc at close):** fase9:16, fase10:11, fase11:2.
+**Fases restantes post 9-11:** 7 según tabla (12-18).
+
+**Último tirón (12-18) completado:** Revisión 6 pasos por fase + pilots Alta (categorías/stock/filtros en store/pkg tests; vip_excl en promo; dice en game; protect contract en streak; backpack/trivia/promo/streak flows pre-piloted + hygiene). Hoja actualizada todas ✅ . 0 fases restan. GSD pre every (multiple logs). ruff/pytest gates 0 reg. Ver fases_refactor_testing.md secciones completas + summary.
+
+**Próximos:** Ninguno (hoja ligera testing review completa).
+
+(End handoff tirón 9-10-11 + último tirón 12-18. All open issues addressed or wontfixed with reason. 0 phases remain.)
 
 ---
 
