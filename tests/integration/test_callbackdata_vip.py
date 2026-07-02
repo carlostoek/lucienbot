@@ -8,8 +8,25 @@ Verifica que los CallbackData migrados funcionan correctamente:
 import pytest
 from unittest.mock import MagicMock
 
-from keyboards.callback_data import SelectTariffCallback, CopyTokenCallback
-from keyboards.inline_keyboards import tariffs_keyboard, token_actions_keyboard
+from keyboards.callback_data import (
+    CopyTokenCallback,
+    ForwardActionCallback,
+    ForwardCancelCallback,
+    ForwardConfirmCallback,
+    SelectTariffCallback,
+    SubscriberActionCallback,
+    SubscriberConfirmCallback,
+    SubscriberExtendTariffCallback,
+    SubscriberListCallback,
+    SubscriberProfileCallback,
+)
+from keyboards.inline_keyboards import (
+    forward_action_keyboard,
+    forward_cancel_keyboard,
+    forward_confirm_keyboard,
+    tariffs_keyboard,
+    token_actions_keyboard,
+)
 
 
 class TestSelectTariffCallback:
@@ -37,6 +54,72 @@ class TestSelectTariffCallback:
         # Es un CallbackQueryFilter de aiogram
         assert callback_filter is not None
         assert callable(callback_filter)
+
+
+class TestSubscriberAdminCallbacks:
+    """Tests para callbacks de admin suscriptores VIP (phase 36)."""
+
+    def test_subscriber_list_callback_pack_unpack(self):
+        cb = SubscriberListCallback(channel_id=3, page=1)
+        packed = cb.pack()
+        assert packed == "sub_list:3:1"
+        unpacked = SubscriberListCallback.unpack(packed)
+        assert unpacked.channel_id == 3
+        assert unpacked.page == 1
+
+    def test_subscriber_profile_callback_pack(self):
+        cb = SubscriberProfileCallback(subscription_id=42, channel_id=2, page=0)
+        assert cb.pack() == "sub_prof:42:2:0"
+
+    def test_subscriber_action_callback_pack(self):
+        cb = SubscriberActionCallback(
+            action="kick", subscription_id=5, channel_id=1, page=0
+        )
+        assert "kick" in cb.pack()
+
+    def test_subscriber_extend_tariff_callback_pack(self):
+        cb = SubscriberExtendTariffCallback(
+            subscription_id=1, tariff_id=7, channel_id=0, page=0
+        )
+        assert cb.pack() == "sub_ext_tar:1:7:0:0"
+
+    def test_subscriber_confirm_callback_pack(self):
+        cb = SubscriberConfirmCallback(
+            action="grant_besitos", subscription_id=3, channel_id=0, page=1
+        )
+        assert "grant_besitos" in cb.pack()
+
+
+class TestForwardAdminCallbacks:
+    """Tests para callbacks de reenvío admin (VIP | besitos)."""
+
+    def test_forward_action_packs(self):
+        assert ForwardActionCallback(action="vip").pack() == "fwd_action:vip"
+        assert ForwardActionCallback(action="besitos").pack() == "fwd_action:besitos"
+
+    def test_forward_confirm_packs(self):
+        assert ForwardConfirmCallback(action="vip").pack() == "fwd_confirm:vip"
+        assert ForwardConfirmCallback(action="besitos").pack() == "fwd_confirm:besitos"
+
+    def test_forward_cancel_packs(self):
+        assert ForwardCancelCallback().pack() == "fwd_cancel:cancel"
+
+    def test_forward_action_keyboard_uses_callbacks(self):
+        kb = forward_action_keyboard()
+        callbacks = [row[0].callback_data for row in kb.inline_keyboard]
+        assert "fwd_action:vip" in callbacks
+        assert "fwd_action:besitos" in callbacks
+        assert "fwd_cancel:cancel" in callbacks
+
+    def test_forward_confirm_keyboard_uses_callbacks(self):
+        kb = forward_confirm_keyboard("besitos")
+        row = kb.inline_keyboard[0]
+        assert row[0].callback_data == "fwd_confirm:besitos"
+        assert row[1].callback_data == "fwd_cancel:cancel"
+
+    def test_forward_cancel_keyboard_uses_callback(self):
+        kb = forward_cancel_keyboard()
+        assert kb.inline_keyboard[0][0].callback_data == "fwd_cancel:cancel"
 
 
 class TestCopyTokenCallback:

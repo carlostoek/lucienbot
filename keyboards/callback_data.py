@@ -96,6 +96,66 @@ class VipPromoInterestCallback(CallbackData, prefix="vip_promo_interest"):
     promo_id: int
 
 
+class ForwardActionCallback(CallbackData, prefix="fwd_action"):
+    """Acción tras reenvío admin: activar VIP u otorgar besitos."""
+
+    action: str  # "vip" | "besitos"
+
+
+class ForwardConfirmCallback(CallbackData, prefix="fwd_confirm"):
+    """Confirmar grant tras reenvío admin."""
+
+    action: str  # "vip" | "besitos"
+
+
+class ForwardCancelCallback(CallbackData, prefix="fwd_cancel"):
+    """Cancelar flujo forward admin."""
+
+    action: str = "cancel"
+
+
+class SubscriberListCallback(CallbackData, prefix="sub_list"):
+    """Lista paginada de suscriptores activos."""
+
+    channel_id: int = 0  # 0 = menú VIP global (sin filtro canal)
+    page: int = 0
+
+
+class SubscriberProfileCallback(CallbackData, prefix="sub_prof"):
+    """Perfil admin de un suscriptor."""
+
+    subscription_id: int
+    channel_id: int = 0
+    page: int = 0
+
+
+class SubscriberActionCallback(CallbackData, prefix="sub_act"):
+    """Iniciar acción admin sobre suscriptor."""
+
+    action: str  # "extend" | "grant_besitos" | "debit_besitos" | "kick"
+    subscription_id: int
+    channel_id: int = 0
+    page: int = 0
+
+
+class SubscriberExtendTariffCallback(CallbackData, prefix="sub_ext_tar"):
+    """Seleccionar tarifa para extender VIP."""
+
+    subscription_id: int
+    tariff_id: int
+    channel_id: int = 0
+    page: int = 0
+
+
+class SubscriberConfirmCallback(CallbackData, prefix="sub_confirm"):
+    """Confirmar acción (extend | grant_besitos | debit_besitos | kick)."""
+
+    action: str
+    subscription_id: int
+    channel_id: int = 0
+    page: int = 0
+
+
 # ==================== STORE ====================
 
 
@@ -145,6 +205,13 @@ class ProductAdminDetailCallback(CallbackData, prefix="prod_admin_detail"):
     """Detalle de producto (admin)"""
 
     product_id: int
+    tier_id: int = 0
+
+
+class AdminStoreTierCallback(CallbackData, prefix="admin_store_tier"):
+    """Navegación admin de productos por tier (0 = sin nivel)."""
+
+    tier_id: int
 
 
 class ConfigStockAlertCallback(CallbackData, prefix="config_stock_alert"):

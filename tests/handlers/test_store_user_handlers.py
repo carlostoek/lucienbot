@@ -32,7 +32,7 @@ def _product_ctx(product, balance=500, file_count=1, effective_price=None, cap=T
         "product": product,
         "balance": balance,
         "file_count": file_count,
-        "can_preview": file_count > 0,
+        "can_preview": file_count > 1,
         "tier_name": "",
         "effective_price": ep,
         "monthly_cap_available": cap,
@@ -54,7 +54,7 @@ class TestShopMenu:
         cb.message.edit_text.assert_called_once()
         text = cb.message.edit_text.call_args[0][0]
         assert "500" in text
-        assert "gabinete" in text.lower()
+        assert "tienda" in text.lower()
 
     @patch("handlers.store_user_handlers.get_service")
     async def test_menu_categories_points_to_tiers_not_package_categories(
@@ -245,7 +245,7 @@ class TestStoreCategoryProducts:
         await store_category_products(cb, cd)
 
         cb.answer.assert_called_once_with(
-            "Esa estantería no figura en el catálogo.", show_alert=True
+            "Categoría no encontrada.", show_alert=True
         )
 
     @patch("handlers.store_user_handlers.get_service")
@@ -344,7 +344,7 @@ class TestProductDetail:
         await product_detail(cb, cd)
 
         cb.answer.assert_called_once_with(
-            "Permítame buscar de nuevo… ese tesoro no figura en el catálogo.",
+            "Producto no encontrado.",
             show_alert=True,
         )
 
@@ -361,7 +361,7 @@ class TestProductDetail:
         product.is_available = True
         product.package = MagicMock(id=1)
         store = _mock_store_ctx(mock_get_service)
-        store.get_product_detail_context.return_value = _product_ctx(product, balance=200)
+        store.get_product_detail_context.return_value = _product_ctx(product, balance=200, file_count=2)
         cb = make_callback(data="product_detail:1")
         cd = ProductDetailCallback(product_id=1)
 
@@ -375,8 +375,8 @@ class TestProductDetail:
         buttons = markup.inline_keyboard
         buy_row = buttons[0]
         buy_texts = [btn.text for btn in buy_row]
-        assert any("Adquirir ahora" in t for t in buy_texts)
-        assert any("Anticipo" in t for t in buy_texts)
+        assert any("🌸 Comprar" in t for t in buy_texts)
+        assert any("Ver vista previa" in t for t in buy_texts)
 
     @patch("handlers.store_user_handlers.get_service")
     async def test_insufficient_balance_shows_needed_amount(self, mock_get_service, make_callback):
@@ -400,7 +400,7 @@ class TestProductDetail:
 
         cb.message.edit_text.assert_called_once()
         text = cb.message.edit_text.call_args[0][0]
-        assert "moneda especial" in text.lower()
+        assert "besitos" in text.lower()
         # Check the insufficient balance button
         markup = cb.message.edit_text.call_args[1].get("reply_markup")
         buttons = markup.inline_keyboard
@@ -426,7 +426,7 @@ class TestProductDetail:
         ctx.update(
             tier_unlocked=False,
             tier_lock_remaining=1,
-            tier_lock_message="Para acceder a este nivel, adquiera 2 tesoros",
+            tier_lock_message="Para acceder a este nivel, compre 2 productos del nivel",
         )
         store = _mock_store_ctx(mock_get_service)
         store.get_product_detail_context.return_value = ctx
@@ -440,7 +440,7 @@ class TestProductDetail:
         markup = cb.message.edit_text.call_args[1].get("reply_markup")
         buy_texts = [btn.text for btn in markup.inline_keyboard[0]]
         buy_callbacks = [btn.callback_data for btn in markup.inline_keyboard[0]]
-        assert any("Requiere" in t for t in buy_texts)
+        assert any("Necesita" in t for t in buy_texts)
         assert not any("Adquirir" in t for t in buy_texts)
         assert DirectBuyCallback(product_id=9).pack() in buy_callbacks
 
@@ -555,7 +555,7 @@ class TestProductDetail:
         product.package = MagicMock(id=1)
         store = _mock_store_ctx(mock_get_service)
         store.get_product_detail_context.return_value = _product_ctx(
-            product, balance=90, effective_price=80
+            product, balance=90, effective_price=80, file_count=2
         )
         cb = make_callback(data="product_detail:1")
         cd = ProductDetailCallback(product_id=1)
@@ -568,7 +568,7 @@ class TestProductDetail:
         assert "80" in text
         markup = cb.message.edit_text.call_args[1].get("reply_markup")
         buy_texts = [btn.text for btn in markup.inline_keyboard[0]]
-        assert any("Adquirir ahora" in t for t in buy_texts)
+        assert any("🌸 Comprar" in t for t in buy_texts)
 
     @patch("handlers.store_user_handlers.get_service")
     async def test_product_detail_monthly_cap_exhausted_shows_agotado(
@@ -616,7 +616,7 @@ class TestProductPreview:
         await product_preview(cb, cd)
 
         cb.answer.assert_called_once_with(
-            "Permítame buscar de nuevo… ese tesoro no figura en el catálogo.",
+            "Producto no encontrado.",
             show_alert=True,
         )
 
@@ -634,7 +634,7 @@ class TestProductPreview:
         product.package = MagicMock(id=1)
         file_entry = MagicMock(file_id="abc123", file_type="photo")
         store = _mock_store_ctx(mock_get_service)
-        store.get_product_detail_context.return_value = _product_ctx(product, balance=200)
+        store.get_product_detail_context.return_value = _product_ctx(product, balance=200, file_count=2)
         store.get_preview_files_for_product.return_value = [file_entry]
         cb = make_callback(data="product_preview:1")
         cd = ProductPreviewCallback(product_id=1)
@@ -644,7 +644,7 @@ class TestProductPreview:
 
         cb.message.answer_photo.assert_called_once_with(
             photo="abc123",
-            caption="<i>Un anticipo de lo que aguarda…</i>",
+            caption="Vista previa del producto.",
             parse_mode="HTML",
         )
 
@@ -662,7 +662,7 @@ class TestProductPreview:
         product.package = MagicMock(id=1)
         file_entry = MagicMock(file_id="video123", file_type="video")
         store = _mock_store_ctx(mock_get_service)
-        store.get_product_detail_context.return_value = _product_ctx(product, balance=200)
+        store.get_product_detail_context.return_value = _product_ctx(product, balance=200, file_count=2)
         store.get_preview_files_for_product.return_value = [file_entry]
         cb = make_callback(data="product_preview:1")
         cd = ProductPreviewCallback(product_id=1)
@@ -672,7 +672,7 @@ class TestProductPreview:
 
         cb.message.answer_video.assert_called_once_with(
             video="video123",
-            caption="<i>Un anticipo de lo que aguarda…</i>",
+            caption="Vista previa del producto.",
             parse_mode="HTML",
         )
 
@@ -689,11 +689,11 @@ class TestProductPreview:
         product.stock = 5
         product.is_available = True
         product.package = MagicMock(id=1)
-        ctx = _product_ctx(product, balance=500)
+        ctx = _product_ctx(product, balance=500, file_count=2)
         ctx.update(
             tier_unlocked=False,
             tier_lock_remaining=1,
-            tier_lock_message="Para acceder a este nivel, adquiera 2 tesoros",
+            tier_lock_message="Para acceder a este nivel, compre 2 productos del nivel",
         )
         store = _mock_store_ctx(mock_get_service)
         store.get_product_detail_context.return_value = ctx
@@ -708,7 +708,7 @@ class TestProductPreview:
         markup = cb.message.answer.call_args[1].get("reply_markup")
         buy_texts = [btn.text for btn in markup.inline_keyboard[0]]
         buy_callbacks = [btn.callback_data for btn in markup.inline_keyboard[0]]
-        assert any("Requiere" in t for t in buy_texts)
+        assert any("Necesita" in t for t in buy_texts)
         assert not any("Adquirir" in t for t in buy_texts)
         assert DirectBuyCallback(product_id=9).pack() in buy_callbacks
 
@@ -749,7 +749,7 @@ class TestProductPreview:
         product.package = MagicMock(id=1)
         store = _mock_store_ctx(mock_get_service)
         store.get_product_detail_context.return_value = _product_ctx(
-            product, balance=200, effective_price=80
+            product, balance=200, effective_price=80, file_count=2
         )
         store.get_preview_files_for_product.return_value = []
         cb = make_callback(data="product_preview:1")
@@ -760,7 +760,7 @@ class TestProductPreview:
         await product_preview(cb, cd)
 
         text = cb.message.answer.call_args[0][0]
-        assert "💋 <b>80</b> besitos" in text
+        assert "💋 <b>Precio:</b> 80 besitos" in text
         assert "Precio de lista:</b> 100 besitos" in text
 
     @patch("handlers.store_user_handlers.get_service")
@@ -800,7 +800,7 @@ class TestProductPreview:
         product.package = MagicMock(id=1)
         file_entry = MagicMock(file_id="bad_file", file_type="photo")
         store = _mock_store_ctx(mock_get_service)
-        store.get_product_detail_context.return_value = _product_ctx(product, balance=200)
+        store.get_product_detail_context.return_value = _product_ctx(product, balance=200, file_count=2)
         cb = make_callback(data="product_preview:1")
         cb.message.answer_photo = AsyncMock(side_effect=Exception("API error"))
         cd = ProductPreviewCallback(product_id=1)
@@ -830,7 +830,7 @@ class TestProductPreview:
         file2 = MagicMock(file_id="second", file_type="photo")
         file3 = MagicMock(file_id="third", file_type="photo")
         store = _mock_store_ctx(mock_get_service)
-        store.get_product_detail_context.return_value = _product_ctx(product, balance=200)
+        store.get_product_detail_context.return_value = _product_ctx(product, balance=200, file_count=3)
         store.get_preview_files_for_product.return_value = [file1]
         cb = make_callback(data="product_preview:1")
         cd = ProductPreviewCallback(product_id=1)
@@ -841,7 +841,7 @@ class TestProductPreview:
 
         cb.message.answer_photo.assert_called_once_with(
             photo="first",
-            caption="<i>Un anticipo de lo que aguarda…</i>",
+            caption="Vista previa del producto.",
             parse_mode="HTML",
         )
 
@@ -859,7 +859,7 @@ class TestProductPreview:
         product.package = MagicMock(id=1)
         file_entry = MagicMock(file_id="f1", file_type="photo")
         store = _mock_store_ctx(mock_get_service)
-        store.get_product_detail_context.return_value = _product_ctx(product, balance=200)
+        store.get_product_detail_context.return_value = _product_ctx(product, balance=200, file_count=2)
         store.get_preview_files_for_product.return_value = [file_entry]
         cb = make_callback(data="product_preview:1")
         cd = ProductPreviewCallback(product_id=1)
@@ -884,14 +884,64 @@ class TestProductPreview:
         product.package = MagicMock(id=1)
         file_entry = MagicMock(file_id="f1", file_type="photo")
         store = _mock_store_ctx(mock_get_service)
-        store.get_product_detail_context.return_value = _product_ctx(product, balance=200)
+        store.get_product_detail_context.return_value = _product_ctx(product, balance=200, file_count=2)
         cb = make_callback(data="product_preview:1")
         cd = ProductPreviewCallback(product_id=1)
 
         from handlers.store_user_handlers import product_preview
         await product_preview(cb, cd)
 
-        cb.answer.assert_called_with("Anticipo enviado.", show_alert=False)
+        cb.answer.assert_called_with("Vista previa enviada.", show_alert=False)
+
+    @patch("handlers.store_user_handlers.get_service")
+    async def test_single_file_product_hides_preview_button(self, mock_get_service, make_callback):
+        """Con 1 solo archivo, el detalle NO muestra botón de preview (evita regalar el producto)."""
+        from keyboards.callback_data import ProductDetailCallback
+
+        product = model_mock(StoreProduct)
+        product.id = 1
+        product.name = "Unico Archivo"
+        product.description = ""
+        product.price = 50
+        product.stock = 3
+        product.is_available = True
+        product.package = MagicMock(id=1)
+        store = _mock_store_ctx(mock_get_service)
+        store.get_product_detail_context.return_value = _product_ctx(product, balance=100, file_count=1)
+        cb = make_callback(data="product_detail:1")
+        cd = ProductDetailCallback(product_id=1)
+
+        from handlers.store_user_handlers import product_detail
+        await product_detail(cb, cd)
+
+        markup = cb.message.edit_text.call_args[1].get("reply_markup")
+        all_texts = [btn.text for row in markup.inline_keyboard for btn in row]
+        assert not any("vista previa" in t.lower() or "👁️" in t for t in all_texts)
+
+    @patch("handlers.store_user_handlers.get_service")
+    async def test_preview_callback_on_single_file_shows_no_preview_alert(self, mock_get_service, make_callback):
+        """Click en preview (o cb directo) para producto de 1 archivo → alerta sin enviar nada."""
+        from keyboards.callback_data import ProductPreviewCallback
+
+        product = model_mock(StoreProduct)
+        product.id = 42
+        product.name = "Solo Uno"
+        product.description = ""
+        product.price = 100
+        product.stock = 1
+        product.is_available = True
+        product.package = MagicMock(id=1)
+        store = _mock_store_ctx(mock_get_service)
+        store.get_product_detail_context.return_value = _product_ctx(product, balance=200, file_count=1)
+        cb = make_callback(data="product_preview:42")
+        cd = ProductPreviewCallback(product_id=42)
+
+        from handlers.store_user_handlers import product_preview
+        await product_preview(cb, cd)
+
+        cb.answer.assert_called_with("Este producto no tiene vista previa.", show_alert=True)
+        cb.message.answer_photo.assert_not_called()
+        cb.message.answer_video.assert_not_called()
 
 
 class TestDirectBuy:
@@ -919,7 +969,7 @@ class TestDirectBuy:
         await direct_buy(cb, cd)
 
         cb.answer.assert_called_once_with(
-            "Permítame buscar de nuevo… ese tesoro no figura en el catálogo.",
+            "Producto no encontrado.",
             show_alert=True,
         )
 
@@ -938,7 +988,7 @@ class TestDirectBuy:
         await direct_buy(cb, cd)
 
         cb.answer.assert_called_once_with(
-            "Moneda especial insuficiente.", show_alert=True
+            "No tiene suficientes besitos.", show_alert=True
         )
 
     @patch("handlers.store_user_handlers.get_service")
@@ -1333,7 +1383,7 @@ class TestStoreSearchStart:
 
         cb.message.edit_text.assert_called_once()
         text = cb.message.edit_text.call_args[0][0]
-        assert "tesoro busca" in text.lower()
+        assert "producto busca" in text.lower() or "busca" in text.lower()
 
     async def test_calls_answer(self, make_callback, make_fsm_context):
         """Llama a callback.answer()."""
@@ -1361,7 +1411,7 @@ class TestProcessSearchQuery:
 
         msg.answer.assert_called_once()
         text = msg.answer.call_args[0][0]
-        assert "dos caracteres" in text.lower()
+        assert "2 caracteres" in text.lower() or "al menos" in text.lower()
 
     @patch("handlers.store_user_handlers.get_service")
     async def test_short_query_does_not_search(self, mock_get_service, make_message, make_fsm_context):
@@ -1388,7 +1438,7 @@ class TestProcessSearchQuery:
 
         msg.answer.assert_called_once()
         text = msg.answer.call_args[0][0]
-        assert "no hallé" in text.lower()
+        assert "no se encontraron" in text.lower()
 
     @patch("handlers.store_user_handlers.get_service")
     async def test_no_results_clears_state(self, mock_get_service, make_message, make_fsm_context):
@@ -1419,7 +1469,7 @@ class TestProcessSearchQuery:
 
         msg.answer.assert_called_once()
         text = msg.answer.call_args[0][0]
-        assert "tesoro" in text
+        assert "producto" in text.lower() or "busca" in text.lower()
         assert "1" in text
 
     @patch("handlers.store_user_handlers.get_service")
@@ -1490,7 +1540,7 @@ class TestFilterPriceAsc:
 
         cb.message.edit_text.assert_called_once()
         text = cb.message.edit_text.call_args[0][0]
-        assert "ningún tesoro" in text.lower()
+        assert "no se encontraron" in text.lower() or "no hay" in text.lower()
 
     @patch("handlers.store_user_handlers.get_service")
     async def test_displays_products_sorted_asc(self, mock_get_service, make_callback):
@@ -1536,7 +1586,7 @@ class TestFilterPriceDesc:
 
         cb.message.edit_text.assert_called_once()
         text = cb.message.edit_text.call_args[0][0]
-        assert "ningún tesoro" in text.lower()
+        assert "no se encontraron" in text.lower() or "no hay" in text.lower()
 
     @patch("handlers.store_user_handlers.get_service")
     async def test_displays_products_sorted_desc(self, mock_get_service, make_callback):
@@ -1582,7 +1632,7 @@ class TestFilterInStock:
 
         cb.message.edit_text.assert_called_once()
         text = cb.message.edit_text.call_args[0][0]
-        assert "ningún tesoro" in text.lower()
+        assert "no se encontraron" in text.lower() or "no hay" in text.lower()
 
     @patch("handlers.store_user_handlers.get_service")
     async def test_displays_available_products(self, mock_get_service, make_callback):
@@ -1639,7 +1689,7 @@ class TestFilterRecent:
 
         cb.message.edit_text.assert_called_once()
         text = cb.message.edit_text.call_args[0][0]
-        assert "ningún tesoro" in text.lower()
+        assert "no se encontraron" in text.lower() or "no hay" in text.lower()
 
     @patch("handlers.store_user_handlers.get_service")
     async def test_displays_recent_products(self, mock_get_service, make_callback):
@@ -1795,7 +1845,7 @@ class TestShowFilteredProducts:
 
         cb.message.edit_text.assert_called_once()
         text = cb.message.edit_text.call_args[0][0]
-        assert "ningún tesoro" in text.lower()
+        assert "no se encontraron" in text.lower() or "no hay" in text.lower()
 
     async def test_shows_filtered_products(self, make_callback):
         """Muestra productos filtrados con el nombre del filtro."""

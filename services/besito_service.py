@@ -15,6 +15,8 @@ from models.models import BesitoBalance, BesitoTransaction, TransactionSource, T
 
 logger = logging.getLogger(__name__)
 
+MAX_ADMIN_BESITO_GRANT = 10_000
+
 
 class BesitoService:
     """Servicio para gestión de besitos (moneda virtual)"""
@@ -246,6 +248,63 @@ class BesitoService:
             .limit(limit)
             .all()
         )
+
+    def grant_manual_admin_besitos(
+        self, target_user_id: int, amount: int, admin_id: int
+    ) -> tuple[bool, int]:
+        """Otorga besitos por ajuste manual de Custodio. Returns (success, new_balance)."""
+        if amount <= 0 or amount > MAX_ADMIN_BESITO_GRANT:
+            logger.warning(
+                f"besito_service | grant_manual_admin_besitos | user_id={admin_id} | "
+                f"target={target_user_id} | amount={amount} | result=invalid_amount"
+            )
+            return False, 0
+        desc = f"Otorgamiento manual por Custodio (admin_id={admin_id})"
+        # reference_id queda None: admin_id es Telegram BigInt y reference_id en BD es Integer.
+        ok = self.credit_besitos(
+            target_user_id,
+            amount,
+            TransactionSource.ADMIN,
+            description=desc,
+            reference_id=None,
+        )
+        balance = self.get_balance(target_user_id) if ok else 0
+        logger.info(
+            f"besito_service | grant_manual_admin_besitos | user_id={admin_id} | "
+            f"target={target_user_id} | amount={amount} | result={'credited' if ok else 'failed'}"
+        )
+        return ok, balance
+
+    def debit_manual_admin_besitos(
+        self, target_user_id: int, amount: int, admin_id: int
+    ) -> tuple[bool, int]:
+        """Debita besitos por ajuste manual de Custodio. Returns (success, new_balance)."""
+        if amount <= 0 or amount > MAX_ADMIN_BESITO_GRANT:
+            logger.warning(
+                f"besito_service | debit_manual_admin_besitos | user_id={admin_id} | "
+                f"target={target_user_id} | amount={amount} | result=invalid_amount"
+            )
+            return False, 0
+        if not self.has_sufficient_balance(target_user_id, amount):
+            logger.warning(
+                f"besito_service | debit_manual_admin_besitos | user_id={admin_id} | "
+                f"target={target_user_id} | amount={amount} | result=insufficient_balance"
+            )
+            return False, 0
+        desc = f"Débito manual por Custodio (admin_id={admin_id})"
+        ok = self.debit_besitos(
+            target_user_id,
+            amount,
+            TransactionSource.ADMIN,
+            description=desc,
+            reference_id=None,
+        )
+        balance = self.get_balance(target_user_id) if ok else 0
+        logger.info(
+            f"besito_service | debit_manual_admin_besitos | user_id={admin_id} | "
+            f"target={target_user_id} | amount={amount} | result={'debited' if ok else 'failed'}"
+        )
+        return ok, balance
 
     # ==================== ESTADÍSTICAS ====================
 

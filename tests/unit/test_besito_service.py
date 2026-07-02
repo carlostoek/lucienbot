@@ -109,6 +109,91 @@ class TestBesitoTransactions:
             assert result is False
             mock_schedule.assert_not_called()
 
+    def test_grant_manual_admin_besitos_success(self, db_session, sample_user):
+        """Admin manual grant credits with ADMIN source and returns new balance."""
+        service = BesitoService(db_session)
+        admin_id = 999001
+        amount = 40
+
+        with patch("services.event_bus.schedule_emit"):
+            ok, balance = service.grant_manual_admin_besitos(
+                sample_user.telegram_id, amount, admin_id
+            )
+
+        assert ok is True
+        assert balance == amount
+        txs = service.get_transactions_by_source(
+            sample_user.telegram_id, TransactionSource.ADMIN, limit=5
+        )
+        assert len(txs) == 1
+        assert txs[0].amount == amount
+        assert txs[0].reference_id is None
+        assert str(admin_id) in (txs[0].description or "")
+
+    def test_grant_manual_admin_besitos_large_admin_telegram_id(self, db_session, sample_user):
+        """Admin Telegram IDs > INT32 must not break grant (reference_id is Integer in DB)."""
+        service = BesitoService(db_session)
+        large_admin_id = 6_181_290_784  # production custodio ID from 2026-06-29 incident
+
+        with patch("services.event_bus.schedule_emit"):
+            ok, balance = service.grant_manual_admin_besitos(
+                sample_user.telegram_id, 500, large_admin_id
+            )
+
+        assert ok is True
+        assert balance == 500
+
+    def test_grant_manual_admin_besitos_respects_max(self, db_session, sample_user):
+        """Admin manual grant rejects amounts above MAX_ADMIN_BESITO_GRANT."""
+        from services.besito_service import MAX_ADMIN_BESITO_GRANT
+
+        service = BesitoService(db_session)
+        ok, balance = service.grant_manual_admin_besitos(
+            sample_user.telegram_id, MAX_ADMIN_BESITO_GRANT + 1, 999001
+        )
+        assert ok is False
+        assert balance == 0
+
+    def test_debit_manual_admin_besitos_success(self, db_session, sample_balance):
+        """Admin manual debit reduces balance with ADMIN source."""
+        service = BesitoService(db_session)
+        initial = sample_balance.balance
+        ok, balance = service.debit_manual_admin_besitos(
+            sample_balance.user_id, 30, 999001
+        )
+        assert ok is True
+        assert balance == initial - 30
+        txs = service.get_transactions_by_source(
+            sample_balance.user_id, TransactionSource.ADMIN, limit=5
+        )
+        assert len(txs) == 1
+        assert txs[0].amount == -30
+
+    def test_debit_manual_admin_besitos_insufficient_balance(
+        self, db_session, sample_balance
+    ):
+        """Admin manual debit rejects when balance too low."""
+        service = BesitoService(db_session)
+        ok, balance = service.debit_manual_admin_besitos(
+            sample_balance.user_id, 999999, 999001
+        )
+        assert ok is False
+        assert balance == 0
+
+    def test_debit_manual_admin_besitos_invalid_amount(self, db_session, sample_balance):
+        """Admin manual debit rejects zero and above-max amounts."""
+        from services.besito_service import MAX_ADMIN_BESITO_GRANT
+
+        service = BesitoService(db_session)
+        ok_zero, bal_zero = service.debit_manual_admin_besitos(
+            sample_balance.user_id, 0, 999001
+        )
+        ok_max, bal_max = service.debit_manual_admin_besitos(
+            sample_balance.user_id, MAX_ADMIN_BESITO_GRANT + 1, 999001
+        )
+        assert ok_zero is False and bal_zero == 0
+        assert ok_max is False and bal_max == 0
+
     def test_debit_besitos_success(self, db_session, sample_balance):
         """Test debitar besitos exitosamente"""
         service = BesitoService(db_session)

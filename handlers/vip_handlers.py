@@ -13,18 +13,24 @@ from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMar
 
 from keyboards.callback_data import (
     CopyTokenCallback,
+    ForwardActionCallback,
+    ForwardCancelCallback,
+    ForwardConfirmCallback,
     SelectTariffCallback,
     ToggleGiftCallback,
 )
 from keyboards.inline_keyboards import (
     back_keyboard,
-    confirmation_keyboard,
+    forward_action_keyboard,
+    forward_cancel_keyboard,
+    forward_confirm_keyboard,
     tariffs_keyboard,
     token_actions_keyboard,
     vip_access_keyboard,
     vip_management_keyboard,
 )
-from services import VIPService, get_service
+from services import BesitoService, VIPService, get_service
+from services.besito_service import MAX_ADMIN_BESITO_GRANT
 from utils.admin import is_admin
 from utils.lucien_voice import LucienVoice
 
@@ -44,9 +50,12 @@ class TokenStates(StatesGroup):
     selecting_tariff = State()
 
 
-class VIPForwardActivationStates(StatesGroup):
-    selecting_tariff = State()
-    confirming = State()
+class AdminForwardStates(StatesGroup):
+    selecting_action = State()
+    vip_selecting_tariff = State()
+    vip_confirming = State()
+    besitos_waiting_amount = State()
+    besitos_confirming = State()
 
 
 def extract_forwarded_candidate(message: Message) -> tuple[int | None, str]:
@@ -64,8 +73,32 @@ def extract_forwarded_candidate(message: Message) -> tuple[int | None, str]:
     return None, "desconocido"
 
 
+def build_forward_manual_delivery_notify(
+    invite_link: str, bot_access_link: str | None = None, delivery_code: str | None = None
+) -> str:
+    """Construye fallback admin cuando VIP ya está activo pero el DM falló. Función pura."""
+    reason_map = {
+        "permanent:bot_blocked": "el visitante bloqueó al bot",
+        "permanent:no_private_chat": "no hay chat privado abierto con el bot",
+        "permanent:user_deactivated": "la cuenta del visitante está desactivada",
+        "permanent:chat_not_found": "no encontré el chat privado del visitante",
+    }
+    reason = reason_map.get(delivery_code or "", "no pude enviarle el mensaje directamente")
+    bot_line = (
+        f"\n\n<i>O bien, pídale que abra:</i>\n<code>{bot_access_link}</code>"
+        if bot_access_link
+        else ""
+    )
+    return (
+        f"🎩 <b>Lucien:</b>\n\n"
+        f"<i>Activación VIP completada, pero {reason}.</i>\n\n"
+        f"Entregue este enlace de acceso al canal:\n<code>{invite_link}</code>"
+        f"{bot_line}"
+    )
+
+
 def build_forward_blocked_notify(deep_link: str) -> str:
-    """Construye mensaje de fallback para admin en caso de bloqueo de candidato. Función pura (sin estado ni side-effects)."""
+    """Legacy: fallback con deep link de token (evitar si el token ya fue canjeado). Función pura."""
     return f"🎩 <b>Lucien:</b>\n\n<i>Activación completada para el visitante, pero no pude notificarle directamente (posible bloqueo).</i>\n\nProporcione enlace manual: <code>{deep_link}</code>"
 
 
@@ -86,42 +119,228 @@ def build_forward_deep_link(bot_username: str | None, token_code: str | None) ->
     return "contacta a Lucien para link"
 
 
+def build_forward_bot_access_link(bot_username: str | None) -> str | None:
+    """Deep link para que un VIP activo reciba su invite desde /start. Función pura."""
+    if bot_username:
+        return f"https://t.me/{bot_username}?start=acceso_vip"
+    return None
+
+
+async def try_deliver_vip_forward_message(bot, target_user_id: int, access_msg: str) -> tuple[bool, str | None]:
+    """Intenta DM al candidato; reintenta sin teclado si el primer envío falla."""
+    from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
+    from utils.telegram_delivery import classify_bad_request_error, classify_forbidden_error
+
+    for with_keyboard in (True, False):
+        try:
+            kwargs = {"chat_id": target_user_id, "text": access_msg, "parse_mode": "HTML"}
+            if with_keyboard:
+                kwargs["reply_markup"] = vip_access_keyboard()
+            await bot.send_message(**kwargs)
+            return True, None
+        except TelegramForbiddenError as exc:
+            _, code = classify_forbidden_error(exc)
+            return False, code or "forbidden"
+        except TelegramBadRequest as exc:
+            _, code = classify_bad_request_error(exc)
+            if with_keyboard and not code:
+                continue
+            return False, code or str(exc)
+        except Exception as exc:
+            if with_keyboard:
+                continue
+            return False, str(exc)
+    return False, "send_failed"
+
+
+def build_forward_action_menu_text(display: str, candidate_id: int) -> str:
+    """Construye texto del menú de acción tras reenvío admin. Función pura (sin estado ni side-effects)."""
+    return (
+        f"🎩 <b>Lucien:</b>\n\n"
+        f"<i>Reenvío detectado de {display} (ID {candidate_id}).</i>\n\n"
+        f"¿Qué desea hacer con este visitante?"
+    )
+
+
+def build_forward_besitos_amount_prompt(display: str, candidate_id: int) -> str:
+    """Construye prompt para cantidad de besitos en forward admin. Función pura (sin estado ni side-effects)."""
+    return (
+        f"🎩 <b>Lucien:</b>\n\n"
+        f"Indique cuántos besitos otorgará Diana a {display} (ID {candidate_id}):\n\n"
+        f"Ejemplo: 50"
+    )
+
+
+def build_forward_besitos_confirm_text(display: str, candidate_id: int, amount: int) -> str:
+    """Construye texto de confirmación de besitos forward. Función pura (sin estado ni side-effects)."""
+    return (
+        f"🎩 <b>Lucien:</b>\n\n"
+        f"<i>¿Confirmar otorgamiento de {amount} besitos a {display} (ID {candidate_id})?</i>"
+    )
+
+
+def build_forward_besitos_success_text(amount: int, new_balance: int) -> str:
+    """Construye texto de éxito admin tras grant besitos forward. Función pura (sin estado ni side-effects)."""
+    return (
+        f"🎩 <b>Lucien:</b>\n\n"
+        f"<i>Otorgamiento completado: {amount} besitos acreditados.</i>\n\n"
+        f"Saldo actual del visitante: {new_balance} besitos."
+    )
+
+
+def build_forward_besitos_visitor_notify(amount: int, balance: int) -> str:
+    """Construye notificación al visitante tras grant besitos. Función pura (sin estado ni side-effects)."""
+    return LucienVoice.admin_besitos_granted_visitor_notify(amount, balance)
+
+
+def parse_positive_telegram_user_id(text: str) -> int | None:
+    """Parsea ID de Telegram positivo para grant admin. Función pura (sin estado ni side-effects)."""
+    raw = (text or "").strip()
+    if not raw.isdigit():
+        return None
+    user_id = int(raw)
+    if user_id <= 0:
+        return None
+    return user_id
+
+
+def build_forward_besitos_error_text(reason: str) -> str:
+    """Construye texto de error admin tras fallo grant besitos. Función pura (sin estado ni side-effects)."""
+    return f"🎩 <b>Lucien:</b>\n\n<i>{reason}</i>"
+
+
+def build_forward_besitos_blocked_notify() -> str:
+    """Construye aviso admin si visitante bloqueó al bot tras grant besitos. Función pura (sin estado ni side-effects)."""
+    return (
+        "🎩 <b>Lucien:</b>\n\n"
+        "<i>Los besitos fueron acreditados, pero no pude notificar al visitante "
+        "(posible bloqueo).</i>"
+    )
+
+
+def parse_positive_besito_amount(text: str) -> int | None:
+    """Parsea cantidad entera positiva de besitos para grant admin. Función pura (sin estado ni side-effects)."""
+    raw = (text or "").strip()
+    if not raw.isdigit():
+        return None
+    amount = int(raw)
+    if amount <= 0 or amount > MAX_ADMIN_BESITO_GRANT:
+        return None
+    return amount
+
+
+async def _answer_forward_vip_manual_fallback(
+    bot, target_message, invite_link: str | None, delivery_code: str | None
+) -> None:
+    """Envía al admin el invite del canal (y deep link acceso_vip) tras fallo de DM."""
+    await target_message.edit_text(
+        build_forward_success_text(),
+        reply_markup=vip_management_keyboard(),
+        parse_mode="HTML",
+    )
+    if not invite_link:
+        await target_message.answer(
+            build_forward_error_text(
+                "VIP activado, pero no pude generar el enlace de acceso. Reintente desde el panel."
+            ),
+            parse_mode="HTML",
+        )
+        return
+    bot_username = (await bot.get_me()).username
+    await target_message.answer(
+        build_forward_manual_delivery_notify(
+            invite_link,
+            build_forward_bot_access_link(bot_username),
+            delivery_code,
+        ),
+        parse_mode="HTML",
+    )
+
+
 async def notify_forward_vip_result(
     bot, target_message, target_user_id: int, ok: bool, access_msg: str, meta: dict, admin_id: int
 ) -> None:
-    """Notifica resultado del grant forward (directo al candidato o fallback al admin que reenvió). Thin helper (sin llamada a grant svc; el 1 with get_service queda exclusivamente en el entrypoint del handler). Copia patrones send+except blocked exact de channel_grant y reward _deliver."""
+    """Notifica resultado del grant forward (directo al candidato o fallback al admin que reenvió)."""
     if ok:
-        try:
-            await bot.send_message(
-                chat_id=target_user_id,
-                text=access_msg,
-                reply_markup=vip_access_keyboard(),
-                parse_mode="HTML",
-            )
+        delivered, delivery_code = await try_deliver_vip_forward_message(
+            bot, target_user_id, access_msg
+        )
+        if delivered:
             logger.info(
-                f"{__name__} | notificar_directo_vip_forward | user_id={admin_id} | target={target_user_id} | resultado=enviado"
+                f"{__name__} | notificar_directo_vip_forward | user_id={admin_id} | "
+                f"target={target_user_id} | resultado=enviado"
             )
             await target_message.edit_text(
                 build_forward_success_text(),
                 reply_markup=vip_management_keyboard(),
                 parse_mode="HTML",
             )
+            return
+        logger.warning(
+            f"{__name__} | notificar_directo_vip_forward_fallo | user_id={admin_id} | "
+            f"target={target_user_id} | delivery_code={delivery_code} | vip_activated=True"
+        )
+        await _answer_forward_vip_manual_fallback(
+            bot, target_message, meta.get("invite_link"), delivery_code
+        )
+        return
+    if meta.get("vip_activated") and meta.get("invite_link"):
+        await _answer_forward_vip_manual_fallback(
+            bot, target_message, meta["invite_link"], "invite_generation_partial"
+        )
+        return
+    await target_message.edit_text(
+        build_forward_error_text(access_msg),
+        reply_markup=vip_management_keyboard(),
+        parse_mode="HTML",
+    )
+
+
+async def notify_forward_besitos_result(
+    bot,
+    target_message,
+    target_user_id: int,
+    ok: bool,
+    amount: int,
+    balance: int,
+    admin_id: int,
+    *,
+    success_keyboard=None,
+) -> None:
+    """Notifica resultado del grant besitos (visitante o fallback admin). Thin helper (0 svc)."""
+    admin_keyboard = success_keyboard or vip_management_keyboard()
+    if ok:
+        try:
+            await bot.send_message(
+                chat_id=target_user_id,
+                text=build_forward_besitos_visitor_notify(amount, balance),
+                parse_mode="HTML",
+            )
+            logger.info(
+                f"{__name__} | notificar_directo_besitos_forward | user_id={admin_id} | "
+                f"target={target_user_id} | amount={amount} | resultado=enviado"
+            )
+            await target_message.edit_text(
+                build_forward_besitos_success_text(amount, balance),
+                reply_markup=admin_keyboard,
+                parse_mode="HTML",
+            )
         except Exception as e:
             if "bot was blocked by the user" in str(e):
                 logger.warning(
-                    f"{__name__} | notificar_directo_vip_forward_bloqueado | user_id={admin_id} | target={target_user_id}"
+                    f"{__name__} | notificar_directo_besitos_forward_bloqueado | user_id={admin_id} | "
+                    f"target={target_user_id}"
                 )
             else:
                 logger.error(
-                    f"{__name__} | notificar_directo_vip_forward_error | user_id={admin_id} | target={target_user_id} | error={e}"
+                    f"{__name__} | notificar_directo_besitos_forward_error | user_id={admin_id} | "
+                    f"target={target_user_id} | error={e}"
                 )
-            bot_username = (await bot.get_me()).username
-            deep_link = build_forward_deep_link(bot_username, meta.get("token_code"))
-            await target_message.answer(build_forward_blocked_notify(deep_link), parse_mode="HTML")
+            await target_message.answer(build_forward_besitos_blocked_notify(), parse_mode="HTML")
     else:
         await target_message.edit_text(
-            build_forward_error_text(access_msg),
-            reply_markup=vip_management_keyboard(),
+            build_forward_besitos_error_text("No pude acreditar los besitos. Intente de nuevo."),
+            reply_markup=admin_keyboard,
             parse_mode="HTML",
         )
 
@@ -483,54 +702,10 @@ async def toggle_gift(callback: CallbackQuery, callback_data: ToggleGiftCallback
         vip_service.close()
 
 
-# ==================== LISTAR SUSCRIPTORES ====================
+# list_subscribers → vip_subscriber_admin_handlers (phase 36)
 
 
-@router.callback_query(F.data == "list_subscribers")
-async def list_subscribers(callback: CallbackQuery):
-    """Lista suscriptores VIP activos"""
-    vip_service = VIPService()
-    try:
-        subscriptions = vip_service.get_active_subscriptions()
-
-        if not subscriptions:
-            await callback.message.edit_text(
-                "🎩 <b>Lucien:</b>\n\n"
-                "<i>No hay miembros en El Diván actualmente...</i>\n\n"
-                "Los selectos aún no han llegado.",
-                reply_markup=vip_management_keyboard(),
-                parse_mode="HTML",
-            )
-            await callback.answer()
-            return
-
-        text = f"""🎩 <b>Lucien:</b>
-
-<i>Los privilegiados de El Diván...</i>
-
-👑 <b>Suscriptores activos:</b> {len(subscriptions)}
-
-"""
-
-        for sub in subscriptions[:10]:  # Mostrar primeros 10
-            username = (
-                f"@{sub.user.username}" if sub.user and sub.user.username else f"ID:{sub.user_id}"
-            )
-            expiry = sub.end_date.strftime("%d/%m/%Y")
-            text += f"• {username} - Vence: {expiry}\n"
-
-        if len(subscriptions) > 10:
-            text += f"\n<i>...y {len(subscriptions) - 10} más.</i>"
-
-        await callback.message.edit_text(
-            text, reply_markup=vip_management_keyboard(), parse_mode="HTML"
-        )
-    finally:
-        vip_service.close()
-    await callback.answer()
-
-
-# ==================== ACTIVACIÓN VIP POR REENVÍO (admin forward de msg de candidato) ====================
+# ==================== ACCIÓN ADMIN POR REENVÍO (VIP | besitos) ====================
 
 
 @router.message(
@@ -539,9 +714,8 @@ async def list_subscribers(callback: CallbackQuery):
         and is_admin(msg.from_user.id)
     )
 )
-async def process_forwarded_vip_candidate(message: Message, state: FSMContext):
-    """Procesa reenvío de mensaje de candidato VIP por admin. Extrae via puro + exactamente 1 svc (get_service) para listar tarifas + set state forward."""
-    # pure extract (Función pura, import inside)
+async def process_forwarded_admin_candidate(message: Message, state: FSMContext):
+    """Procesa reenvío admin: extrae visitante (puro) y muestra menú acción (0 svc)."""
     candidate_id, display = extract_forwarded_candidate(message)
     if not candidate_id:
         await message.answer(
@@ -551,80 +725,181 @@ async def process_forwarded_vip_candidate(message: Message, state: FSMContext):
         return
     admin_id = message.from_user.id
     logger.info(
-        f"{__name__} | detectar_candidato_vip_reenviado | user_id={admin_id} | forwarded_user_id={candidate_id} | display={display}"
+        f"{__name__} | detectar_candidato_reenviado | user_id={admin_id} | "
+        f"forwarded_user_id={candidate_id} | display={display}"
     )
-    # EXACTLY 1 service call in this handler (get_service per rules)
+    await message.answer(
+        build_forward_action_menu_text(display, candidate_id),
+        reply_markup=forward_action_keyboard(),
+        parse_mode="HTML",
+    )
+    await state.set_state(AdminForwardStates.selecting_action)
+    await state.update_data(forward_target_user_id=candidate_id, forward_target_display=display)
+
+
+@router.callback_query(
+    AdminForwardStates.selecting_action,
+    ForwardActionCallback.filter(F.action == "vip"),
+    lambda cb: is_admin(cb.from_user.id),
+)
+async def select_forward_action_vip(callback: CallbackQuery, state: FSMContext):
+    """Elige activar VIP: 1 svc para tarifas activas."""
+    data = await state.get_data()
+    target_id = data.get("forward_target_user_id")
+    display = data.get("forward_target_display", str(target_id))
+    admin_id = callback.from_user.id
+    logger.info(
+        f"{__name__} | elegir_accion_vip_forward | user_id={admin_id} | target_user_id={target_id}"
+    )
     tariffs = []
     with get_service(VIPService) as vip_service:
         tariffs = vip_service.get_all_tariffs(active_only=True)
     if not tariffs:
-        await message.answer(
+        await callback.message.edit_text(
             "🎩 <b>Lucien:</b>\n\n"
             "<i>No hay tarifas activas para activar VIP por reenvío...</i>\n\n"
             "👉 <i>Cree una tarifa primero en 'Gestionar tarifas'.</i>",
             reply_markup=vip_management_keyboard(),
             parse_mode="HTML",
         )
+        await state.clear()
+        await callback.answer()
         return
-    await message.answer(
-        f"🎩 <b>Lucien:</b>\n\n<i>Reenvío detectado de {display} (ID {candidate_id}). Seleccione tarifa para activar/renovar VIP...</i>",
+    await callback.message.edit_text(
+        f"🎩 <b>Lucien:</b>\n\n"
+        f"<i>Seleccione tarifa para activar/renovar VIP de {display} (ID {target_id})...</i>",
         reply_markup=tariffs_keyboard(tariffs, for_selection=True),
         parse_mode="HTML",
     )
-    await state.set_state(VIPForwardActivationStates.selecting_tariff)
-    await state.update_data(forward_target_user_id=candidate_id, forward_target_display=display)
-
-
-# --- T2: forward tariff select + confirm UI (0 svc, pure transition) ---
+    await state.set_state(AdminForwardStates.vip_selecting_tariff)
+    await callback.answer()
 
 
 @router.callback_query(
-    VIPForwardActivationStates.selecting_tariff,
-    SelectTariffCallback.filter(),
+    AdminForwardStates.selecting_action,
+    ForwardActionCallback.filter(F.action == "besitos"),
     lambda cb: is_admin(cb.from_user.id),
 )
-async def select_tariff_for_forward_vip(
-    callback: CallbackQuery, state: FSMContext, callback_data: SelectTariffCallback
-):
-    """Selecciona tarifa para forward activation (transiciona a confirm; 0 svc calls)."""
-    tariff_id = callback_data.tariff_id
+async def select_forward_action_besitos(callback: CallbackQuery, state: FSMContext):
+    """Elige otorgar besitos: pide cantidad (0 svc)."""
     data = await state.get_data()
     target_id = data.get("forward_target_user_id")
     display = data.get("forward_target_display", str(target_id))
     admin_id = callback.from_user.id
     logger.info(
-        f"{__name__} | seleccionar_tarifa_vip_forward | user_id={admin_id} | tariff_id={tariff_id} | target_user_id={target_id}"
+        f"{__name__} | elegir_accion_besitos_forward | user_id={admin_id} | target_user_id={target_id}"
     )
     await callback.message.edit_text(
-        f"🎩 <b>Lucien:</b>\n\n<i>¿Activar/renovar VIP con esta tarifa para {display} (ID {target_id})?</i>\n\nConfirme para proceder vía token interno.",
-        reply_markup=confirmation_keyboard(
-            "confirm_vip_forward_activation", "cancel_vip_activation"
-        ),
+        build_forward_besitos_amount_prompt(display, target_id),
+        reply_markup=forward_cancel_keyboard(),
         parse_mode="HTML",
     )
-    await state.update_data(selected_tariff_id=tariff_id)
-    await state.set_state(VIPForwardActivationStates.confirming)
+    await state.set_state(AdminForwardStates.besitos_waiting_amount)
     await callback.answer()
 
 
-@router.callback_query(F.data == "cancel_vip_activation", lambda cb: is_admin(cb.from_user.id))
-async def cancel_vip_forward_activation(callback: CallbackQuery, state: FSMContext):
-    """Cancela flujo forward VIP (limpia state)."""
+@router.callback_query(ForwardCancelCallback.filter(), lambda cb: is_admin(cb.from_user.id))
+async def cancel_forward_action(callback: CallbackQuery, state: FSMContext):
+    """Cancela flujo forward admin (VIP o besitos)."""
     await state.clear()
     await callback.message.edit_text(
-        "🎩 <b>Lucien:</b>\n\n<i>Activación VIP por reenvío cancelada.</i>",
+        "🎩 <b>Lucien:</b>\n\n<i>Acción por reenvío cancelada.</i>",
         reply_markup=vip_management_keyboard(),
         parse_mode="HTML",
     )
     await callback.answer()
 
 
-# --- T3: confirm + EXACTLY 1 svc grant + direct send + blocked fallback (critical 1-svc path) ---
+@router.callback_query(
+    AdminForwardStates.vip_selecting_tariff,
+    SelectTariffCallback.filter(),
+    lambda cb: is_admin(cb.from_user.id),
+)
+async def select_tariff_for_forward_vip(
+    callback: CallbackQuery, state: FSMContext, callback_data: SelectTariffCallback
+):
+    """Selecciona tarifa para forward VIP (transiciona a confirm; 0 svc)."""
+    tariff_id = callback_data.tariff_id
+    data = await state.get_data()
+    target_id = data.get("forward_target_user_id")
+    display = data.get("forward_target_display", str(target_id))
+    admin_id = callback.from_user.id
+    logger.info(
+        f"{__name__} | seleccionar_tarifa_vip_forward | user_id={admin_id} | "
+        f"tariff_id={tariff_id} | target_user_id={target_id}"
+    )
+    await callback.message.edit_text(
+        f"🎩 <b>Lucien:</b>\n\n"
+        f"<i>¿Activar/renovar VIP con esta tarifa para {display} (ID {target_id})?</i>\n\n"
+        f"Confirme para proceder vía token interno.",
+        reply_markup=forward_confirm_keyboard("vip"),
+        parse_mode="HTML",
+    )
+    await state.update_data(selected_tariff_id=tariff_id)
+    await state.set_state(AdminForwardStates.vip_confirming)
+    await callback.answer()
+
+
+@router.message(AdminForwardStates.besitos_waiting_amount, lambda m: is_admin(m.from_user.id))
+async def process_besitos_amount_for_forward(message: Message, state: FSMContext):
+    """Recibe cantidad de besitos y muestra confirmación (0 svc)."""
+    amount = parse_positive_besito_amount(message.text)
+    if amount is None:
+        await message.answer(
+            f"🎩 <b>Lucien:</b>\n\n"
+            f"<i>Cantidad inválida. Indique un entero entre 1 y {MAX_ADMIN_BESITO_GRANT}.</i>",
+            parse_mode="HTML",
+        )
+        return
+    data = await state.get_data()
+    target_id = data.get("forward_target_user_id")
+    display = data.get("forward_target_display", str(target_id))
+    admin_id = message.from_user.id
+    logger.info(
+        f"{__name__} | capturar_cantidad_besitos_forward | user_id={admin_id} | "
+        f"target_user_id={target_id} | amount={amount}"
+    )
+    await message.answer(
+        build_forward_besitos_confirm_text(display, target_id, amount),
+        reply_markup=forward_confirm_keyboard("besitos"),
+        parse_mode="HTML",
+    )
+    await state.update_data(besito_amount=amount)
+    await state.set_state(AdminForwardStates.besitos_confirming)
 
 
 @router.callback_query(
-    VIPForwardActivationStates.confirming,
-    F.data == "confirm_vip_forward_activation",
+    AdminForwardStates.besitos_confirming,
+    ForwardConfirmCallback.filter(F.action == "besitos"),
+    lambda cb: is_admin(cb.from_user.id),
+)
+async def confirm_forward_besitos_grant(callback: CallbackQuery, state: FSMContext):
+    """Confirma y ejecuta grant besitos (EXACTLY 1 svc) + notificación visitante."""
+    data = await state.get_data()
+    target_user_id = data.get("forward_target_user_id")
+    amount = data.get("besito_amount")
+    admin_id = callback.from_user.id
+    logger.info(
+        f"{__name__} | confirmar_besitos_forward | user_id={admin_id} | "
+        f"target_user_id={target_user_id} | amount={amount}"
+    )
+    if not target_user_id or not amount:
+        await callback.answer("Datos incompletos", show_alert=True)
+        await state.clear()
+        return
+    ok, balance = False, 0
+    with get_service(BesitoService) as besito_service:
+        ok, balance = besito_service.grant_manual_admin_besitos(target_user_id, amount, admin_id)
+    await notify_forward_besitos_result(
+        callback.bot, callback.message, target_user_id, ok, amount, balance, admin_id
+    )
+    await state.clear()
+    await callback.answer()
+
+
+@router.callback_query(
+    AdminForwardStates.vip_confirming,
+    ForwardConfirmCallback.filter(F.action == "vip"),
     lambda cb: is_admin(cb.from_user.id),
 )
 async def confirm_forward_vip_activation(callback: CallbackQuery, state: FSMContext):
